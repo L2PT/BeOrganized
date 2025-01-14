@@ -15,9 +15,10 @@ class ListTileOperator extends StatelessWidget {
   final dynamic onRemove;
   bool darkStyle;
   bool detailMode;
+  double iconSize;
 
 
-  ListTileOperator(this.operator, {this.detailMode = false, this.position = 0,this.darkStyle = false, this.checkbox = 0, this.isChecked = 0, this.onTap, this.onRemove, this.padding = 20});
+  ListTileOperator(this.operator, {this.detailMode = false, this.position = 0,this.darkStyle = false, this.checkbox = 0, this.isChecked = 0, this.onTap, this.onRemove, this.padding = 20, this.iconSize = 24});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +32,7 @@ class ListTileOperator extends StatelessWidget {
             Container(
               margin: EdgeInsets.only(right: 10.0),
               padding: EdgeInsets.only(top: 3, left: 3, right: 6, bottom: 3),
-              child: Icon(operator.supervisor? FontAwesomeIcons.userTie : FontAwesomeIcons.helmetSafety, color: darkStyle?black:yellow,),
+              child: Icon(operator.supervisor? FontAwesomeIcons.userTie : FontAwesomeIcons.helmetSafety, color: darkStyle?black:yellow, size: iconSize,),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
                 color: darkStyle?yellow:black,
@@ -67,7 +68,7 @@ class ListTileOperator extends StatelessWidget {
             ),child: Checkbox(onChanged: (v)=>onTap?.call(operator),
               value: isChecked>0?true:false, activeColor: black, checkColor: white, )):
             onRemove != null?IconButton(
-                icon: Icon(Icons.delete, color: darkStyle?grey_dark:black, size: 25),
+                icon: Icon(Icons.delete, color: darkStyle?grey_dark:black, size: iconSize),
                 onPressed: () => onRemove(operator)
             ):
             Container()

@@ -11,9 +11,10 @@ class DateUtils {
   static final DateFormat _fullDayFormat = DateFormat('EEE MMM dd, yyyy');
   static final DateFormat _apiDayFormat = DateFormat('yyyy-MM-dd');
   static final DateFormat _hoverDateFormat = DateFormat('EEEE, dd MMMM', 'it_IT');
+  static final DateFormat _tableDateFormat = DateFormat('dd MMMM yyyy', 'it_IT');
   static final DateFormat _pdfDateFormat = DateFormat('EEEE, dd MMMM yyyy', 'it_IT');
   static final DateFormat _hoverTimeFormat = DateFormat('HH:mm');
-  static final DateFormat _hoverDateFormatDiff = DateFormat('dd MMMM hh:mm');
+  static final DateFormat _hoverDateFormatDiff = DateFormat('dd MMMM hh:mm', 'it_IT');
 
   static String formatMonth(DateTime d) => _monthFormat.format(d);
 
@@ -32,6 +33,8 @@ class DateUtils {
   static String hoverDateFormatDiff(DateTime d) => _hoverDateFormatDiff.format(d);
 
   static String pdfDateFormat(DateTime d) => _pdfDateFormat.format(d);
+
+  static String tableDateFormat(DateTime d) => _tableDateFormat.format(d);
 
   static const List<String> weekdays = [
     'Sun',

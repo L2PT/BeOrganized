@@ -209,21 +209,20 @@ class CloudFirestoreService {
     return await table.doc(id).get().then((doc) => doc);
   }
 
-  Future<List<Event>> _getEventsFiltered(Query query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining, history]) async {
+  Future<List<Event>> _getEventsFiltered(CollectionReference query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining, history]) async {
     Query startQuery = query;
     filters = Map.from(filters);
     // due to firebase limitations (we can't build a query with all filters) let the repository do ALL filtering work
     // despite some fields will be handled in the firebase query and some other in code
     bool endOfList = false;
     bool filterStatus = false;
-
     if (filters.containsKey("status") && filters["status"]!.fieldValue != null){
       filterStatus = true;
-      query = query.where(Constants.tabellaEventi_stato, isEqualTo: filters["status"]!.fieldValue);
+      startQuery = startQuery.where(Constants.tabellaEventi_stato, isEqualTo: filters["status"]!.fieldValue);
     }
-    query = query.orderBy(
+    startQuery = startQuery.orderBy(
         Constants.tabellaEventi_dataInizio, descending: true);
-    query = addPagination(query, limit, startFrom);
+    startQuery = addPagination(startQuery, limit, startFrom);
 
     // if(filters.containsKey("title") && filters["title"]!.fieldValue!=null){
     //   String title = filters.remove("title")!.fieldValue;
@@ -233,7 +232,7 @@ class CloudFirestoreService {
     if (filters.containsKey("suboperators") && filters["suboperators"]!.fieldValue != null) {
       List<Account> suboperators = new List.from(filters["suboperators"]!.fieldValue);
       if (suboperators.length > 0) {
-        query = query.where(Constants.tabellaEventi_idOperatori, arrayContains: suboperators[0].id);
+        startQuery = startQuery.where(Constants.tabellaEventi_idOperatori, arrayContains: suboperators[0].id);
         if (suboperators.length == 1) filters.remove("suboperators");
       }
     }
@@ -241,10 +240,10 @@ class CloudFirestoreService {
     if (filters.containsKey("categories") && filters["categories"]!.fieldValue != null) {
       Map<String, bool> categories = Map.from(filters.remove("categories")!.fieldValue);
       categories.removeWhere((key, value) => !value);
-      if (categories.length > 0) query = query.where(Constants.tabellaEventi_categoria, whereIn: categories.keys.toList());
+      if (categories.length > 0) startQuery = startQuery.where(Constants.tabellaEventi_categoria, whereIn: categories.keys.toList());
     }
 
-    var docs = await query.get().then((snapshot) => snapshot.docs);
+    var docs = await startQuery.get().then((snapshot) => snapshot.docs);
     if (limit != null && docs.length < limit) endOfList = true;
 
     List<Event> events = docs.map((document) =>
@@ -252,38 +251,78 @@ class CloudFirestoreService {
             document.get(Constants.tabellaEventi_categoria)),
             document.data() as Map<String, dynamic>)).toList();
 
-    DateTime lastRetrieved = events.isNotEmpty?events.last.start:DateTime.now();
-
     if(!history && !filterStatus) {
-      events.removeWhere((element) => element.status <= EventStatus.New);
+      events.removeWhere((element) => element.status < EventStatus.New);
     }
 
     events = events.where((event) => filters.values.every((wrapper) =>
             event.filter(wrapper.filterFunction, wrapper.fieldValue))
     ).toList();
 
+    DocumentSnapshot? lastRetrieved = docs.isNotEmpty?await getDocument(query, docs.last.id):null;
+
     var a = (events.length>=(remaining??limit) || endOfList) ? events :
-    [...events, ...(await _getEventsFiltered(startQuery, filters, limit, lastRetrieved, limit-events.length, history))];
+    [...events, ...(await _getEventsFiltered(query, filters, limit, lastRetrieved, limit-events.length, history))];
     return a;
   }
 
-  Future<List<Event>> getEventsHistoryFiltered(int category, Map<String, FilterWrapper> filters, {limit, startFrom}) {
+  Future<List<Event>> getEventsHistoryFiltered(int category, Map<String, FilterWrapper> filters, {limit, startFrom}) async {
     CollectionReference table = _collectionStoricoTerminati;
     if(category == EventStatus.Refused){
       table = _collectionStoricoRifiutati;
     }else if(category == EventStatus.Deleted){
       table = _collectionStoricoEliminati;
     }
-    return _getEventsFiltered(table, filters, limit, startFrom, null, true);
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(table, startFrom);
+    return _getEventsFiltered(table, filters, limit, documentSnapshot, null, true);
   }
 
-  Future<List<Event>> getEventsActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) {
-    return _getEventsFiltered(_collectionEventi, filters, limit, startFrom, null, false);
+  Future<List<Event>> getEventsActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) async{
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionEventi, startFrom);
+    return _getEventsFiltered(_collectionEventi, filters, limit, documentSnapshot, null, false);
+  }
+
+  Future<int> getEventCountsByStatus([int? status]) async {
+    Query startQuery = _collectionEventi;
+
+    if(status != null){
+      startQuery = startQuery.where(Constants.tabellaEventi_stato, isEqualTo: status); // Filtra in base al campo e al valore
+    }else{
+      startQuery = startQuery.where(Constants.tabellaEventi_stato, isGreaterThanOrEqualTo: EventStatus.New); // Filtra in base al campo e al valore
+    }
+
+    final aggregateQuerySnapshot = await startQuery.count().get();
+
+    // Restituisce il conteggio
+    return aggregateQuerySnapshot.count??0;
   }
 
   Future<String> addEvent(Event data) async {
     var docRef = await _collectionEventi.add(data.toDocument());
     return docRef.id;
+  }
+
+  Future<int> getHistoryCountsByType( int? archives, String? category) async {
+    Query table = _collectionStoricoTerminati;
+
+    if(archives == EventStatus.Refused){
+      table = _collectionStoricoRifiutati;
+    }else if(archives == EventStatus.Deleted){
+      table = _collectionStoricoEliminati;
+    }
+
+    if(category != null){
+      table = table.where(Constants.tabellaEventi_categoria, isEqualTo: category);
+    }
+
+    final aggregateQuerySnapshot = await table.count().get();
+
+    // Restituisce il conteggio
+    return aggregateQuerySnapshot.count??0;
   }
 
   Future<String> addEventPast(Event e) async {
@@ -420,13 +459,13 @@ class CloudFirestoreService {
   }
 
   Query addPagination(Query query, [limit, startFrom]) {
-    if (limit != null && startFrom != null)
-      query = query.limit(limit).startAfter([startFrom]);
-    else if (limit != null)
+    if (limit != null && startFrom != null) {
+      query = query.limit(limit).startAfterDocument(startFrom as DocumentSnapshot);
+    }else if (limit != null)
       query = query.limit(limit);
-    else if (startFrom != null)
-      query = query.startAfter([startFrom]);
-
+    else if (startFrom != null) {
+      query = query.startAfterDocument(startFrom as DocumentSnapshot);
+    }
     return query;
   }
 
@@ -440,21 +479,25 @@ class CloudFirestoreService {
     _collectionClienti.doc(id).update(data.toDocument());
   }
 
-  Future<List<Customer>> getCustomers({limit, startFrom}) async {
-    Query query = _collectionClienti.orderBy(Constants.tabellaClienti_cognome);
-    query = addPagination(query, limit, startFrom);
-    return query.get().then((snapshot) => snapshot.docs.map((document) => Customer.fromMap(document.id, document.data() as Map<String, dynamic>)).toList());
+  Future<List<Customer>> getCustomers(Map<String, FilterWrapper> filters, {limit, startFrom }) async {
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionClienti, startFrom);
+    return _getCustomersFiltered(_collectionClienti, filters, limit, documentSnapshot, null);
   }
 
   void deleteCustomer(String id) {
     _collectionClienti.doc(id).delete();
   }
 
-  Future<List<Customer>> getCustomersActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) {
-    return _getCustomersFiltered(_collectionClienti, filters, limit, startFrom, null);
+  Future<List<Customer>> getCustomersActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) async {
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionClienti, startFrom);
+    return _getCustomersFiltered(_collectionClienti, filters, limit, documentSnapshot, null);
   }
 
-  Future<List<Customer>> _getCustomersFiltered(Query query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining]) async {
+  Future<List<Customer>> _getCustomersFiltered(CollectionReference query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining]) async {
     Query startQuery = query;
     filters = Map.from(filters);
     // due to firebase limitations (we can't build a query with all filters) let the repository do ALL filtering work
@@ -462,27 +505,42 @@ class CloudFirestoreService {
     bool endOfList = false;
 
     if (filters.containsKey("typology") && filters["typology"]!.fieldValue != null){
-      query = query.where(Constants.tabellaClienti_tipologia, isEqualTo: filters["typology"]!.fieldValue);
+      startQuery = startQuery.where(Constants.tabellaClienti_tipologia, isEqualTo: filters["typology"]!.fieldValue);
     }
-    query = query.orderBy(
+    startQuery = startQuery.orderBy(
         Constants.tabellaClienti_cognome);
-    query = addPagination(query, limit, startFrom);
+    startQuery = addPagination(startQuery, limit, startFrom);
 
-    var docs = await query.get().then((snapshot) => snapshot.docs);
+    var docs = await startQuery.get().then((snapshot) => snapshot.docs);
     if (limit != null && docs.length < limit) endOfList = true;
 
     List<Customer> customer = docs.map((document) =>
         Customer.fromMap(document.id, document.data() as Map<String, dynamic>)).toList();
 
-    String lastSurnameRecived = customer.isNotEmpty?customer.last.surname:'';
+    DocumentSnapshot? lastRetrieved = docs.isNotEmpty?await getDocument(query, docs.last.id):null;
 
     customer = customer.where((customer) => filters.values.every((wrapper) =>
         customer.filter(wrapper.filterFunction, wrapper.fieldValue))
     ).toList();
 
     var a = (customer.length>=(remaining??limit) || endOfList) ? customer :
-    [...customer, ...(await _getCustomersFiltered(startQuery, filters, limit, lastSurnameRecived, limit-customer.length))];
+    [...customer, ...(await _getCustomersFiltered(query, filters, limit, lastRetrieved, limit-customer.length))];
     return a;
+  }
+
+  Future<int> getCustomerCountsByType( String? typology) async {
+
+    // Query filtrata con aggregazione per il conteggio
+    Query startQuery = _collectionClienti;
+
+    if(typology != null){
+      startQuery = startQuery.where(Constants.tabellaClienti_tipologia, isEqualTo: typology); // Filtra in base al campo e al valore
+    }
+
+    final aggregateQuerySnapshot = await startQuery.count().get();
+
+    // Restituisce il conteggio
+    return aggregateQuerySnapshot.count??0;
   }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

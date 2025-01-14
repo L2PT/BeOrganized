@@ -1,3 +1,5 @@
+import 'package:venturiautospurghi/utils/global_constants.dart';
+
 extension DateTimeExtensions on DateTime {
   String stringify() {
     return this.year.toString() + '-' + ((this.month/10<1)?"0"+this.month.toString():this.month.toString()) + '-' + ((this.day/10<1)?"0"+this.day.toString():this.day.toString());
@@ -46,8 +48,7 @@ extension string on String {
   }
 
   static bool isPhoneNumber(String str) {
-    String patttern = r'(^(?:[+3]9)?[0-9]{8,12}$)';
-    RegExp regExp = new RegExp(patttern);
+    RegExp regExp = new RegExp(Constants.pattternPhoneValid);
     if (str.length == 0) {
       return false;
     }

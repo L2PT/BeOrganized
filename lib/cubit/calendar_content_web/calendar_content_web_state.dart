@@ -23,8 +23,6 @@ abstract class CalendarContentWebState extends Equatable {
     Event? eventHover,
     double? widthOpeCalendar,
     Account? user,
-    Map<DateTime, List<Event>>? eventsMap,
-    DateTime? selectedDay,
   }) => CalendarContentWebReady.update(
     showHoverContainer?? this.showHoverContainer,
     posLeft??this.posLeft,

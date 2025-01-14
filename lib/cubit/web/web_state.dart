@@ -2,38 +2,45 @@ part of 'web_cubit.dart';
 
 class WebCubitState extends Equatable {
 
-  DateTime calendarDate;
   List<Account> webops = [];
   bool expandedMode = true;
-  bool filterCustomer = false;
-  Map<String,List<Event>> eventsOpe = {};
+  CalendarPageState calendarPageState = new CalendarPageState();
+  ContactsPageState contactsPageState = new ContactsPageState();
+  HistoryPageState historyPageState = new HistoryPageState();
+  EventListPageState eventListPageState = new EventListPageState();
+  bool filterEvent = false;
   Map<String, FilterWrapper> filters = {};
-  List<Customer> customerList = [];
 
-  WebCubitState({ bool expandedMode = true, List<Account>? webops, DateTime? calendarDate, Map<String,List<Event>>? eventsOpe,
-    Map<String, FilterWrapper>? filters, List<Customer>? customerList, bool filterCustomer = false}):
-              this.calendarDate = calendarDate??DateTime.now(),
+  WebCubitState({ bool expandedMode = true, List<Account>? webops, Map<String,List<Event>>? eventsOpe,
+    Map<String, FilterWrapper>? filters, List<Customer>? customerList, Map<int, int>? countCustomerTypology,
+    bool filterEvent = false, CalendarPageState? calendarPageState, ContactsPageState? contactsPageState,
+  HistoryPageState? historyPageState, EventListPageState? eventListPageState}):
               this.expandedMode = expandedMode,
-              this.filterCustomer = filterCustomer,
+              this.calendarPageState = calendarPageState??new CalendarPageState(),
+              this.contactsPageState = contactsPageState??new ContactsPageState(),
+              this.historyPageState = historyPageState??new HistoryPageState(),
+              this.eventListPageState = eventListPageState?? new EventListPageState(),
+              this.filterEvent = filterEvent,
               this.webops = webops??[],
-              this.eventsOpe = eventsOpe??{},
-              this.customerList = customerList??[],
               this.filters = filters??{};
 
   @override
-  List<Object?> get props => [ expandedMode, calendarDate,  webops, eventsOpe.entries, this.customerList.map((e) => e.id).join()];
+  List<Object?> get props => [ expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState,  webops,
+    filters.keys.join(), filters.values.join()];
 
   ReadyWebCubitState assign({
     bool? expandedMode,
-    bool? filterCustomer,
-    DateTime? calendarDate,
+    bool? filterEvent,
     List<Account>? webops,
-    Map<String,List<Event>>? eventsOpe,
     Map<String, FilterWrapper>? filters,
-    List<Customer>? customerList,
+    CalendarPageState? calendarPageState,
+    ContactsPageState? contactsPageState,
+    HistoryPageState? historyPageState,
+    EventListPageState? eventListPageState
   }) => ReadyWebCubitState.update(
-      expandedMode??this.expandedMode,filterCustomer??this.filterCustomer, calendarDate??this.calendarDate, webops??this.webops,
-      eventsOpe??this.eventsOpe,filters??this.filters,customerList??this.customerList);
+      expandedMode??this.expandedMode, filterEvent??this.filterEvent, webops??this.webops,
+      filters??this.filters, calendarPageState??this.calendarPageState, contactsPageState??this.contactsPageState,
+      historyPageState??this.historyPageState, eventListPageState??this.eventListPageState);
 
 }
 
@@ -48,15 +55,11 @@ class ReadyWebCubitState extends WebCubitState{
   ReadyWebCubitState([List<Account>? webops]): super(webops: webops);
 
   @override
-  List<Object?> get props => [expandedMode, calendarDate,  webops, eventsOpe.entries, this.customerList.map((e) => e.id).join()];
+  List<Object?> get props => [expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState,  webops];
 
-  ReadyWebCubitState.update(bool expandedMode, bool filterCustomer, DateTime? calendarDate, List<Account> webops, Map<String,List<Event>> eventsOpe,
-                          Map<String, FilterWrapper> filters,List<Customer> customerList):
-        super(expandedMode: expandedMode, webops: webops, calendarDate: calendarDate, eventsOpe: eventsOpe, filters: filters, customerList: customerList,
-      filterCustomer: filterCustomer);
-
-  List<Event> selectedEventsOperator(String idOperator) {
-    return eventsOpe[idOperator]??[];
-  }
+  ReadyWebCubitState.update(bool expandedMode, bool filterEvent,List<Account> webops,
+                          Map<String, FilterWrapper> filters, CalendarPageState calendarPageState, ContactsPageState contactsPageState,
+      HistoryPageState historyPageState, EventListPageState eventListPageState):
+        super(expandedMode: expandedMode, webops: webops,filters: filters, calendarPageState:  calendarPageState, contactsPageState: contactsPageState, historyPageState: historyPageState, eventListPageState: eventListPageState);
 
 }

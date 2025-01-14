@@ -87,4 +87,22 @@ class EventStatus {
     }
   }
 
+  static Color getColorArichive(int status){
+    switch(status){
+      case EventStatus.Refused: return black;
+      case EventStatus.Deleted: return black_light;
+      case EventStatus.Ended: return grey_dark;
+      default: return black;
+    }
+  }
+
+  static Color getColorDefault(int index){
+    switch(index){
+      case 0: return black;
+      case 1: return black_light;
+      case 2: return grey_dark;
+      default: return black;
+    }
+  }
+
 }

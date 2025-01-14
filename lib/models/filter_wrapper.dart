@@ -12,6 +12,11 @@ class FilterWrapper {
 
   FilterWrapper update(newValue) => FilterWrapper(this.fieldName, newValue, this.filterFunction);
 
+  FilterWrapper.from(FilterWrapper original)
+      : fieldName = original.fieldName,
+        fieldValue = original.fieldValue,
+        filterFunction = original.filterFunction;
+
   @override
   String toString() {
     return 'FilterWrapper{fieldName: $fieldName, fieldValue: $fieldValue}';
@@ -22,7 +27,7 @@ class FilterWrapper {
     Map<String, FilterWrapper> filters = {
       "title": new FilterWrapper("title", null, (Event event, value) => value == null || event.title.toUpperCase().contains(value.toUpperCase()) ),
       "address" : new FilterWrapper("address", null, (Event event, value) => value == null || event.address.toUpperCase().contains(value.toUpperCase()) ),
-      "phone" : new FilterWrapper("phone", null, (Event event, value) => value == null || event.customer.phones.map((phone) => phone.toUpperCase()).contains(value.toUpperCase())),
+      "phone" : new FilterWrapper("phone", null, (Event event, value) => value == null || event.customer.allPhones().toUpperCase().contains(value.toUpperCase())),
       "startDate" : new FilterWrapper("startDate", null, (Event event, value) => value == null || event.start.add(Duration(minutes: 1)).isAfter(value) ),
       "status" : new FilterWrapper("status", null, (Event event, value) => value == null || event.status == value),
       "endDate" : new FilterWrapper("endDate", null, (Event event, value) => value == null || value.add(Duration(minutes: 1)).isAfter(event.end) ),
@@ -45,7 +50,6 @@ class FilterWrapper {
       "email" : new FilterWrapper("email", null, (Customer customer, value) => value == null || customer.email.toUpperCase().contains(value.toUpperCase()) ),
       "phone" : new FilterWrapper("phone", null, (Customer customer, value) => value == null || value == '' || customer.phones.where((phone) => phone.toUpperCase().contains(value.toUpperCase())).isNotEmpty),
       "address" : new FilterWrapper("address", null, (Customer customer, value) => value == null || value == '' || customer.addresses.where((address) => address.address.toUpperCase().contains(value.toUpperCase())).isNotEmpty),
-      "typology" : new FilterWrapper("typology", null, (Customer customer, value) => value == null || customer.typology == value),
       "partitaIva" : new FilterWrapper("partitaIva", null, (Customer customer, value) => value == null || customer.partitaIva.toUpperCase().contains(value.toUpperCase()) ),
       "codFiscale" : new FilterWrapper("codFiscale", null, (Customer customer, value) => value == null || customer.codFiscale.toUpperCase().contains(value.toUpperCase()) ),
     };

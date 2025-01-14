@@ -45,7 +45,7 @@ class OverViewReady extends WebState {
 
 class CloseOverView extends WebState {
   final dynamic arg;
-  final bool result;
+  bool result;
   Function? callback;
 
   CloseOverView(this.arg,String route, this.result, [this.callback, content]) : super(route, content);

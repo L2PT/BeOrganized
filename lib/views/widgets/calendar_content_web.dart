@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:printing/printing.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/calendar_content_web/calendar_content_web_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
@@ -299,8 +300,8 @@ class _HeaderOperatorCalendarState extends State<HeaderOperatorCalendar>  {
                   color: black, // Button color
                   child: InkWell(
                     splashColor: black_light, // Splash color
-                    onTap: () => Printing.layoutPdf(onLayout: (format) => pdfUtils.createDailyProgram((context.read<WebCubit>().state as ReadyWebCubitState)
-                        .selectedEventsOperator(operator.id), context.read<WebCubit>().state.calendarDate, operator)),
+                    onTap: () => Printing.layoutPdf(onLayout: (format) => pdfUtils.createDailyProgram((context.read<WebCubit>().state.calendarPageState! as ReadyCalendarPageState)
+                        .selectedEventsOperator(operator.id), context.read<WebCubit>().state.calendarPageState!.calendarDate, operator)),
                     child: SizedBox(width: 30, height: 30, child: Icon(Icons.print, color: white, size: 20,)),
                   ),
                 ),
@@ -366,7 +367,7 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
     user.webops.forEach((operator) {
       ft = ft.then((_) {
         return Future.delayed(const Duration(milliseconds: 100), () {
-          _listOperatorCalendar.add(singleOperatorCalendar(operator,index,context));
+          _listOperatorCalendar.add(singleOperatorCalendar(operator,index, context));
           _listKey.currentState?.insertItem(_listOperatorCalendar.length -1);
           index++;
         });
@@ -376,8 +377,8 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
   }
 
   Widget singleOperatorCalendar(Account operator, int index, BuildContext context){
-    DateTime selectDay = context.read<WebCubit>().state.calendarDate;
-    List<Event> listEvent = (context.read<WebCubit>().state as ReadyWebCubitState)
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState!.calendarDate;
+    List<Event> listEvent = (context.read<WebCubit>().state.calendarPageState! as ReadyCalendarPageState)
         .selectedEventsOperator(operator.id);
     DateTime _base = new DateTime(1990, 1, 1, Constants.MIN_WORKTIME, 0, 0);
     return Column(

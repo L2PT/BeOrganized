@@ -115,3 +115,16 @@ class GeoUtils {
   }
 
 }
+
+class DoubleUtils {
+
+  static int roundUpIfOverHalf(double value) {
+    // Verifica se la parte decimale supera 0.5
+    if (value - value.floor() > 0.5) {
+      return value.ceil(); // Approssima per eccesso
+    } else {
+      return value.floor(); // Lascia il valore intero inferiore
+    }
+  }
+
+}

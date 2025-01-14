@@ -18,7 +18,7 @@ class HistoryEventListCubit extends Cubit<HistoryEventListState> {
   Map<int, bool> canLoadMore = {};
   Map<int, bool> loaded = {};
 
-  HistoryEventListCubit(this._databaseRepository, int? _selectedStatusTab) :
+  HistoryEventListCubit(this._databaseRepository, [int? _selectedStatusTab]) :
         super(HistoryLoading(_selectedStatusTab)){
     startingElements = PlatformUtils.isMobile? 10 : 20;
     loadingElements = PlatformUtils.isMobile? 5 : 10;
@@ -28,7 +28,7 @@ class HistoryEventListCubit extends Cubit<HistoryEventListState> {
   void loadMoreData() async {
     List<Event> selectedEvents = (state as HistoryReady).selectedEvents();
     listEvent = List.from(selectedEvents);
-    listEvent.addAll(await _databaseRepository.getEventsHistoryFiltered(state.selectedStatusTab, state.filters, limit: loadingElements, startFrom: selectedEvents.last.start));
+    listEvent.addAll(await _databaseRepository.getEventsHistoryFiltered(state.selectedStatusTab, state.filters, limit: loadingElements, startFrom: selectedEvents.last.id));
     canLoadMore[state.selectedStatusTab] = listEvent.length >= selectedEvents.length+loadingElements;
     Map<int, List<Event>> eventsMap =  Map.from(state.eventsMap);
     eventsMap[state.selectedStatusTab] = listEvent;
@@ -43,7 +43,7 @@ class HistoryEventListCubit extends Cubit<HistoryEventListState> {
       canLoadMore[status] = listEvent.length >= startingElements;
       Map<int, List<Event>> eventsMap =  Map.from(state.eventsMap);
       eventsMap[status] = listEvent;
-      emit(state.assign(selectedStatus: status, eventsMap: eventsMap));
+      emit(state.assign(selectedStatus: status, eventsMap: eventsMap,));
     } else emit(state.assign(selectedStatus: status));
   }
 
@@ -62,11 +62,7 @@ class HistoryEventListCubit extends Cubit<HistoryEventListState> {
   }
 
   void scrollToTheTop(){
-    scrollController.animateTo(
-    0.0,
-    curve: Curves.easeOut,
-    duration: const Duration(milliseconds: 100),
-  );
+    scrollController.animateTo(0.0, curve: Curves.easeOut, duration: const Duration(milliseconds: 100),);
   }
 
 }

@@ -99,6 +99,7 @@ class Constants {
   static const String tabellaClienti_telefoni = 'Telefoni';
   static const String tabellaClienti_indirizzi = 'Indirizzi';
   static const String tabellaClienti_indirizzo = 'Indirizzo';
+  static const String tabellaClienti_indirizziSearch = 'IndirizziSearch';
 
   // HANDLES
   static const int MIN_WORKTIME = 7;
@@ -113,4 +114,8 @@ class Constants {
   //OVERVIEW SCREEN
   static const double WIDTH_OVERVIEW = 400;
   static const double HEIGHT_OVERVIEW = 655;
+
+  //REGEXP
+  static const String pattternPhoneValid = r'(^(?:[+3]9)?[0-9]{8,12}$)';
+  static const String pattternPhone = r'\b(?:\+?39)?\d{9,12}\b';
 }

@@ -29,9 +29,9 @@ class FabCubit extends Cubit<FabState> {
   Widget content = SizedBox();
 
   void callSupervisor(String phone) async {
-    phone = "tel:"+phone;
-    if(await canLaunch(phone)){
-      launch(phone);
+    Uri phoneUri = Uri.parse("tel:"+phone);
+    if(await canLaunchUrl(phoneUri)){
+      launchUrl(phoneUri);
     }
   }
 

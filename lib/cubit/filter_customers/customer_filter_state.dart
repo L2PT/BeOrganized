@@ -6,8 +6,6 @@ class CustomersFilterState extends Equatable {
 
   Map<String, FilterWrapper> filters = {};
   bool filtersBoxVisibile = false;
-  bool isCompany = false;
-  bool isPrivate = false;
   _filterStatus status = _filterStatus.normal;
 
   CustomersFilterState() {
@@ -15,11 +13,11 @@ class CustomersFilterState extends Equatable {
   }
 
   @override
-  List<Object> get props => [filters.values.join(), filtersBoxVisibile, status, isCompany, isPrivate];
+  List<Object> get props => [filters.values.join(), filtersBoxVisibile, status];
 
   bool isLoading() => this.status == _filterStatus.loading;
 
-  CustomersFilterState.update(this.filters, this.filtersBoxVisibile, this.status, this.isCompany, this.isPrivate);
+  CustomersFilterState.update(this.filters, this.filtersBoxVisibile, this.status);
 
   CustomersFilterState assign({
     Map<String, FilterWrapper>? filters,
@@ -31,8 +29,6 @@ class CustomersFilterState extends Equatable {
       filters??this.filters,
       filtersBoxVisibile??this.filtersBoxVisibile,
       status??this.status,
-      isCompany??this.isCompany,
-      isPrivate??this.isPrivate,
   );
 
 }

@@ -35,7 +35,7 @@ class CreateCustomer extends StatelessWidget {
     return new BlocProvider(
         create: (_) => CreateCustomerCubit(repository,_event, currentStep, type ),
         child: PopScope(
-            onPopInvoked: (bool)=>PlatformUtils.backNavigator(context),
+            onPopInvokedWithResult: (bool, value)=>PlatformUtils.backNavigator(context),
             child: _formCustomerWidget(this.type))
     );
   }
@@ -204,7 +204,7 @@ class _tipologyCustomer extends StatelessWidget{
             onTap: () => context.read<CreateCustomerCubit>().onSelectedType(key),
             child: AnimatedContainer(
               duration: Duration(milliseconds: 300),
-              padding: EdgeInsets.all(10.0),
+              padding: EdgeInsets.all(5.0),
               decoration: BoxDecoration(
                 color: context.read<CreateCustomerCubit>().state.customer.typology == key ? Colors.grey.shade900 : Colors.grey.shade100,
                 border: Border.all(
@@ -218,7 +218,7 @@ class _tipologyCustomer extends StatelessWidget{
                   children: <Widget>[
                     Image.asset((PlatformUtils.isMobile?'assets/':'/typologyCustomer/')+value, height: 100),
                     SizedBox(height: 5,),
-                    Text(key, style: title.copyWith(color: context.read<CreateCustomerCubit>().state.customer.typology == key ? white: black),)
+                    Text(key, style: title.copyWith(fontSize: 18, color: context.read<CreateCustomerCubit>().state.customer.typology == key ? white: black),)
                   ]
               ),
             ),
@@ -239,14 +239,14 @@ class _tipologyCustomer extends StatelessWidget{
             ConstrainedBox(
               constraints: new BoxConstraints(
                 minHeight: 200,
-                maxHeight: PlatformUtils.isMobile?MediaQuery.of(context).size.height - 280:250,
+                maxHeight: PlatformUtils.isMobile?MediaQuery.of(context).size.height - 280:420,
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.0),
                 child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.8,
+                      childAspectRatio: 0.95,
                       crossAxisSpacing: 20.0,
                       mainAxisSpacing: 20.0,
                     ),

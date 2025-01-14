@@ -203,7 +203,7 @@ class PDFUtils {
                 children: [
                   Icon(IconData(0xe0cf), size: 15, color: PdfColors.grey800),
                   SizedBox(width: 5,),
-                  Text(event.customer.address.phone.isNotEmpty?event.customer.address.phone+' - ':''+event.customer.phones.join(' - '),
+                  Text(event.customer.allPhones(),
                       style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.normal, color: PdfColors.grey700,), maxLines: 2),
                 ],
               ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/filter_customers/customer_filter_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -22,6 +22,8 @@ class CustomersFilterWidget extends FilterWidget {
     double paddingBottomBox = 14,
     double paddingRightBox = 14,
     double spaceButton = 15,
+    double iconSize = 18,
+    double labelSize = 14,
     String hintTextSearch = '',
     required void Function(Map<String, FilterWrapper> filters) onFiltersChanged,
     required void Function(Map<String, FilterWrapper> filters) onSearchFieldChanged,
@@ -41,12 +43,14 @@ class CustomersFilterWidget extends FilterWidget {
           paddingBottomBox: paddingBottomBox,
           paddingRightBox: paddingRightBox,
           spaceButton: spaceButton,
+          iconSize: iconSize,
+          labelSize: labelSize,
       );
 
   @override
   Widget filterBox(BuildContext context) {
-    const double spaceIconText = 10;
-    const double spaceInput = 10;
+    const double spaceIconText = 5;
+    const double spaceInput = 5;
 
     return new Form(
         key: context.read<CustomerFilterCubit>().formKey,
@@ -73,19 +77,19 @@ class CustomersFilterWidget extends FilterWidget {
                         padding: EdgeInsets.only(top: spaceInput),
                         child: Row(
                           children: <Widget>[
-                            Icon(Icons.assignment_ind, color: grey,),
+                            Icon(Icons.assignment_ind, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   cursorColor: white,
                                   controller: context.read<CustomerFilterCubit>().titleController,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   keyboardType: TextInputType.text,
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per nome e cognome',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,
                                   ),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["name-surname"]!.fieldValue = value??"",
@@ -96,19 +100,19 @@ class CustomersFilterWidget extends FilterWidget {
                         padding: EdgeInsets.only(top: spaceInput),
                         child: Row(
                           children: <Widget>[
-                            Icon(Icons.mail, color: grey,),
+                            Icon(Icons.mail, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   controller: context.read<CustomerFilterCubit>().emailController,
                                   cursorColor: white,
                                   keyboardType: TextInputType.phone,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per mail',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["email"]!.fieldValue = value??"",
                                 )),
@@ -118,19 +122,19 @@ class CustomersFilterWidget extends FilterWidget {
                         padding: EdgeInsets.only(top: spaceInput),
                         child: Row(
                           children: <Widget>[
-                            Icon(Icons.phone, color: grey,),
+                            Icon(Icons.phone, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   controller: context.read<CustomerFilterCubit>().phoneController,
                                   cursorColor: white,
                                   keyboardType: TextInputType.phone,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per telefono',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["phone"]!.fieldValue = value??"",
                                 )),
@@ -140,19 +144,19 @@ class CustomersFilterWidget extends FilterWidget {
                       padding: EdgeInsets.only(top: spaceInput),
                       child: Row(
                           children: <Widget>[
-                            Icon(Icons.map, color: grey,),
+                            Icon(Icons.map, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   keyboardType: TextInputType.text,
                                   cursorColor: white,
                                   controller: context.read<CustomerFilterCubit>().addressController,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per indirizzo',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,
                                   ),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["address"]!.fieldValue = value??"",
@@ -163,100 +167,48 @@ class CustomersFilterWidget extends FilterWidget {
                       padding: EdgeInsets.only(top: spaceInput),
                       child: Row(
                           children: <Widget>[
-                            Icon(Icons.apartment, color: grey,),
-                            SizedBox(width: spaceIconText),
-                            Expanded(
-                              child: Text("Azienda", style: subtitle.copyWith(color: grey),),
-                            ),
-                            Container(
-                                height: 30,
-                                alignment: Alignment.centerRight,
-                                child: FittedBox(
-                                  fit: BoxFit.fill,
-                                  child:Switch(
-                                    inactiveTrackColor: black_light,
-                                    value: context.read<CustomerFilterCubit>().state.isCompany,
-                                    activeTrackColor: black_light,
-                                    activeColor: yellow,
-                                    onChanged: context.read<CustomerFilterCubit>().setIsCompany,
-                                  ),
-                                ),
-                            ),
-                          ]),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: spaceInput),
-                      child: Row(
-                          children: <Widget>[
-                            Icon(FontAwesomeIcons.userTie, color: grey,),
-                            SizedBox(width: spaceIconText),
-                            Expanded(
-                              child: Text("Privato", style: subtitle.copyWith(color: grey),),
-                            ),
-                            Container(
-                              height: 30,
-                              alignment: Alignment.centerRight,
-                              child: FittedBox(
-                                fit: BoxFit.fill,
-                                child:Switch(
-                                  inactiveTrackColor: black_light,
-                                  value: context.read<CustomerFilterCubit>().state.isPrivate,
-                                  activeTrackColor: black_light,
-                                  activeColor: yellow,
-                                  onChanged: context.read<CustomerFilterCubit>().setIsPrivate,
-                                ),
-                              ),
-                            ),
-                          ]),
-                    ),
-                    context.read<CustomerFilterCubit>().state.isCompany?
-                    Padding(
-                      padding: EdgeInsets.only(top: spaceInput),
-                      child: Row(
-                          children: <Widget>[
-                            Icon(Icons.assignment, color: grey,),
+                            Icon(Icons.assignment, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   keyboardType: TextInputType.text,
                                   cursorColor: white,
                                   controller: context.read<CustomerFilterCubit>().paritaivaController,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per partita iva',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,
                                   ),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["partitaIva"]!.fieldValue = value??"",
                                 )),
                           ]),
-                    ):Container(),
-                    context.read<CustomerFilterCubit>().state.isPrivate?
+                    ),
                     Padding(
                       padding: EdgeInsets.only(top: spaceInput),
                       child: Row(
                           children: <Widget>[
-                            Icon(Icons.badge, color: grey,),
+                            Icon(Icons.badge, color: grey, size: iconSize,),
                             SizedBox(width: spaceIconText),
                             Expanded(
                                 child: TextFormField(
                                   keyboardType: TextInputType.text,
                                   cursorColor: white,
                                   controller: context.read<CustomerFilterCubit>().codicefiscaleController,
-                                  style: TextStyle(color: white),
+                                  style: TextStyle(color: white, fontSize: labelSize),
                                   decoration: InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 5),
                                     hintText: 'Cerca per codice fiscale',
-                                    hintStyle: subtitle,
+                                    hintStyle: subtitle.copyWith(fontSize: labelSize),
                                     border: InputBorder.none,
                                   ),
                                   onSaved: (value) => context.read<CustomerFilterCubit>().state.filters["codFiscale"]!.fieldValue = value??"",
                                 )),
                           ]),
-                    ):Container(),
+                    )
                   ],
                 )),
             constraints: BoxConstraints(
@@ -274,12 +226,12 @@ class CustomersFilterWidget extends FilterWidget {
 
   @override
   void clearFilters(BuildContext context) {
-    context.read<CustomerFilterCubit>().clearFilters();
+    context.read<CustomerFilterCubit>().clearFilters(context.read<WebCubit>().state.filters);
   }
 
   @override
   void applyFilters(BuildContext context){
-    context.read<CustomerFilterCubit>().notifyFiltersChanged(true);
+    context.read<CustomerFilterCubit>().notifyFiltersChanged(context.read<WebCubit>().state.filters, true);
   }
 
   @override
@@ -292,7 +244,7 @@ class CustomersFilterWidget extends FilterWidget {
     Account account = context.read<AuthenticationBloc>().account!;
 
     return new BlocProvider(
-      create: (_) => CustomerFilterCubit(repository, callbackSearchFieldChanged, callbackFiltersChanged),
+      create: (_) => CustomerFilterCubit(callbackSearchFieldChanged, callbackFiltersChanged, context.read<WebCubit>().state.filters),
       child: BlocBuilder<CustomerFilterCubit, CustomersFilterState>(
           buildWhen: (previous, current) => previous != current,
           builder: (context, state) {

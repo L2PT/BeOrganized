@@ -6,6 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/bloc/web_bloc/web_bloc.dart';
 import 'package:venturiautospurghi/cubit/messaging/messaging_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/page_parameter.dart';
@@ -20,14 +24,14 @@ import 'package:venturiautospurghi/web.dart';
 final Map<String, PageParameter> parameterPage = {
   Constants.homeRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.calendar,
       true, true, true),
-  Constants.historyEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.calendar,
-      false, false, false),
-  Constants.bozzeEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuova bozza', FunctionalWidgetType.calendar,
-      false, true, false),
+  Constants.historyEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.filterEvent,
+      false, false, true),
+  Constants.bozzeEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuova bozza', FunctionalWidgetType.filterEvent,
+      false, true, true),
   Constants.manageUtenzeRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo dipendente', FunctionalWidgetType.calendar,
       false, true, false),
-  Constants.filterEventListRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo dipendente', FunctionalWidgetType.calendar,
-      false, false, false),
+  Constants.filterEventListRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo dipendente', FunctionalWidgetType.filterEvent,
+      false, false, true),
   Constants.customerContactsListRoute: PageParameter(Icons.person_add, Constants.createCustomerViewRoute, 'Nuovo cliente', FunctionalWidgetType.FilterCustomer,
       false, true, true),
 };
@@ -69,8 +73,13 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
             account: context.read<AuthenticationBloc>().account!, databaseRepository: databaseRepository,
             posLeftOverView: (MediaQuery.of(context).size.width/2) - (Constants.WIDTH_OVERVIEW/2),posTopOverView:  (MediaQuery.of(context).size.height/2) - (Constants.HEIGHT_OVERVIEW/2)
     )),
+        BlocProvider(create: (_) => CalendarPageCubit(databaseRepository, account)),
+        BlocProvider(create: (_) => ContactsPageCubit(databaseRepository)),
+        BlocProvider(create: (_) => HistoryPageCubit(databaseRepository)),
+        BlocProvider(create: (_) => EventListPageCubit(databaseRepository)),
         BlocProvider(
-            create: (_) => WebCubit(GoRouterState.of(context).uri.toString(), databaseRepository, account)),
+            create: (tex) => WebCubit(GoRouterState.of(context).uri.toString(),tex.read<CalendarPageCubit>(),tex.read<ContactsPageCubit>(),
+                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), databaseRepository, account)),
     ], child:Scaffold(
           backgroundColor: Color(0x00000000),
           body: Stack(
@@ -82,15 +91,15 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                 Expanded(child: Column(
                   children: [
                     new BlocBuilder<WebCubit, WebCubitState>(
-                      buildWhen: (previous, current) => previous.calendarDate != current.calendarDate,
+                      buildWhen: (previous, current) => previous.calendarPageState!.calendarDate != current.calendarPageState!.calendarDate,
                       builder: (context, state) {
                         return HeaderMenuLayerWeb(
                             pageParameter.showBoxCalendar,
-                            state.calendarDate,
+                            state.calendarPageState!.calendarDate,
                             account,
                             () => context.read<AuthenticationBloc>().add(LoggedOut()),
-                            () => context.read<WebCubit>().todayCalendarDate(),
-                            context.read<WebCubit>().selectNextorPrevious,
+                            () => context.read<WebCubit>().calendarPageCubit.todayCalendarDate(),
+                            context.read<WebCubit>().calendarPageCubit.selectNextorPrevious,
                         );}),
                     new BlocBuilder<WebCubit, WebCubitState>(
                       buildWhen: (previous, current) => (previous.runtimeType) != (current.runtimeType),
@@ -142,8 +151,25 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                           PlatformUtils.navigator(context, context.read<WebBloc>().state.route, <String,dynamic>{'objectParameter' : state.arg['objectParameter'],'typeStatus': state.arg['typeStatus'], 'currentStep' : state.arg['currentStep']});
                         else if(state.result)
                           switch(GoRouterState.of(context).uri.toString()){
+                            case Constants.bozzeEventListRoute :{
+                              context.read<WebCubit>().onFiltersChangedEvent(context.read<WebCubit>().state.eventListPageState.filters, Constants.bozzeEventListRoute);
+                              context.read<WebCubit>().eventListPageCubit.forceRefresh();
+                              state.result = false;
+                            }break;
+                            case Constants.filterEventListRoute :{
+                              context.read<WebCubit>().onFiltersChangedEvent(context.read<WebCubit>().state.eventListPageState.filters, Constants.filterEventListRoute);
+                              context.read<WebCubit>().eventListPageCubit.forceRefresh();
+                              state.result = false;
+                            }break;
+                            case Constants.historyEventListRoute :{
+                              context.read<WebCubit>().onFiltersChangedEvent(context.read<WebCubit>().state.historyPageState.filters, Constants.historyEventListRoute);
+                              context.read<WebCubit>().historyPageCubit.forceRefresh();
+                              state.result = false;
+                            }break;
                             case Constants.customerContactsListRoute :{
-                              context.read<WebCubit>().onFiltersChanged(context.read<WebCubit>().state.filters);
+                              context.read<WebCubit>().contactsPageCubit.onFiltersChangedCustomer(context.read<WebCubit>().state.filters);
+                              context.read<WebCubit>().contactsPageCubit.forceRefresh();
+                              state.result = false;
                             }break;
                           }
                       }break;
@@ -162,7 +188,7 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                       if (stateRoute.uri.toString() == Constants.detailsEventViewRoute)
                         PlatformUtils.backNavigator(context);
                       PlatformUtils.navigator(
-                          context, Constants.detailsEventViewRoute, state.event);
+                          context, Constants.detailsEventViewRoute, <String,dynamic>{"objectParameter" : state.event});
                     }
                   }, child: Container(),)
             )

@@ -8,7 +8,6 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
-import 'package:venturiautospurghi/utils/extensions.dart';
 
 part 'customer_selection_state.dart';
 
@@ -16,10 +15,9 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   final CloudFirestoreService _databaseRepository;
   final ScrollController scrollController = new ScrollController();
   late List<Customer> customers;
-  final int startingElements = 10;
+  final int startingElements = 500;
   final int loadingElements = 5;
   Map<String, ExpansionTileController> mapController = {};
-  bool canLoadMore = true;
 
   CustomerSelectionCubit(this._databaseRepository, Event? _event) :
         super(LoadingCustomers()){
@@ -27,58 +25,37 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   }
 
   void getCustomers(Event event) async {
-    customers = await _databaseRepository.getCustomers();
-    canLoadMore = false;
-    emit(new ReadyCustomers(customers, event));
+    customers = await _databaseRepository.getCustomers(state.filters, limit: startingElements);
+    emit(state.assign(filteredCustomers: customers,event:  event));
   }
 
   void loadMoreData() async {
     if(state is ReadyCustomers){
-      List<Customer> preLoaded = [...string.isNullOrEmpty(state.searchNameField) ? customers : (state as ReadyCustomers).filteredCustomers];
       List<Customer> loaded;
-      loaded = await _databaseRepository.getCustomers(limit: loadingElements, startFrom: (state as ReadyCustomers).filteredCustomers.last.surname);
+      loaded = await _databaseRepository.getCustomers(state.filters,limit: loadingElements, startFrom: (state as ReadyCustomers).filteredCustomers.last.id);
       customers.addAll(loaded);
-      // update filtered operators with the new ones
-      preLoaded.addAll(_filterData(loaded));
-      canLoadMore = loaded.length >= loadingElements;
-      emit((state as ReadyCustomers).assign( filteredCustomers: preLoaded));
+      bool canLoadMore = loaded.length >= loadingElements;
+      emit((state as ReadyCustomers).assign( filteredCustomers: customers, canLoadMore: canLoadMore));
     }
   }
 
 
   void onSearchFieldChanged(Map<String, FilterWrapper> filters) {
-    String text = filters["name-surname"]!.fieldValue;
-    state.searchNameField = text;
+    CustomerSelectionState stateprev = state;
+    emit(LoadingCustomers());
     scrollToTheTop();
-    if(string.isNullOrEmpty(text))
-      emit((state as ReadyCustomers).assign(searchNameField: text, filteredCustomers: customers));
-    else if(text.toLowerCase().contains(state.searchNameField.toLowerCase()))
-      emit((state as ReadyCustomers).assign(searchNameField: text,
-          filteredCustomers: _filterData((state as ReadyCustomers).filteredCustomers)));
-    else
-      emit((state as ReadyCustomers).assign(searchNameField: text, filteredCustomers: _filterData(customers)));
-
-    if(canLoadMore && state is ReadyCustomers && (state as ReadyCustomers).filteredCustomers.length<startingElements)
-      loadMoreData();
+    _filterData(filters, stateprev.event);
   }
 
   void onFiltersChanged(Map<String, FilterWrapper> filters) {
     // not implemented
   }
 
-  List<Customer> _filterData(customers){
-    List<Customer> filteredOperators = [];
-    if(string.isNullOrEmpty(state.searchNameField))
-      filteredOperators = List.of(customers);
-    else {
-      customers.forEach((customer) {
-        String searchedFields = customer.name + " " + customer.surname;
-        if(searchedFields.toLowerCase().contains(state.searchNameField.toLowerCase())){
-          filteredOperators.add(customer);
-        }
-      });
-    }
-    return filteredOperators;
+  void _filterData(Map<String, FilterWrapper> filters, Event e) async{
+    List<Customer> loaded = await _databaseRepository.getCustomers(filters, limit: startingElements,);
+    bool canLoadMore = loaded.length >= loadingElements;
+    emit(state.assign( filteredCustomers: loaded, searchNameField: filters["address"]!.fieldValue, filters: filters,
+        event: e, canLoadMore: canLoadMore));
   }
 
   void onExpansionChanged(bool isOpen, Customer customer){
@@ -111,12 +88,11 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     return false;
   }
   void saveSelectionToEvent(){
-    ReadyCustomers state = (this.state as ReadyCustomers);
     state.event.customer = state.customer;
   }
 
   bool validateAndSave() {
-    if((state as ReadyCustomers).customer.id.isNotEmpty) {
+    if(state.customer.id.isNotEmpty) {
       saveSelectionToEvent();
       return true;
     } else {
@@ -148,7 +124,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     return true;
   }
 
-  Event getEvent() => (state as ReadyCustomers).event;
+  Event getEvent() => state.event;
 
   Event getEventCustomerEmpty() {
     (state as ReadyCustomers).event.customer = Customer.empty();

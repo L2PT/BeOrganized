@@ -69,7 +69,7 @@ class _EventStepper extends StatelessWidget{
   void _onSavePressed() async {
     if (await context.read<CreateEventCubit>().saveEvent())
       if( !(await SuccessAlert(context, text: "Incarico salvato e inviato!").show()))
-        PlatformUtils.backNavigator(context);
+        PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : context.read<CreateEventCubit>().state.event, 'res': true});
   }
 
   _EventStepper(this.context);
@@ -183,7 +183,7 @@ class _EventStepper extends StatelessWidget{
               if (controls.currentStep > 2)
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  child: new Text(context.read<CreateEventCubit>().state.event.operator == null? 'Salva in bozza': 'Salva', style: button_card),
+                  child: new Text(context.read<CreateEventCubit>().state.event.operator != null && context.read<CreateEventCubit>().state.event.operator!.id.isNotEmpty? 'Salva': 'Salva in bozza', style: button_card),
                   onPressed: (){
                     if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, DateTime.now())){_onSavePressed();}}),
             ],
@@ -491,7 +491,8 @@ class _formAssignedList extends StatelessWidget{
             BlocBuilder<CreateEventCubit, CreateEventState>(
               buildWhen: (previous, current) => previous.event.toString() != current.event.toString(),
               builder: (context, state) {
-                return Column(children: <Widget>[...(context.read<CreateEventCubit>().state.event.operator != null ?
+                return Column(children: <Widget>[...(context.read<CreateEventCubit>().state.event.operator != null &&
+                    context.read<CreateEventCubit>().state.event.operator!.id.isNotEmpty?
                   [context.read<CreateEventCubit>().state.event.operator!, ...context.read<CreateEventCubit>().state.event.suboperators] :
                   context.read<CreateEventCubit>().state.event.suboperators).asMap().map((i, operator) =>
                   MapEntry(i,ListTileOperator(

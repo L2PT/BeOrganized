@@ -51,7 +51,7 @@ class _customerSelectableListState extends State<_customerSelectableList> {
     context.read<CustomerSelectionCubit>().scrollController.addListener(() {
       if (context.read<CustomerSelectionCubit>().scrollController.position.pixels ==
           context.read<CustomerSelectionCubit>().scrollController.position.maxScrollExtent) {
-        if(context.read<CustomerSelectionCubit>().canLoadMore)
+        if(context.read<CustomerSelectionCubit>().state.canLoadMore)
           context.read<CustomerSelectionCubit>().loadMoreData();
       }
     });
@@ -88,7 +88,7 @@ class _customerSelectableListState extends State<_customerSelectableList> {
                  'typeStatus' : TypeStatus.modify}),
 
              ):
-          context.read<CustomerSelectionCubit>().canLoadMore?
+          context.read<CustomerSelectionCubit>().state.canLoadMore?
             Center(child: Container(margin: new EdgeInsets.symmetric(vertical: 13.0), height: 26, width: 26,
               child: CircularProgressIndicator(),)):Container()
     );

@@ -6,26 +6,33 @@ THIS IS THE MAIN PAGE OF THE OPERATOR
 -(O)al centro e in basso c'è una grglia oraria dove sono rappresentati i propri eventi del giorno selezionato in alto
  */
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/cubit/history_event_list/history_event_list_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
+import 'package:venturiautospurghi/models/dataTable/event_data_table.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/colors.dart';
+import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
+import 'package:venturiautospurghi/utils/global_methods.dart';
+import 'package:venturiautospurghi/utils/headers_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
+import 'package:venturiautospurghi/views/widgets/chart/BadgePieChart.dart';
+import 'package:venturiautospurghi/views/widgets/chart/BadgePieChartText.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_events_widget.dart';
+import 'package:venturiautospurghi/views/widgets/flat_tab_widget.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
+import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
 class HistoryEventList extends StatelessWidget{
-  final int? selectedStatus;
-  final List<MapEntry<Tab,int>> tabsHeaders = [
-    MapEntry(new Tab(text: "CONCLUSI",icon: Icon(Icons.flag),),EventStatus.Ended),
-    MapEntry(new Tab(text: "ELIMINATI",icon: Icon(Icons.delete),),EventStatus.Deleted),
-    MapEntry(new Tab(text: "RIFIUTATI",icon: Icon(Icons.assignment_late),),EventStatus.Refused)
-  ];
 
+  final int? selectedStatus;
   HistoryEventList([this.selectedStatus]);
 
   @override
@@ -35,98 +42,253 @@ class HistoryEventList extends StatelessWidget{
     return new BlocProvider(
         create: (_) => HistoryEventListCubit(repository, selectedStatus),
       child: ResponsiveWidget(
-        smallScreen: _smallScreen(this.tabsHeaders),
-        largeScreen: _largeScreen(this.tabsHeaders),
+        smallScreen: _smallScreen(),
+        largeScreen: _largeScreen(),
       ));
     }
 }
 
 class _largeScreen extends StatefulWidget {
-  final List<MapEntry<Tab,int>> tabsHeaders;
-
-  _largeScreen(this.tabsHeaders);
+  _largeScreen();
 
   @override
-  State<StatefulWidget> createState() => _largeScreenState(tabsHeaders);
+  State<StatefulWidget> createState() => _largeScreenState();
 
 }
 
 class _largeScreenState extends State<_largeScreen>  {
-  final List<MapEntry<Tab,int>> tabsHeaders;
+  final List<MapEntry<Tab,int>> tabsHeaders = Headers.tabsHeadersHistory;
+  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  List<Widget> _listHeaderContacts = [];
+  Future ft = Future(() {});
+  Tween<Offset> _offset = Tween(begin: Offset(1,0), end: Offset(0,0));
+  List<PieChartSectionData> _listPieSection = [];
+  List<PieChartSectionData> _listPieSectionCategory = [];
 
-  _largeScreenState(this.tabsHeaders);
+  _largeScreenState();
 
-  @override
-  void initState() {
-    context.read<HistoryEventListCubit>().scrollController.addListener(() {
-      if (context.read<HistoryEventListCubit>().scrollController.position.pixels == context.read<HistoryEventListCubit>().scrollController.position.maxScrollExtent) {
-        if(context.read<HistoryEventListCubit>().canLoadMore[context.read<HistoryEventListCubit>().state.selectedStatusTab]??false)
-          context.read<HistoryEventListCubit>().loadMoreData();
+  _addWidgetHeaderHistory(){
+    _listHeaderContacts = [];
+    _listKey.currentState?.removeAllItems((context, animation) => Container());
+    tabsHeaders.forEach((header) {
+      ft = ft.then((_) {
+        return Future.delayed(const Duration(milliseconds: 100), () {
+          _listHeaderContacts.add(_headerWidget(header));
+          _listKey.currentState?.insertItem(_listHeaderContacts.length -1);
+        });
+      });
+    });
+  }
+
+  void _listPieChartSectionData(){
+    _listPieSection.clear();
+    tabsHeaders.forEach((header) {
+      if (header.value != 0) {
+        _listPieSection.add(_PieChartSectionDataWidget(header));
       }
     });
   }
 
+  void _listPieChartSectionDataCategory(){
+    _listPieSectionCategory.clear();
+    int count = 0;
+    context.read<WebCubit>().historyPageCubit.categories.forEach((key, color) {
+        _listPieSectionCategory.add(_PieChartSectionDataWidgetCategory(key, color, count));
+        count++;
+    });
+  }
+
+  Widget _headerWidget(MapEntry<Tab,int> mapEntry){
+    return BlocBuilder<WebCubit, WebCubitState>(
+        buildWhen: (previous, current) =>
+        previous.historyPageState.selectedStatusTab != current.historyPageState.selectedStatusTab
+            || previous.historyPageState.countEntity != current.historyPageState.countEntity,
+        builder: (context, state) {
+          return Container(margin: EdgeInsets.symmetric(vertical: 5),child: FlatFab(mapEntry, selectedStatus: state.historyPageState.selectedStatusTab,
+            onStatusTabSelected: context.read<WebCubit>().historyPageCubit.onStatusTabSelected,
+            count: (state.historyPageState.countEntity[mapEntry.value]??0),)
+          );
+        });
+  }
+
+  PieChartSectionData _PieChartSectionDataWidgetCategory(String key, String color, int count){
+    int status = context.read<WebCubit>().state.historyPageState.selectedStatusTab;
+    bool active = context.read<WebCubit>().state.historyPageState.selectedCategory.contains(key);
+    int tot = context.read<WebCubit>().state.historyPageState.countEntity[status]??1;
+    int value = context.read<WebCubit>().state.historyPageState.countEventsArchivesCateogry[key]??0;
+    int perceptual = DoubleUtils.roundUpIfOverHalf((100 * value) / tot);
+
+    return PieChartSectionData(
+      color: EventStatus.getColorDefault(count),
+      value: perceptual.toDouble(),
+      title: perceptual.toString()+'%',
+      radius: active?60:50.0,
+      titleStyle: TextStyle(
+        fontSize: active?15:13.0,
+        fontWeight: FontWeight.bold,
+        color: const Color(0xffffffff),
+      ),
+      badgeWidget: BadgePieChartText(
+        value.toString(),
+        size: active?35:30.0,
+        borderColor: grey_light,
+        active: active,
+        tooltipText: key,
+        backgroundColor: HexColor(color),
+      ),
+      badgePositionPercentageOffset: 1.05,
+    );
+  }
+
+  PieChartSectionData _PieChartSectionDataWidget(MapEntry<Tab,int> mapEntry){
+    bool active = context.read<WebCubit>().state.historyPageState.selectedStatusTab == mapEntry.value;
+    int tot = context.read<WebCubit>().state.historyPageState.countEntity[-99]??1;
+    int value = context.read<WebCubit>().state.historyPageState.countEntity[mapEntry.value]??0;
+    int perceptual = DoubleUtils.roundUpIfOverHalf((100 * value) / tot);
+
+    return PieChartSectionData(
+      color: EventStatus.getColorArichive(mapEntry.value),
+      value: perceptual.toDouble(),
+      title: perceptual.toString()+'%',
+      radius: active?60:50.0,
+      titleStyle: TextStyle(
+        fontSize: active?15:13.0,
+        fontWeight: FontWeight.bold,
+        color: const Color(0xffffffff),
+      ),
+      badgeWidget: BadgePieChart(
+        (mapEntry.key.icon as Icon).icon,
+        size: active?35:30.0,
+        borderColor: grey_light,
+        active: active,
+        tooltipText: (mapEntry.key.text??'').toLowerCase().capitalize(),
+      ),
+      badgePositionPercentageOffset: 1.05,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    return BlocBuilder <HistoryEventListCubit, HistoryEventListState>(
-        builder: (context, state) {
-          return !(state is HistoryReady) ? Center(child: CircularProgressIndicator()) : Container(
-            padding: EdgeInsets.symmetric(vertical: 10),
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _addWidgetHeaderHistory();
+    });
+    return BlocBuilder <WebCubit, WebCubitState>(
+          buildWhen: (previous, current) => previous.historyPageState != current.historyPageState,
+          builder: (context, state) {
+          return !(state.historyPageState is ReadyHistoryPageState) ? Center(child: CircularProgressIndicator()) : Container(
             child:Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  width: 280,
+                  width: 240,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         Text("Archivi", style: title,),
                         SizedBox(height: 10,),
-                        ...tabsHeaders.map((mapEntry)=>FlatTab(text: mapEntry.key.text!, icon:(mapEntry.key.icon as Icon).icon!, status: mapEntry.value, selectedStatus: state.selectedStatusTab)).toList(),
-                        EventsFilterWidget(
-                          hintTextSearch: 'Cerca gli interventi',
-                          onSearchFieldChanged: context.read<HistoryEventListCubit>().onFiltersChanged,
-                          onFiltersChanged: context.read<HistoryEventListCubit>().onFiltersChanged,
-                          maxHeightContainerExpanded: MediaQuery.of(context).size.height-450,
-                          textSearchFieldVisible: true,
+                        AnimatedList(
+                          shrinkWrap: true,
+                          key: _listKey,
+                          initialItemCount: _listHeaderContacts.length,
+                          itemBuilder: (context, i, animation) => SlideTransition(
+                            position: animation.drive(_offset),
+                            child: _listHeaderContacts[i],
+                          ),
                         ),
+                        SizedBox(height: 10,),
+                        Divider(
+                          color: grey_light2,
+                          thickness: 1,
+                          height: 0,
+                          indent: 10,
+                          endIndent: 10,
+                        ),
+                        SizedBox(height: 10,),
+                        BlocBuilder<WebCubit, WebCubitState>(
+                            buildWhen: (previous, current) =>
+                            previous.historyPageState.countEntity != current.historyPageState.countEntity
+                                || previous.historyPageState.selectedStatusTab != current.historyPageState.selectedStatusTab,
+                            builder: (context, state) {
+                              _listPieChartSectionData();
+                              return Expanded(
+                                  flex: 2,
+                                  child: Padding(padding: EdgeInsets.symmetric(vertical: 5) ,child:PieChart(
+                                    PieChartData(
+                                      startDegreeOffset: -90,
+                                      pieTouchData: PieTouchData(
+                                          mouseCursorResolver: (event, pieTouchResponse) => event is FlPointerHoverEvent?SystemMouseCursors.click:SystemMouseCursors.basic,
+                                          touchCallback: (event, pieTouchResponse) => event is FlTapDownEvent?context.read<WebCubit>().historyPageCubit.onTouchPieChart(event,pieTouchResponse):null
+                                      ),
+                                      borderData: FlBorderData(
+                                          show: true,
+                                          border: Border.all(color: grey, width: 1)
+                                      ),
+                                      sectionsSpace: 5,
+                                      centerSpaceRadius: 30,
+                                      sections: _listPieSection,
+                                    ),
+                                  )));
+                            }),
+                        SizedBox(height: 5,),
+                        Text("Categorie", style: title,),
+                        SizedBox(height: 10,),
+                        BlocBuilder<WebCubit, WebCubitState>(
+                            buildWhen: (previous, current) =>
+                            previous.historyPageState.countEventsArchivesCateogry != current.historyPageState.countEventsArchivesCateogry
+                                || previous.historyPageState.selectedCategory != current.historyPageState.selectedCategory,
+                            builder: (context, state) {
+                              _listPieChartSectionDataCategory();
+                              return Expanded(
+                                  flex: 2,
+                                  child: Padding(padding: EdgeInsets.symmetric(vertical: 5),
+                                      child: PieChart(
+                                    PieChartData(
+                                      startDegreeOffset: -90,
+                                      pieTouchData: PieTouchData(
+                                          mouseCursorResolver: (event, pieTouchResponse) => event is FlPointerHoverEvent?SystemMouseCursors.click:SystemMouseCursors.basic,
+                                          touchCallback: (event, pieTouchResponse) => event is FlTapDownEvent?context.read<WebCubit>().historyPageCubit.onTouchPieChartCategory(event,pieTouchResponse):null
+                                      ),
+                                      borderData: FlBorderData(
+                                          show: true,
+                                          border: Border.all(color: grey, width: 1)
+                                      ),
+                                      sectionsSpace: 5,
+                                      centerSpaceRadius: 30,
+                                      sections: _listPieSectionCategory,
+                                    ),
+                                  )));
+                            }),
                       ],
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 8,
-                  child: Container(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        SizedBox(height: 5,),
-                        Text("Tutti Gli Incarichi "+EventStatus.getCategoryText(state.selectedStatusTab), style: title, textAlign: TextAlign.left,),
+                        Text("Tutti Gli Incarichi "+EventStatus.getCategoryText(state.historyPageState.selectedStatusTab), style: title, textAlign: TextAlign.left,),
                         SizedBox(height: 10,),
-                        (context.read<HistoryEventListCubit>().state as HistoryReady).selectedEvents().length>0 ? //TODO add pagination here
-                            Container(
-                              height: MediaQuery.of(context).size.height - 110,
-                          child: GridView(
-                            controller: context.read<HistoryEventListCubit>().scrollController,
-                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                              maxCrossAxisExtent: 350.0,
-                              mainAxisSpacing: 5.0,
-                              crossAxisSpacing: 5.0,
-                              childAspectRatio: 3,
-                            ),
-                            children: (context.read<HistoryEventListCubit>().state as HistoryReady).selectedEvents().map((event)=> Container(
-                                child: CardEvent(
-                                  event: event,
-                                  height: 120,
-                                  showEventDetails: true,
-                                  onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute,  <String,dynamic>{"objectParameter" : event}),
-                                ))).toList()
-                        )): Container(
+                        (context.read<WebCubit>().state.historyPageState as ReadyHistoryPageState).selectedEvents().isNotEmpty?
+                          BlocBuilder<WebCubit, WebCubitState>(
+                              buildWhen: (previous, current) => previous.historyPageState.numPage != current.historyPageState.numPage,
+                              builder: (context, state) {
+                                return PaginationTable(new EventDataTable((context.read<WebCubit>().state.historyPageState as ReadyHistoryPageState).selectedEvents(),
+                                    (context.read<WebCubit>().state.historyPageState as ReadyHistoryPageState).countEvents(),
+                                    onSelected: (event, bool) => PlatformUtils.navigator(context, Constants.detailsEventViewRoute, <String,dynamic>{"objectParameter" :event})),
+                                  ['','Tipo','Titolo','Data','Operatori','Cliente','Indirizzo','Telefoni'],
+                                  firstRowIndex: state.historyPageState.numPage,
+                                  showCheckboxColumn: false,
+                                  handleNext: context.read<WebCubit>().historyPageCubit.nextPage,
+                                  handlePrevious: context.read<WebCubit>().historyPageCubit.previousPage,
+                                );
+                              })
+                       : Container(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -144,57 +306,23 @@ class _largeScreenState extends State<_largeScreen>  {
           );
         });
   }
-
-  @override
-  void dispose() {
-    context.read<HistoryEventListCubit>().scrollController.dispose();
-    super.dispose();
-  }
-
-  Widget FlatTab({required String text, required IconData icon, required int status, required int selectedStatus}) {
-    bool selected = status==selectedStatus;
-    return  BlocBuilder <HistoryEventListCubit, HistoryEventListState>(
-    buildWhen: (previous, current) =>
-    previous.runtimeType != current.runtimeType,
-    builder: (context, state) {
-      return Container(
-        height: 45,
-        child: TextButton(
-          style: flatButtonStyle.copyWith(
-              backgroundColor: WidgetStateProperty.all<Color>(selected?black:whitebackground),
-              shape: WidgetStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.horizontal(right: Radius.circular(15.0))),)
-          ),
-          child: Row(
-            children: <Widget>[
-              Icon(icon, color:selected?yellow:grey_dark, size: 35,),
-              SizedBox(width: 5),
-              Text("INCARICHI "+text, style: selected?button_card:subtitle),
-            ],
-          ),
-          onPressed: (){context.read<HistoryEventListCubit>().onStatusTabSelected(status);},
-        ),
-      );
-    });
-  }
 }
 
 
 class _smallScreen extends StatefulWidget {
-  final List<MapEntry<Tab,int>> tabsHeaders;
-
-  _smallScreen(this.tabsHeaders);
+  _smallScreen();
 
   @override
-  State<StatefulWidget> createState() => _smallScreenState(tabsHeaders);
+  State<StatefulWidget> createState() => _smallScreenState();
 
 }
 
 class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixin {
 
   late TabController _tabController;
-  final List<MapEntry<Tab,int>> tabsHeaders;
+  final List<MapEntry<Tab,int>> tabsHeaders = Headers.tabsHeadersHistory;
 
-  _smallScreenState(this.tabsHeaders);
+  _smallScreenState();
 
   @override
   void initState() {

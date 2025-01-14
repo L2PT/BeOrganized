@@ -1,12 +1,37 @@
 part of 'customer_selection_cubit.dart';
 
 abstract class CustomerSelectionState extends Equatable {
-  String searchNameField;
-  CustomerSelectionState([String? searchNameField,]):
-        this.searchNameField = searchNameField ?? "";
+  String searchNameField = "";
+  Map<String, FilterWrapper> filters = FilterWrapper.initFilterCustomer() ;
+  List<Customer> filteredCustomers = [];
+  late Event event;
+  late Customer customer;
+  bool canLoadMore = true;
+
+  CustomerSelectionState([ List<Customer>? filteredCustomers, Event? event, Map<String, FilterWrapper>? filters, String? searchNameField, bool? canLoadMore]) {
+    this.searchNameField = searchNameField ?? "";
+    this.event = event ?? Event.empty();
+    this.filteredCustomers = filteredCustomers ?? [];
+    this.canLoadMore = canLoadMore ?? true;
+    this.event.customer.name.isEmpty? this.customer = Customer.empty(): this.customer = this.event.customer;
+    this.filters = filters??FilterWrapper.initFilterCustomer();
+  }
 
   @override
   List<Object> get props => [searchNameField];
+
+  ReadyCustomers assign(
+      {List<Customer>? filteredCustomers,
+        Event? event,Customer? customer,
+        String? searchNameField,
+        bool? canLoadMore,
+        Map<String, FilterWrapper>? filters,}) {
+
+    var form = ReadyCustomers.update(filteredCustomers?? this.filteredCustomers, event??this.event, filters??this.filters,
+        searchNameField??this.searchNameField, canLoadMore??this.canLoadMore);
+    form.customer = customer??this.customer;
+    return form;
+  }
 
 }
 
@@ -16,23 +41,13 @@ class LoadingCustomers extends CustomerSelectionState {
 }
 
 class ReadyCustomers extends CustomerSelectionState {
-  List<Customer> filteredCustomers = [];
-  late Event event;
-  late Customer customer;
 
-  ReadyCustomers(this.filteredCustomers, this.event, {String? searchNameField}): super(searchNameField){
-    this.event.customer.name.isEmpty? this.customer = Customer.empty(): this.customer = this.event.customer;
-  }
 
-  ReadyCustomers.update(this.filteredCustomers, this.event,  String? searchNameField): super(searchNameField);
+  ReadyCustomers(): super();
 
-  ReadyCustomers assign({List<Customer>? filteredCustomers,Event? event,Customer? customer, String? searchNameField}) {
-    var form = ReadyCustomers(filteredCustomers??this.filteredCustomers, event??this.event, searchNameField: searchNameField??this.searchNameField);
-    form.customer = customer??this.customer;
-    return form;
-  }
+  ReadyCustomers.update(List<Customer>? filteredCustomers, Event? event,Map<String, FilterWrapper>? filters,  String? searchNameField, bool? canLoadMore): super(filteredCustomers, event, filters,searchNameField, canLoadMore);
 
   @override
-  List<Object> get props => [filteredCustomers.map((op) => op.id).join(), event.toString(), customer.toString()];
+  List<Object> get props => [filteredCustomers.map((op) => op.id).join(), event.toString(), customer.toString(), canLoadMore];
 }
 

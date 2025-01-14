@@ -22,7 +22,8 @@ class HeaderMenuLayerWeb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Column(children: [
+          Container(
             height: 75,
             child:
             Row(
@@ -88,7 +89,8 @@ class HeaderMenuLayerWeb extends StatelessWidget {
                   ),
                 ),
               ],
-      ));
+      ))
+    ]);
   }
 
 }

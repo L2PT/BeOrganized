@@ -9,6 +9,7 @@ import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_customer_widget.dart';
+import 'package:venturiautospurghi/views/widgets/filter/filter_events_widget.dart';
 
 import '../../../plugins/table_calendar/table_calendar.dart';
 
@@ -46,7 +47,7 @@ class SideMenuLayerWeb extends StatelessWidget {
                 child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute), icon: Icon(iconData, color: white, size: 40,),)):
             Column( children: [
               ElevatedButton(
-                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarDate} ),
+                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState!.calendarDate} ),
                   style: ButtonStyle(
                     backgroundColor:  WidgetStateProperty.all<Color>(black),
                     surfaceTintColor: WidgetStateProperty.all<Color>(black),
@@ -134,24 +135,24 @@ class SideMenuLayerWeb extends StatelessWidget {
     );
   }
 
-  Widget getFunctionWidget(BuildContext context){
+  Widget getFunctionWidget(BuildContext tex){
     switch(this.functionalWidgetType){
       case FunctionalWidgetType.calendar:
         return BlocBuilder<WebCubit, WebCubitState>(
-            buildWhen: (previous, current) => previous.calendarDate != current.calendarDate,
+            buildWhen: (previous, current) => previous.calendarPageState!.calendarDate != current.calendarPageState!.calendarDate,
             builder: (context, state) =>
                 TableCalendar(
             rowHeight: 25,
             locale: 'it_IT',
-            calendarController: context.read<WebCubit>().calendarController,
-            initialSelectedDay: context.read<WebCubit>().newDate,
+            calendarController: context.read<WebCubit>().calendarPageCubit.calendarController,
+            initialSelectedDay: context.read<WebCubit>().calendarPageCubit.newDate,
             initialCalendarFormat: CalendarFormat.month,
             formatAnimation: FormatAnimation.slide,
             startingDayOfWeek: StartingDayOfWeek.monday,
             availableGestures: AvailableGestures.none,
             availableCalendarFormats: {CalendarFormat.month: ''},
             onDaySelected: (date, events) {
-              context.read<WebCubit>().selectCalendarDate(date);
+              context.read<WebCubit>().calendarPageCubit.selectCalendarDate(date);
             },
             daysOfWeekStyle: DaysOfWeekStyle(
               weekdayStyle: TextStyle(fontWeight: FontWeight.normal, color: Colors.white, fontSize: 10),
@@ -201,7 +202,22 @@ class SideMenuLayerWeb extends StatelessWidget {
             ),)
           );break;
       case FunctionalWidgetType.filterEvent:
-        return Container();
+        return BlocBuilder<WebCubit, WebCubitState>(
+            buildWhen: (previous, current) => previous != current,
+            builder: (context, state) =>
+                EventsFilterWidget(
+                  hintTextSearch: 'Cerca gli interventi',
+                  onSearchFieldChanged: (filter) => context.read<WebCubit>().onFiltersChangedEvent(filter, GoRouterState.of(tex).fullPath??''),
+                  onFiltersChanged: (filter) => context.read<WebCubit>().onFiltersChangedEvent(filter, GoRouterState.of(tex).fullPath??''),
+                  maxHeightContainerExpanded: MediaQuery.of(context).size.height-270,
+                  textSearchFieldVisible: true,
+                  paddingTop: 10,
+                  paddingBottomBox: 0,
+                  paddingLeftBox: 0,
+                  paddingRightBox: 0,
+                  paddingTopBox: 0,
+                  spaceButton: 10,
+                ));
       case FunctionalWidgetType.FilterOperator:
         return Container();
       case FunctionalWidgetType.FilterCustomer:
@@ -210,8 +226,8 @@ class SideMenuLayerWeb extends StatelessWidget {
             builder: (context, state) =>
                  CustomersFilterWidget(
                   hintTextSearch: 'Cerca i clienti',
-                  onSearchFieldChanged: context.read<WebCubit>().onFiltersChanged,
-                  onFiltersChanged: context.read<WebCubit>().onFiltersChanged,
+                  onSearchFieldChanged: context.read<WebCubit>().contactsPageCubit.onFiltersChangedCustomer,
+                  onFiltersChanged: context.read<WebCubit>().contactsPageCubit.onFiltersChangedCustomer,
                   maxHeightContainerExpanded: MediaQuery.of(context).size.height-270,
                   textSearchFieldVisible: true,
                   paddingTop: 10,

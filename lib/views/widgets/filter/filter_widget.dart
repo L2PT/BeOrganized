@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
@@ -17,6 +19,9 @@ class FilterWidget extends StatelessWidget {
   double paddingLeftBox;
   double paddingBottomBox;
   double spaceButton;
+  double iconSize;
+  double labelSize;
+  Timer? _debounce;
 
 
   FilterWidget({
@@ -32,6 +37,8 @@ class FilterWidget extends StatelessWidget {
     this.paddingLeftBox = 14,
     this.paddingBottomBox = 14,
     this.paddingRightBox = 14,
+    this.iconSize = 16,
+    this.labelSize = 14,
   });
 
   @override
@@ -83,6 +90,13 @@ class FilterWidget extends StatelessWidget {
 
   }
 
+  void _onSearchChanged(BuildContext context, String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(seconds: 1), () {
+      onSearchFieldTextChanged(context, query);
+    });
+  }
+
   Widget filterBox(BuildContext context){
     return Column();
   }
@@ -96,7 +110,7 @@ class FilterWidget extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: titleController(context),
-                onChanged: (s)=>onSearchFieldTextChanged(context,s),
+                onChanged: (s)=>_onSearchChanged(context,s),
                 style: new TextStyle(color: white),
                 decoration: InputDecoration(
                   border: InputBorder.none,

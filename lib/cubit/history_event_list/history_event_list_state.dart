@@ -5,13 +5,14 @@ abstract class HistoryEventListState extends Equatable {
   final Map<int, List<Event>> eventsMap;
   final int selectedStatusTab;
 
+
   HistoryEventListState(int? selectedStatus, [Map<int, List<Event>>? eventsMap, Map<String, FilterWrapper>? filters]):
       this.selectedStatusTab = selectedStatus ?? EventStatus.Ended,
       this.eventsMap = eventsMap ?? {},
       this.filters = filters ?? {};
 
   @override
-  List<Object> get props => [selectedStatusTab, eventsMap[selectedStatusTab]!=null?eventsMap[selectedStatusTab]!.map((e) => e).join():""];
+  List<Object> get props => [selectedStatusTab, eventsMap[selectedStatusTab]!=null?eventsMap[selectedStatusTab]!.map((e) => e).join():"",];
 
   HistoryReady assign({
     Map<String, FilterWrapper>? filters,
@@ -32,6 +33,7 @@ class HistoryReady extends HistoryEventListState{
 
   List<Event> events(int status) => (eventsMap[status] ?? []).toList() ;
 
-  HistoryReady(int selectedStatus, Map<int, List<Event>> eventsMap, Map<String, FilterWrapper> filters) : super(selectedStatus,eventsMap, filters);
+  HistoryReady(int selectedStatus, Map<int, List<Event>> eventsMap, Map<String, FilterWrapper> filters) :
+        super(selectedStatus,eventsMap,filters);
 
 }

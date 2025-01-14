@@ -87,7 +87,7 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
         if(state.event.typology == 'Contratto') state.event.title = state.event.typology + " - " + state.event.title;
 
         bool sendNotification = true;
-        if (state.event.operator == null){
+        if (state.event.operator == null || state.event.operator!.id.isEmpty){
           state.event.status = EventStatus.Bozza;
           sendNotification = false;
         } else if (state.isScheduled) {
@@ -299,13 +299,14 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
   }
 
   void onSelectedType(String key){
+    Event temp = Event.fromMap(state.event.id, state.event.color, state.event.toMap());
     if(key == "contratto-cartello")
-      state.event.withCartel = !state.event.withCartel;
+      temp.withCartel = !state.event.withCartel;
     else {
-      state.event.withCartel = false;
-      state.event.typology = key;
+      temp.withCartel = false;
+      temp.typology = key;
     }
-    emit(state.assign(typeSelected: key, withCartel: state.event.withCartel));
+    emit(state.assign(event: temp));
   }
 
   void onSelectedCategory(String key){

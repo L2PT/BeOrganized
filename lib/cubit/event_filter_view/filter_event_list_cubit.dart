@@ -24,7 +24,7 @@ class FilterEventListCubit extends Cubit<FilterEventListState> {
 
   void loadMoreData() async {
     listEvent = List.from(state.listEventFiltered);
-    listEvent.addAll(await _databaseRepository.getEventsActiveFiltered(state.filters, limit: loadingElements, startFrom: state.listEventFiltered.last.start));
+    listEvent.addAll(await _databaseRepository.getEventsActiveFiltered(state.filters, limit: loadingElements, startFrom: state.listEventFiltered.last.id));
     canLoadMore = listEvent.length == state.listEventFiltered.length+loadingElements;
     emit(state.assign(eventsList: listEvent));
   }

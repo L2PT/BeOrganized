@@ -1,9 +1,11 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/details_event/details_event_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
@@ -14,6 +16,7 @@ import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_storage_service.dart';
 import 'package:venturiautospurghi/utils/colors.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
+import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_delete.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_nota.dart';
@@ -67,6 +70,57 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
     PlatformUtils.inizializateFile();
     _controller = new TabController(vsync: this, length: tabsHeaders.length);
     super.initState();
+  }
+
+  Widget buildPhoneNumberText(String text, bool substring) {
+    text = substring?text.substring(0,min<int>(text.length,80)):text;
+    final phoneRegex = RegExp(Constants.pattternPhone); // Riconosce numeri di telefono con 9-15 cifre
+    final matches = phoneRegex.allMatches(text);
+
+    if (matches.isEmpty) {
+      return Text(text, style: subtitle_rev,overflow: substring?TextOverflow.ellipsis:null,maxLines: substring?5:null,);
+    }
+
+    List<InlineSpan> spans = [];
+    int lastMatchEnd = 0;
+
+    for (var match in matches) {
+      final nonPhoneText = text.substring(lastMatchEnd, match.start);
+      if (nonPhoneText.isNotEmpty) {
+        spans.add(TextSpan(text: nonPhoneText, style: subtitle_rev));
+      }
+
+      final phoneText = text.substring(match.start, match.end);
+      spans.add(
+        TextSpan(
+          text: phoneText,
+          style: subtitle_rev.copyWith(fontSize: 17),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () async {
+              Uri phoneUri = Uri.parse('tel:$phoneText');
+              if (await canLaunchUrl(phoneUri)) {
+                await launchUrl(phoneUri);
+              } else {
+                throw 'Could not launch $phoneUri';
+              }
+            },
+        ),
+      );
+      lastMatchEnd = match.end;
+    }
+
+    final remainingText = text.substring(lastMatchEnd);
+    if (remainingText.isNotEmpty) {
+      spans.add(TextSpan(text: remainingText, style: subtitle_rev));
+    }
+
+    return RichText(
+      overflow: TextOverflow.ellipsis,maxLines: 5,
+      text: TextSpan(
+        children: spans,
+        style: subtitle_rev,
+      ),
+    );
   }
 
   @override
@@ -243,11 +297,8 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(string.isNullOrEmpty(event.description)?'Nessuna nota indicata':event.description.substring(0,min<int>(event.description.length,80)),
-                              style: subtitle_rev,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 5,
-                            ),
+                            string.isNullOrEmpty(event.description)?Text('Nessuna nota indicata', style: subtitle_rev,):
+                              buildPhoneNumberText(event.description, true),
                             SizedBox(height: 15),
                             event.description.isNotEmpty?
                             GestureDetector(
@@ -266,7 +317,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                                           style: subtitle_rev.copyWith(color: white),
                                         ),
                                       ))),
-                              onTap: () => _controller.animateTo(2),
+                              onTap: () => _controller.animateTo(3),
                             ):Container()
                           ],
                         ),
@@ -403,7 +454,8 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                         flex: 1,
                         child: new SingleChildScrollView(
                           scrollDirection: Axis.vertical,
-                          child: new Text(event.description.isEmpty?'Nessuna nota indicata':event.description, style: subtitle_rev),
+                          child: event.description.isEmpty?new Text('Nessuna nota indicata', style: subtitle_rev)
+                              :buildPhoneNumberText(event.description, true),
                         ))
                   ],
                 ),

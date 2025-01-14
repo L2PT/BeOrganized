@@ -49,26 +49,35 @@ class RouterWebApp{
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.historyEventListRoute,
                   name: 'historyEvent',
-                  builder: (context, state) => HistoryEventList(),
+                  builder: (context, state) {
+                    context.read<WebCubit>().initCubit(state.uri.path);
+                    return HistoryEventList();
+                  },
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.bozzeEventListRoute,
                   name: 'bozzeEvent',
-                  builder: (context, state) => BozzeEventList(),
+                  builder: (context, state) {
+                    context.read<WebCubit>().initCubit(state.uri.path);
+                    return BozzeEventList();
+                  }
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.filterEventListRoute,
                   name: 'filterEvent',
-                  builder: (context, state) => FilterEventList(),
+                  builder: (context, state) {
+                    context.read<WebCubit>().initCubit(state.uri.path);
+                    return FilterEventList();
+                  },
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.customerContactsListRoute,
                   name: 'customerContacts',
                   builder: (context, state) {
-                    context.read<WebCubit>().resetFilterCustomer();
+                    context.read<WebCubit>().initCubit(state.uri.path);
                     return CustomerContacts();
                   },
                 ),
