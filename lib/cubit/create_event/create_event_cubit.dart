@@ -1,4 +1,3 @@
-import 'package:bloc/bloc.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -246,11 +245,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
     if(state.event.end.hour < Constants.MIN_WORKTIME || (state.event.end.hour > Constants.MAX_WORKTIME && !state.event.isAllDayLong()) )
         return PlatformUtils.notifyErrorMessage("Inserisci un'orario finale valido");
     //shh this is wrong, it breaks the mvvm
-    PlatformUtils.navigator(context, Constants.operatorListRoute, <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep ,'requirePrimaryOperator' : true, 'context' : context});
+    PlatformUtils.navigator(context, Constants.operatorListRoute, <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep ,'requirePrimaryOperator' : true, 'context' : context, 'callback': PlatformUtils.isMobile?forceRefresh:null});
   }
 
   void addCustomerDialog(BuildContext context) async {
-    PlatformUtils.navigator(context, Constants.customerListRoute, <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'context' : context});
+    PlatformUtils.navigator(context, Constants.customerListRoute, <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CreateEventCubit>().forceRefresh:null});
   }
 
   void removeCustomer(){

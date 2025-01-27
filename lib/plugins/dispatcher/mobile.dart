@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:venturiautospurghi/bloc/mobile_bloc/mobile_bloc.dart';
@@ -25,6 +25,7 @@ abstract class PlatformUtils {
   static const bool isMobile = true;
   static bool isIOS = Platform.isIOS;
   static FileUtils fileUtils = new FileUtils.empty();
+  static MobileBloc? mobileBloc = null;
   
   static Future<bool> download(url, filename) async {
     final status = await Permission.storage.request();
@@ -57,12 +58,14 @@ abstract class PlatformUtils {
   static File file(path) => File(path);
 
   static dynamic navigator(BuildContext context, route, [arg]) async {
-    context.read<MobileBloc>().add(NavigateEvent(route, arg));
+    if(mobileBloc == null) mobileBloc = context.read<MobileBloc>();
+    mobileBloc!.add(NavigateEvent(route, arg));
   }
 
   static Future<bool> backNavigator(BuildContext context,  [ res ]) {
     if (Navigator.canPop(context)) {
       Navigator.pop(context, res);
+      FocusScope.of(context).unfocus();
     } else context.read<MobileBloc>().add(NavigateBackEvent());
     return Future<bool>(()=>false);
   }

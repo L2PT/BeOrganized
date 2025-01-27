@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:launch_review/launch_review.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 
 class VersionApp extends StatelessWidget {
@@ -34,7 +33,7 @@ class VersionApp extends StatelessWidget {
                                   ), ElevatedButton(
                                     style: ElevatedButton.styleFrom(side: BorderSide(width: 1.0, color: white,)),
                                     child: new Text('VISITA LO STORE', style: button_card),
-                                    onPressed: () => LaunchReview.launch(),
+                                    onPressed: null,
                                   ),
                                 ],
                               ),

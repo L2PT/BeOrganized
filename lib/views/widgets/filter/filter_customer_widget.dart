@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/filter_customers/customer_filter_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
-import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
-import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_widget.dart';
 
@@ -226,12 +224,15 @@ class CustomersFilterWidget extends FilterWidget {
 
   @override
   void clearFilters(BuildContext context) {
-    context.read<CustomerFilterCubit>().clearFilters(context.read<WebCubit>().state.filters);
+    context.read<CustomerFilterCubit>().clearFilters(
+        PlatformUtils.isMobile?context.read<CustomerFilterCubit>().state.filters:
+    context.read<WebCubit>().state.filters);
   }
 
   @override
   void applyFilters(BuildContext context){
-    context.read<CustomerFilterCubit>().notifyFiltersChanged(context.read<WebCubit>().state.filters, true);
+    context.read<CustomerFilterCubit>().notifyFiltersChanged(PlatformUtils.isMobile?context.read<CustomerFilterCubit>().state.filters:
+    context.read<WebCubit>().state.filters, true);
   }
 
   @override
@@ -240,11 +241,9 @@ class CustomersFilterWidget extends FilterWidget {
 
   @override
   Widget build(BuildContext context) {
-    CloudFirestoreService repository = context.read<CloudFirestoreService>();
-    Account account = context.read<AuthenticationBloc>().account!;
-
     return new BlocProvider(
-      create: (_) => CustomerFilterCubit(callbackSearchFieldChanged, callbackFiltersChanged, context.read<WebCubit>().state.filters),
+      create: (_) => CustomerFilterCubit(callbackSearchFieldChanged, callbackFiltersChanged, PlatformUtils.isMobile? {}
+              :context.read<WebCubit>().state.filters),
       child: BlocBuilder<CustomerFilterCubit, CustomersFilterState>(
           buildWhen: (previous, current) => previous != current,
           builder: (context, state) {

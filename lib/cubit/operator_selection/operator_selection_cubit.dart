@@ -47,7 +47,7 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
       if (isTriState) {
         loaded = await _databaseRepository.getOperatorsFree(_event.id, _event.start, _event.end,
             limit: loadingElements,
-            startFrom: (state as ReadyOperators).filteredOperators.last.surname);
+            startFrom: (state as ReadyOperators).filteredOperators.last.id);
       }else {
         loaded = await _databaseRepository.getOperators(limit: loadingElements, startFrom: (state as ReadyOperators).filteredOperators.last.surname);
       }

@@ -30,7 +30,7 @@ class OperatorListCubit extends Cubit<OperatorListState> {
 
   void loadMoreData() async {
     int prevSize = operators.length;
-    operators.addAll(await _databaseRepository.getOperatorsFree("", state.searchTimeField, state.searchTimeField.add(new Duration(minutes: Constants.WORKTIME_SPAN)), limit: loadingElements, startFrom: operators.last.surname));
+    operators.addAll(await _databaseRepository.getOperatorsFree("", state.searchTimeField, state.searchTimeField.add(new Duration(minutes: Constants.WORKTIME_SPAN)), limit: loadingElements, startFrom: operators.last.id));
     canLoadMore = operators.length >= prevSize + loadingElements;
     emit((state as ReadyOperators).assign(operators: operators));
   }

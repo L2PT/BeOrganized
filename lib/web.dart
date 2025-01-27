@@ -9,8 +9,6 @@ import 'package:venturiautospurghi/utils/theme.dart';
 
 import 'bloc/authentication_bloc/authentication_bloc.dart';
 
-@JS()
-external void init(bool debug, String idUtente);
 
 @JS()
 external dynamic showAlertJs(dynamic value);

@@ -35,6 +35,7 @@ ThemeData _buildTheme() {
       selectionHandleColor: yellow,
       selectionColor: yellow.withOpacity(0.7),
     ),
+    dialogBackgroundColor: whitebackground,
     disabledColor: grey,
     buttonTheme: ButtonThemeData(
       buttonColor: black,
@@ -64,7 +65,6 @@ ThemeData _buildTheme() {
     elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
     outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle),
     colorScheme: ColorScheme.dark().copyWith(secondary: black, primary: yellow, surface: black, error: red),
-    buttonBarTheme: ButtonBarThemeData(buttonTextTheme: ButtonTextTheme.accent,),
     hintColor: grey_light2,
     inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(

@@ -97,7 +97,10 @@ class CloudFirestoreService {
 
   Future<List<Account>> getOperators({limit, startFrom}) async {
     Query query = _collectionUtenti.orderBy(Constants.tabellaUtenti_Cognome);
-    query = addPagination(query, limit, startFrom);
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionUtenti, startFrom);
+    query = addPagination(query, limit, documentSnapshot);
     return query.get().then((snapshot) => snapshot.docs.map((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>)).toList());
   }
 
@@ -484,6 +487,28 @@ class CloudFirestoreService {
     if(startFrom != null)
       documentSnapshot = await getDocument(_collectionClienti, startFrom);
     return _getCustomersFiltered(_collectionClienti, filters, limit, documentSnapshot, null);
+  }
+
+  Future<List<Customer>> getCustomersByIds(List<String> idCustomers) async {
+    final snapshot = await _collectionClienti
+        .where(FieldPath.documentId, whereIn: idCustomers)
+        .get();
+
+    // Mappa i documenti in una lista di Customer
+    final customers = snapshot.docs
+        .map((document) =>
+        Customer.fromMap(document.id, document.data() as Map<String, dynamic>))
+        .toList();
+
+    // Crea una mappa per accedere ai Customer in base al loro ID
+    final customersMap = {for (var customer in customers) customer.id: customer};
+
+    // Riordina i risultati secondo l'ordine originale di idCustomers
+    return idCustomers
+        .map((id) => customersMap[id])
+        .where((customer) => customer != null) // Filtra gli ID mancanti
+        .cast<Customer>() // Cast a Customer
+        .toList();
   }
 
   void deleteCustomer(String id) {

@@ -86,7 +86,7 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     state.customer.address = Address.empty();
     state.event.customer = state.customer;
     PlatformUtils.navigator(context, Constants.createAddressViewRoute,
-        <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'typeStatus' : TypeStatus.create});
+        <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'typeStatus' : TypeStatus.create, 'context' : context, 'callback': PlatformUtils.isMobile?forceRefresh:null});
   }
 
   /* STEPPER CONTROLLER */
@@ -148,4 +148,9 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     return event;
   }
   Event getEvent() => this.state.event;
+
+  void forceRefresh() {
+    emit(state.assign(status: _formStatus.loading));
+    emit(state.assign(status: _formStatus.normal));
+  }
 }

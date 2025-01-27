@@ -31,7 +31,7 @@ class FlatFab extends StatelessWidget {
                   SizedBox(width: 10),
                   Text(tabsHeader.key.text.toString().toLowerCase().capitalize(), style: selected?button_card:subtitle),
                   Expanded(child: Container()),
-                  Container(margin: EdgeInsets.only(right: 10), child: Text(count.toString(), style: selected?button_card:subtitle),)
+                  Container(margin: EdgeInsets.only(right: 10), child: Text(count.toString().formatNumber(short: false), style: selected?button_card:subtitle),)
                 ],
               ),
               onPressed: (){ this.onStatusTabSelected!(tabsHeader.value);},

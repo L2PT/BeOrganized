@@ -132,19 +132,17 @@ class CardAddress extends StatelessWidget {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                      padding: EdgeInsets.only(right: 8),
-                      constraints: BoxConstraints(),
-                      icon: Icon(Icons.edit, color: selectItem?white:grey_dark, size: 20),
-                      onPressed: onEditAction
+                  GestureDetector(
+                    onTap: onEditAction,
+                    child: Icon(Icons.edit, color: selectItem ? Colors.white : Colors.grey, size: 20),
                   ),
-                  IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                      icon: Icon(Icons.delete, color: selectItem?white:grey_dark, size: 20),
-                      onPressed: onDeleteAction
-                  )
+                  SizedBox(width: 8,),
+                  GestureDetector(
+                    onTap: onDeleteAction,
+                    child: Icon(Icons.delete, color: selectItem ? Colors.white : Colors.grey, size: 20),
+                  ),
                 ])
             ],
           )):Container(),

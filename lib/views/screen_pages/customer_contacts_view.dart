@@ -267,7 +267,7 @@ class _largeScreenState extends State<_largeScreen>  {
                         (customer) => deleteCustomer(customer,context),
                         (customer) => PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{
                           'objectParameter' : context.read<WebCubit>().contactsPageCubit.getEventCustomer(customer),
-                          'typeStatus' : TypeStatus.modify},),
+                          'typeStatus' : TypeStatus.modify, 'context' : context,},),
                         context.read<WebCubit>().contactsPageCubit.onSelectedCustomer,
                         context.read<WebCubit>().state.contactsPageState.mapSelected
                     ),
@@ -363,7 +363,7 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
                                 customer:  state.customerList[index],
                                 onEditAction: () => PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{
                                   'objectParameter' : context.read<CustomerContactsCubit>().getEventCustomer(state.customerList[index]),
-                                  'typeStatus' : TypeStatus.modify}),
+                                  'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CustomerContactsCubit>().forceRefresh:null}),
                                 onDeleteAction: () => _onDeletePressed(state.customerList[index], context),)
                         ) : context.read<CustomerContactsCubit>().canLoadMore?
                         Center(

@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 
 class BadgePieChartText extends StatelessWidget {
@@ -41,7 +42,7 @@ class BadgePieChartText extends StatelessWidget {
           ),
           padding: EdgeInsets.all(size * .15),
           child: Center(
-              child: Tooltip(message: tooltipText, child: Text(text, style:
+              child: Tooltip(message: tooltipText, child: Text(text.formatNumber(), style:
               TextStyle(fontSize: active?15:13.0, fontWeight: FontWeight.bold, color: const Color(0xffffffff),),))
           ),
     );

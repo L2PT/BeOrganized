@@ -105,6 +105,7 @@ class _operatorSelectableListState extends State<_operatorSelectableList> {
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             BlocBuilder<OperatorSelectionCubit, OperatorSelectionState>(builder: (context, state) {
               return OperatorsFilterWidget(

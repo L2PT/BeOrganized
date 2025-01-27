@@ -45,7 +45,7 @@ class CustomerFilterCubit extends Cubit<CustomersFilterState> {
   }
 
   void onSearchFieldTextChanged(String text){
-    state.filters["address"]!.fieldValue = text;
+    state.filters["searchQuery"]!.fieldValue = text;
     callbackSearchFieldChanged(state.filters);
   }
 

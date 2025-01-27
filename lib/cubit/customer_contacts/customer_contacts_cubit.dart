@@ -53,4 +53,9 @@ class CustomerContactsCubit extends Cubit<CustomerContactsState> {
     event.customer = customer;
     return event;
   }
+
+  void forceRefresh() {
+    emit(state.assign(status: _formStatus.loading));
+    emit(state.assign(status: _formStatus.normal));
+  }
 }

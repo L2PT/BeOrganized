@@ -171,6 +171,7 @@ class Fab_details_oper extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(2),
         child: FloatingActionButton(
+          shape: const CircleBorder(),
           child: Icon(Icons.phone,size: 40, color: white),
           onPressed: () =>  showDialog(
               context: parentContext,

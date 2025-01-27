@@ -19,7 +19,6 @@ import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart'
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/views/widgets/web/header_menu_widget.dart';
 import 'package:venturiautospurghi/views/widgets/web/side_menu_widget.dart';
-import 'package:venturiautospurghi/web.dart';
 
 final Map<String, PageParameter> parameterPage = {
   Constants.homeRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.calendar,
@@ -47,12 +46,6 @@ class WebPage extends StatefulWidget {
 }
 
 class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
-
-  @override
-  void initState() {
-    super.initState();
-    init(Constants.debug, context.read<AuthenticationBloc>().account!.id);
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -13,19 +13,16 @@ import 'package:venturiautospurghi/utils/theme.dart';
 class CreateAddress extends StatelessWidget {
   final Event? _event;
   TypeStatus type ;
+  late CloudFirestoreService? repository;
 
-  CreateAddress( [this._event, this.type = TypeStatus.create,]);
+  CreateAddress( [this._event, this.type = TypeStatus.create, this.repository ]);
 
   @override
   Widget build(BuildContext context) {
-    var repository = context.read<CloudFirestoreService>();
+    if(this.repository == null) this.repository = context.read<CloudFirestoreService>();
     return new BlocProvider(
-        create: (_) => CreateAddressCubit(repository,this._event, this.type),
-        child: PopScope(
-        onPopInvoked: (bool)=>PlatformUtils.backNavigator(context),
-        child: _formAddressWidget()
-        )
-    );
+        create: (_) => CreateAddressCubit(repository!,this._event, this.type),
+        child:  _formAddressWidget());
   }
 }
 

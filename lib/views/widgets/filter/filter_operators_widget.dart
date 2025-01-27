@@ -99,11 +99,13 @@ class OperatorsFilterWidget extends FilterWidget {
           builder: (context, state) {
             super.showFiltersBox = context.read<OperatorsFilterCubit>().showFiltersBox;
             super.filtersBoxVisibile = state.filtersBoxVisibile;
-            return largeScreen?
-            Padding(
-              padding: EdgeInsets.only(top: paddingTop),
-              child: super.build(context),
-            ): super.build(context);
+            if(!state.isLoading()){
+              return !textSearchFieldVisible?
+              Padding(
+                padding: EdgeInsets.only(top: paddingTop),
+                child: super.build(context),
+              ): super.build(context);
+            } else return CircularProgressIndicator();
           }
       ),);
   }

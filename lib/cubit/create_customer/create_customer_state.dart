@@ -15,7 +15,7 @@ class CreateCustomerState extends Equatable {
   _formStatus status = _formStatus.normal;
 
   @override
-  List<Object> get props => [customer.toString(), status, currentStep, typeSelected];
+  List<Object> get props => [customer.toString(), event.toString(), status, currentStep, typeSelected];
 
   bool isLoading() => this.status == _formStatus.loading;
 

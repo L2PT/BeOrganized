@@ -1,7 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 
@@ -14,11 +16,10 @@ class FilterEventListCubit extends Cubit<FilterEventListState> {
   final int startingElements = 25;
   final int loadingElements = 10;
   bool canLoadMore = true;
+  final Account _account;
+  final bool isBozze;
 
-  FilterEventListCubit(this._databaseRepository, Map<String, dynamic> filters) : super(LoadingFilterEventList()){
-    filters.keys.forEach((key) {
-      state.filters[key]!.fieldValue = filters[key];
-    });
+  FilterEventListCubit(this._databaseRepository, this._account, {this.isBozze = false}) : super(LoadingFilterEventList()){
     onFiltersChanged(state.filters);
   }
 
@@ -31,6 +32,10 @@ class FilterEventListCubit extends Cubit<FilterEventListState> {
 
   void onFiltersChanged(Map<String, FilterWrapper> filters) async {
     // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query
+    if(isBozze)
+      filters["status"]!.fieldValue = EventStatus.Bozza;
+    if(!_account.supervisor)
+      filters["suboperators"]!.fieldValue = [_account];
     listEvent = await _databaseRepository.getEventsActiveFiltered(filters, limit: startingElements);
     canLoadMore = listEvent.length == startingElements;
     scrollToTheTop();

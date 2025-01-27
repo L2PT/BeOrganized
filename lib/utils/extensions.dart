@@ -43,6 +43,20 @@ extension string on String {
     return "${this[0].toUpperCase()}${this.substring(1)}";
   }
 
+  String formatNumber({ bool short = true }) {
+    int? number = int.tryParse(this);
+    if (number == null) {
+      throw ArgumentError('Il valore fornito non è un numero valido.');
+    }
+    if (number < 1000) {
+      return number.toString();
+    }
+
+    int reducedNumber = number ~/ 1000;
+    String abbreviation = short?'k':'Mila';
+    return '${reducedNumber}${abbreviation}';
+  }
+
   static bool isNumeric(String str) {
     return double.tryParse(str) != null;
   }

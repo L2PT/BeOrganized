@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +8,7 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
+import 'package:venturiautospurghi/utils/create_entity_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/views/screen_pages/bozze_event_list_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/daily_calendar_view.dart';
@@ -17,7 +17,10 @@ import 'package:venturiautospurghi/views/screen_pages/monthly_calendar_view.dart
 import 'package:venturiautospurghi/views/screen_pages/operator_list_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/user_profile_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/waiting_event_list_view.dart';
+import 'package:venturiautospurghi/views/screens/create_address_view.dart';
+import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
 import 'package:venturiautospurghi/views/screens/create_event_view.dart';
+import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
@@ -40,6 +43,8 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
   StreamSubscription<List<Event>>? _notificationSubscription;
   late MobileState savedState;
   Map<String, FilterWrapper> filters = {};
+  late BuildContext? context;
+  late CloudFirestoreService? repository = null;
   
   MobileBloc({
     required CloudFirestoreService databaseRepository,
@@ -62,21 +67,38 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
   Future<void> _onNavigateEvent(NavigateEvent event, Emitter<MobileState> emit) async {
     if(state is InBackdropState) savedState = state;
 
+    dynamic objectParameter;
+    int currentStep = 0;
+    TypeStatus status = TypeStatus.create;
+    if(event.arg is Map){
+      objectParameter = event.arg["objectParameter"];
+      currentStep = event.arg["nextStep"]??event.arg["currentStep"]??0;
+      status = event.arg["typeStatus"]??TypeStatus.create;
+      context = event.arg["context"]??this.context;
+      if(context != null && repository == null){
+        repository = context?.read<CloudFirestoreService>();
+      }
+    }else{
+      objectParameter = null;
+    }
     switch(event.route) {
       case Constants.detailsEventViewRoute: emit(OutBackdropState(event.route, DetailsEvent(event.arg))); break;
-      case Constants.createEventViewRoute: emit( OutBackdropState(event.route, CreateEvent(event.arg))); break;
+      case Constants.createEventViewRoute: emit( OutBackdropState(event.route, CreateEvent(event: objectParameter, type: status, currentStep: currentStep, ))); break;
       case Constants.registerRoute: emit( OutBackdropState(event.route, Register())); break;
       case Constants.waitingNotificationRoute: emit( NotificationWaitingState(event.route, PersistentNotification(event.arg))); break;
       case Constants.homeRoute: emit( InBackdropState(event.route, _account.supervisor? OperatorList() : DailyCalendar(event.arg != null? event.arg['day']:null,event.arg != null?event.arg['operator']:null) )); break;
       case Constants.monthlyCalendarRoute: emit( InBackdropState(event.route, MonthlyCalendar(event.arg != null?event.arg['month']:null,event.arg != null?event.arg['operator']:null) )); break;
       case Constants.dailyCalendarRoute: emit( InBackdropState(event.route, DailyCalendar(event.arg['day'],event.arg['operator']) )); break;
       case Constants.profileRoute: emit( InBackdropState(event.route, Profile())); break;
-      case Constants.operatorListRoute: Navigator.push(event.arg["context"], MaterialPageRoute(maintainState: true, builder: (context) => OperatorSelection(event.arg["event"],event.arg["requirePrimaryOperator"],event.arg["context"])))
+      case Constants.operatorListRoute: Navigator.push(event.arg["context"], MaterialPageRoute(maintainState: true, builder: (context) => OperatorSelection(objectParameter, event.arg["requirePrimaryOperator"],event.arg["context"])))
           .then((value) { (event.arg["callback"]).call(); });break;
+      case Constants.customerListRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings: RouteSettings(name: Constants.customerListRoute), builder: (context) => CustomerSelection(objectParameter, repository))).then((value) { (event.arg["callback"]).call(); }); break;
+      case Constants.createCustomerViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true,settings:   RouteSettings(name: Constants.createCustomerViewRoute),builder: (context) => CreateCustomer(event: objectParameter, type: status,currentStep: currentStep, repository: repository,))).then((value) { (event.arg["callback"]).call(); }); break;
+      case Constants.createAddressViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings:  RouteSettings(name: Constants.createAddressViewRoute),builder: (context) => CreateAddress(objectParameter, status, repository))).then((value) { (event.arg["callback"]).call(); }).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createEventViewRoute: emit( InBackdropState(event.route, CreateEvent())); break;
       case Constants.waitingEventListRoute: emit( InBackdropState(event.route, WaitingEventList())); break;
       case Constants.historyEventListRoute: emit( InBackdropState(event.route, HistoryEventList())); break;
-      case Constants.filterEventListRoute: emit( InBackdropState(event.route, FilterEventList(filters: !_account.supervisor?{"suboperators" : [_account]}:{}))); break;
+      case Constants.filterEventListRoute: emit( InBackdropState(event.route, FilterEventList())); break;
       case Constants.bozzeEventListRoute: emit( InBackdropState(event.route, BozzeEventList())); break;
       default: emit( InBackdropState(event.route, Profile())); break;
     }

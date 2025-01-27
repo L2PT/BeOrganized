@@ -15,20 +15,19 @@ import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import '../../models/customer.dart';
 
 class CustomerSelection extends StatelessWidget {
-  BuildContext? callerContext;
   Event? event;
+  late CloudFirestoreService? repository;
 
-  CustomerSelection([this.event, this.callerContext]);
+  CustomerSelection([this.event, this.repository]);
 
   @override
   Widget build(BuildContext context) {
-    if(callerContext != null) context = callerContext!;
-    var repository = context.read<CloudFirestoreService>();
+    if(this.repository == null) this.repository = context.read<CloudFirestoreService>();
     return new Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: white,
       body: new BlocProvider(
-          create: (_) => CustomerSelectionCubit(repository, event),
+          create: (_) => CustomerSelectionCubit(repository!, event),
           child: _customerSelectableList()
       ),
     );
@@ -60,42 +59,59 @@ class _customerSelectableListState extends State<_customerSelectableList> {
   @override
   Widget build(BuildContext context) {
 
+    void _onCerateCustomer(){
+        PlatformUtils.navigator(context, Constants.createCustomerViewRoute,
+            <String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomerEmpty(),
+              'typeStatus' : TypeStatus.create, 'context' : context, 'callback':  PlatformUtils.isMobile?context.read<CustomerSelectionCubit>().forceRefresh:null});
+    }
+
     void _onDeletePressed(Customer customer) async {
       if (await context.read<CustomerSelectionCubit>().deleteCustomer(customer))
         await SuccessAlert(context, text: "Cliente eliminato!").show();
     }
 
-    Widget buildCustomersList() => ListView.separated(
-        controller: context.read<CustomerSelectionCubit>().scrollController,
-        separatorBuilder: (context, index) => SizedBox(height: 10,),
-        physics: BouncingScrollPhysics(),
-        padding: new EdgeInsets.symmetric(vertical: 8.0),
-        itemCount: (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers.length+1,
-        itemBuilder: (context, index) => index != (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers.length?
-             CardCustomer(
-               controller: context.read<CustomerSelectionCubit>().getController((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index].id),
-               expadedMode: context.read<CustomerSelectionCubit>().getExpadedMode((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
-               customer:  (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index],
-               selectedMode: context.read<CustomerSelectionCubit>().getExpadedMode((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
-               onEditAction: () => PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{
+    Widget buildCustomersList() => context.read<CustomerSelectionCubit>().state.filteredCustomers.isNotEmpty?
+        ListView.separated(
+            controller: context.read<CustomerSelectionCubit>().scrollController,
+            separatorBuilder: (context, index) => SizedBox(height: 10,),
+            physics: BouncingScrollPhysics(),
+            padding: new EdgeInsets.symmetric(vertical: 8.0),
+            itemCount: (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers.length+1,
+            itemBuilder: (context, index) => index != (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers.length?
+            CardCustomer(
+              controller: context.read<CustomerSelectionCubit>().getController((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index].id),
+              expadedMode: context.read<CustomerSelectionCubit>().getExpadedMode((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
+              customer:  (context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index],
+              selectedMode: context.read<CustomerSelectionCubit>().getExpadedMode((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
+              onEditAction: () => PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{
                 'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomer((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
-                'typeStatus' : TypeStatus.modify}),
-               onExpansionChanged: context.read<CustomerSelectionCubit>().onExpansionChanged,
-               onDeleteAction: () => _onDeletePressed((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
-               onTapActionAddress: context.read<CustomerSelectionCubit>().selectAddressOnCustomer,
-               onDeleteActionAddress: context.read<CustomerSelectionCubit>().removeAddressOnCustomer,
-               onEditActionAddress: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomer((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
-                 'typeStatus' : TypeStatus.modify}),
+                'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CustomerSelectionCubit>().forceRefresh:null}),
+              onExpansionChanged: context.read<CustomerSelectionCubit>().onExpansionChanged,
+              onDeleteAction: () => _onDeletePressed((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
+              onTapActionAddress: context.read<CustomerSelectionCubit>().selectAddressOnCustomer,
+              onDeleteActionAddress: context.read<CustomerSelectionCubit>().removeAddressOnCustomer,
+              onEditActionAddress: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomer((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
+                'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CustomerSelectionCubit>().forceRefresh:null}),
 
-             ):
-          context.read<CustomerSelectionCubit>().state.canLoadMore?
+            ):
+            context.read<CustomerSelectionCubit>().state.canLoadMore?
             Center(child: Container(margin: new EdgeInsets.symmetric(vertical: 13.0), height: 26, width: 26,
               child: CircularProgressIndicator(),)):Container()
-    );
+        ):Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text("Nessun cliente da mostrare", style: title),
+              ],
+            ),
+          ),
+        );
 
     void onExit(bool result,{ dynamic event }) {
       PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : event, 'res': result});
     }
+
 
     return Scaffold(
         appBar: AppBar(
@@ -135,9 +151,9 @@ class _customerSelectableListState extends State<_customerSelectableList> {
               Row(
                 children: [
                   Expanded(child:
-                    Padding(padding: EdgeInsets.only(left: 20),
-                      child:   Text("Tutti i clienti", style: label.copyWith(fontWeight: FontWeight.bold),),
-                    ),
+                  Padding(padding: EdgeInsets.only(left: 20),
+                    child:   Text("Tutti i clienti", style: label.copyWith(fontWeight: FontWeight.bold),),
+                  ),
                   ),
                   Container(
                       alignment: Alignment.center,
@@ -152,9 +168,7 @@ class _customerSelectableListState extends State<_customerSelectableList> {
                         ),
                         style: raisedButtonStyle.copyWith(shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(borderRadius: new BorderRadius.circular(5.0))),),
-                        onPressed: () {
-                          PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEvent(), 'typeStatus' : TypeStatus.create});
-                        },
+                        onPressed: () => _onCerateCustomer(),
                       )),
                 ],
               ),

@@ -7,6 +7,7 @@ import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
+import 'package:venturiautospurghi/repositories/agolia_service.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 
 part 'customer_selection_state.dart';
@@ -15,8 +16,8 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   final CloudFirestoreService _databaseRepository;
   final ScrollController scrollController = new ScrollController();
   late List<Customer> customers;
-  final int startingElements = 500;
-  final int loadingElements = 5;
+  final int startingElements = 30;
+  final int loadingElements = 15;
   Map<String, ExpansionTileController> mapController = {};
 
   CustomerSelectionCubit(this._databaseRepository, Event? _event) :
@@ -32,7 +33,12 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   void loadMoreData() async {
     if(state is ReadyCustomers){
       List<Customer> loaded;
-      loaded = await _databaseRepository.getCustomers(state.filters,limit: loadingElements, startFrom: (state as ReadyCustomers).filteredCustomers.last.id);
+      if(state.searchNameField.isNotEmpty){
+        List<String> idCustomers = await AlgoliaService.searchCustomer(state.searchNameField, hitsPerPage: loadingElements, page: state.numPage);
+        loaded = await _databaseRepository.getCustomersByIds(idCustomers);
+      }else{
+        loaded = await _databaseRepository.getCustomers(state.filters,limit: loadingElements, startFrom: (state as ReadyCustomers).filteredCustomers.last.id);
+      }
       customers.addAll(loaded);
       bool canLoadMore = loaded.length >= loadingElements;
       emit((state as ReadyCustomers).assign( filteredCustomers: customers, canLoadMore: canLoadMore));
@@ -44,18 +50,26 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     CustomerSelectionState stateprev = state;
     emit(LoadingCustomers());
     scrollToTheTop();
-    _filterData(filters, stateprev.event);
+    _filterData(filters, stateprev.event, stateprev.customer);
   }
 
   void onFiltersChanged(Map<String, FilterWrapper> filters) {
     // not implemented
   }
 
-  void _filterData(Map<String, FilterWrapper> filters, Event e) async{
-    List<Customer> loaded = await _databaseRepository.getCustomers(filters, limit: startingElements,);
-    bool canLoadMore = loaded.length >= loadingElements;
-    emit(state.assign( filteredCustomers: loaded, searchNameField: filters["address"]!.fieldValue, filters: filters,
-        event: e, canLoadMore: canLoadMore));
+  void _filterData(Map<String, FilterWrapper> filters, Event e, Customer customer) async{
+    String searchquery = filters['searchQuery']!.fieldValue;
+    List<Customer> loaded = List.empty();
+    if(searchquery.isNotEmpty){
+      List<String> idCustomers = await AlgoliaService.searchCustomer(filters['searchQuery']!.fieldValue, hitsPerPage: startingElements, );
+      if(idCustomers.isNotEmpty)
+        loaded = await _databaseRepository.getCustomersByIds(idCustomers);
+    }else{
+      loaded = await _databaseRepository.getCustomers(state.filters, limit: startingElements);
+    }
+    bool canLoadMore = loaded.length >= startingElements;
+    emit(state.assign( filteredCustomers: loaded, searchNameField: filters["searchQuery"]!.fieldValue, filters: filters,
+        event: e, canLoadMore: canLoadMore, customer: customer));
   }
 
   void onExpansionChanged(bool isOpen, Customer customer){
@@ -67,6 +81,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
       emit((state as ReadyCustomers).assign(customer: customerCopy));
     }else{
       if(customer == (state as ReadyCustomers).customer){
+        state.event.customer = Customer.empty();
         emit((state as ReadyCustomers).assign(customer: Customer.empty()));
       }
     }
@@ -124,7 +139,10 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     return true;
   }
 
-  Event getEvent() => state.event;
+  Event getEvent() {
+    state.customer = state.event.customer;
+    return state.event;
+  }
 
   Event getEventCustomerEmpty() {
     (state as ReadyCustomers).event.customer = Customer.empty();
@@ -164,6 +182,11 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
     filteredCustomers.where((element) => element.id == customer.id).first.address = address;
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
+  }
+
+  void forceRefresh() {
+    emit(state.assign(status: _formStatus.loading));
+    emit(state.assign(status: _formStatus.normal));
   }
 
 }

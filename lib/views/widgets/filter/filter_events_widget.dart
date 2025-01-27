@@ -262,6 +262,7 @@ class EventsFilterWidget extends FilterWidget {
                           )
                         ],
                       ),
+                      if(isSupervisor)
                       BlocBuilder<EventsFilterCubit, EventsFilterState>(
                           buildWhen: (previous, current) => previous.filters["suboperators"].toString() != current.filters["suboperators"].toString(),
                           builder: (context, state) {

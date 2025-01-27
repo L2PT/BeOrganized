@@ -21,22 +21,21 @@ import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
 import '../../utils/extensions.dart';
 
 class CreateCustomer extends StatelessWidget {
-  final Event? _event;
+  final Event? event;
   int currentStep;
   TypeStatus type ;
   static const iconWidth = 30.0;
+  late CloudFirestoreService? repository;
 
 
-  CreateCustomer([this._event, this.currentStep = 0, this.type = TypeStatus.create]);
+  CreateCustomer({this.event, this.currentStep = 0, this.type = TypeStatus.create, this.repository});
 
   @override
   Widget build(BuildContext context) {
-    var repository = context.read<CloudFirestoreService>();
+    if(this.repository == null) this.repository = context.read<CloudFirestoreService>();
     return new BlocProvider(
-        create: (_) => CreateCustomerCubit(repository,_event, currentStep, type ),
-        child: PopScope(
-            onPopInvokedWithResult: (bool, value)=>PlatformUtils.backNavigator(context),
-            child: _formCustomerWidget(this.type))
+        create: (_) => CreateCustomerCubit(repository!,event, currentStep, type ),
+        child:  _formCustomerWidget(this.type)
     );
   }
 }
@@ -436,6 +435,7 @@ class _formBasiclyInfo extends StatelessWidget{
 
 class _formAddressInfo extends StatelessWidget{
   double iconWidth = CreateCustomer.iconWidth;
+
   @override
   Widget build(BuildContext context) {
 
@@ -467,14 +467,18 @@ class _formAddressInfo extends StatelessWidget{
 
     Widget addressListElement(Address address){
       return Container(
-        margin: EdgeInsets.only(top: 10, left: 20, right: 20),
+        margin: EdgeInsets.only(top: 10, left: PlatformUtils.isMobile?5:20, right: PlatformUtils.isMobile?5:20),
         child: CardAddress(address: address,
           onclickMode: context.read<CreateCustomerCubit>().onClickModeAddress(),
           selectItem: context.read<CreateCustomerCubit>().onSelectItemAddress(address),
           actionButton: true,
           onTapAction: () => context.read<CreateCustomerCubit>().selectAddressOnCustomer(address),
           onDeleteAction: () => context.read<CreateCustomerCubit>().removeAddressOnCustomer(address),
-          onEditAction: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{'objectParameter' : context.read<CreateCustomerCubit>().getEventCustomer(), 'currentStep': context.read<CreateCustomerCubit>().state.currentStep, 'typeStatus' : TypeStatus.modify}),
+          onEditAction: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{
+            'objectParameter' : context.read<CreateCustomerCubit>().getEventCustomer(),
+            'currentStep': context.read<CreateCustomerCubit>().state.currentStep,
+            'typeStatus' : TypeStatus.modify, 'context' : context,
+            'callback' :   context.read<CreateCustomerCubit>().forceRefresh }),
         )
       );
     }
@@ -553,7 +557,7 @@ class _formAddressInfo extends StatelessWidget{
                           onPressed: () => context.read<CreateCustomerCubit>().addAddressOnCustomer(context))
                     ]),
                     BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
-                        buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString(),
+                        buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
                         builder: (context, state) {
                           return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.addresses).asMap()
                               .map((i, address) =>

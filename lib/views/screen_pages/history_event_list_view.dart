@@ -359,8 +359,6 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
                   borderRadius: BorderRadius.all(
                       Radius.circular(30.0))),
               child: new TabBar(
-                //onTap: (index) => context.read<HistoryCubit>().onStatusSelect(tabsHeaders[_tabController.index].value),
-                isScrollable: true,
                 unselectedLabelColor: black,
                 labelStyle: title.copyWith(fontSize: 16),
                 labelColor: black,

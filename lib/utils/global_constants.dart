@@ -110,6 +110,8 @@ class Constants {
   static const String googleMapsApiKey = 'AIzaSyD3A8jbx8IRtXvnmoGSwJy2VyRCvo0yjGk';
   static const String googleMessagingApiKey = 'AIzaSyBF13XNJM1LDuRrLcWdQQxuEcZ5TakypEk';
   static const String webPushNotificationsVapidKey = 'BJstIUpFNSxgd1Ir1xQd_qt48ijnfLG2B3Md_9unMkA7nMBpZZRVX3_6A5f2HJJLCOZJoFH2CgpmtrimGRe-rWo';
+  static const String agoliaApiKey = '485e3979c1cc1eb09770c7f45e11b20b';
+  static const String agoliaApplicationId = '6JDU1L4FVI';
 
   //OVERVIEW SCREEN
   static const double WIDTH_OVERVIEW = 400;
@@ -118,4 +120,7 @@ class Constants {
   //REGEXP
   static const String pattternPhoneValid = r'(^(?:[+3]9)?[0-9]{8,12}$)';
   static const String pattternPhone = r'\b(?:\+?39)?\d{9,12}\b';
+
+  //AGOLIA INDEX
+  static const String indexSearchCustomer = debug?'Clienti_Debug_Index':'Clienti_Index';
 }

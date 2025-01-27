@@ -35,7 +35,7 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
         state.customer.addresses.removeWhere((element) => element.address == addressToModify.address);
       }
       state.customer.addresses.add(state.customer.address);
-      if(isModify()){
+      if(isModify() && state.customer.id.isNotEmpty){
         _databaseRepository.updateCustomer(state.customer.id, state.customer);
       }
       state.event.customer = state.customer;

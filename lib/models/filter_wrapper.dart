@@ -52,6 +52,7 @@ class FilterWrapper {
       "address" : new FilterWrapper("address", null, (Customer customer, value) => value == null || value == '' || customer.addresses.where((address) => address.address.toUpperCase().contains(value.toUpperCase())).isNotEmpty),
       "partitaIva" : new FilterWrapper("partitaIva", null, (Customer customer, value) => value == null || customer.partitaIva.toUpperCase().contains(value.toUpperCase()) ),
       "codFiscale" : new FilterWrapper("codFiscale", null, (Customer customer, value) => value == null || customer.codFiscale.toUpperCase().contains(value.toUpperCase()) ),
+      "searchQuery" : new FilterWrapper("searchQuery", null, (Customer customer, value) => true ),
     };
 
     return filters;

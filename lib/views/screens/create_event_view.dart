@@ -21,21 +21,21 @@ import 'package:venturiautospurghi/views/widgets/platform_datepicker.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
 
 class CreateEvent extends StatelessWidget {
-  final Event? _event;
+  final Event? event;
   int currentStep;
   DateTime? dateSelect;
   TypeStatus type;
   static const iconWidth = 30.0; //HANDLE
 
-  CreateEvent([this._event, this.currentStep = 0, this.dateSelect, this.type = TypeStatus.create ]);
+  CreateEvent({this.event, this.currentStep = 0, this.dateSelect, this.type = TypeStatus.create });
 
   @override
   Widget build(BuildContext context) {
     var repository = context.read<CloudFirestoreService>();
     var account = context.select((AuthenticationBloc bloc)=>bloc.account!);
-    print("create event: " + this._event.toString());
+    print("create event: " + this.event.toString());
     return new BlocProvider(
-        create: (_) => CreateEventCubit(repository, account, _event, currentStep, dateSelect, type: type),
+        create: (_) => CreateEventCubit(repository, account, event, currentStep, dateSelect, type: type),
         child: PopScope(
             onPopInvoked: (bool)=>PlatformUtils.backNavigator(context),
             child: new Scaffold(
@@ -263,7 +263,7 @@ class _tipologyEvent extends StatelessWidget{
             ConstrainedBox(
               constraints: new BoxConstraints(
                 minHeight: 200,
-                maxHeight: PlatformUtils.isMobile?MediaQuery.of(context).size.height - 280:250,
+                maxHeight: PlatformUtils.isMobile?MediaQuery.of(context).size.height - 520:250,
               ),
               child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -400,13 +400,13 @@ class _formClientInfo extends StatelessWidget{
   double iconWidth = CreateEvent.iconWidth;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext buildContext) {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           FadeAnimation(
             1.2,  Text(
-              'Inserisci le informazioni sul cliente del ' + context.read<CreateEventCubit>().state.event.typology.toLowerCase() +'.',
+              'Inserisci le informazioni sul cliente del ' + buildContext.read<CreateEventCubit>().state.event.typology.toLowerCase() +'.',
               style: title.copyWith(fontSize: 16)
           ),
           ), SizedBox(height: 10,),
@@ -422,7 +422,10 @@ class _formClientInfo extends StatelessWidget{
                       'objectParameter' : context.read<CreateEventCubit>().state.event,
                       'currentStep': context.read<CreateEventCubit>().state.currentStep,
                       'nextStep': 0,
-                      'typeStatus' : TypeStatus.modify}),
+                      'context' : context,
+                      'typeStatus' : TypeStatus.modify,
+                      'callback' : PlatformUtils.isMobile?context.read<CreateEventCubit>().forceRefresh:null
+                }),
                 onDeleteAction: () => context.read<CreateEventCubit>().removeCustomer(),
               )
               ))
@@ -440,7 +443,7 @@ class _formClientInfo extends StatelessWidget{
             ),
             context.read<CreateEventCubit>().canModify ? IconButton(
                 icon: Icon(Icons.add, color: black),
-                onPressed: () => context.read<CreateEventCubit>().addCustomerDialog(context)
+                onPressed: () => context.read<CreateEventCubit>().addCustomerDialog(buildContext)
             ) : Container()
           ]);}),
         ]);
@@ -752,7 +755,6 @@ class _categoriesList extends StatelessWidget {
     Widget sigleCategoryWidget(String key, String value){
       return MouseRegion(
           cursor: SystemMouseCursors.click,
-
         child: GestureDetector(
           onTap: () => context.read<CreateEventCubit>().onSelectedCategory(key),
           child: AnimatedContainer(
@@ -795,7 +797,7 @@ class _categoriesList extends StatelessWidget {
           ),
           ),
           Container(
-            height:PlatformUtils.isMobile?MediaQuery.of(context).size.height - 650:150,
+            height:PlatformUtils.isMobile?MediaQuery.of(context).size.height - 600:150,
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: GridView.builder(

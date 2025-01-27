@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/event_filter_view/filter_event_list_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
+import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/dataTable/event_data_table.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
@@ -18,17 +20,16 @@ import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
 class FilterEventList extends StatelessWidget {
 
-  Map<String, dynamic> filters;
   bool isBozze;
 
-  FilterEventList( {Map<String, dynamic>? filters, this.isBozze = false}) : this.filters = filters??{};
+  FilterEventList({this.isBozze = false});
 
   @override
   Widget build(BuildContext context) {
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
-
+    Account account = context.read<AuthenticationBloc>().account!;
     return new BlocProvider(
-        create: (_) => FilterEventListCubit(repository, filters),
+        create: (_) => FilterEventListCubit(repository, account, isBozze: this.isBozze),
         child: ResponsiveWidget(
           smallScreen: _smallScreen(),
           largeScreen: _largeScreen(),

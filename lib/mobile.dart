@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:venturiautospurghi/bloc/mobile_bloc/mobile_bloc.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/mobile.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -11,7 +12,7 @@ import 'package:venturiautospurghi/views/screen_pages/reset_auth_account_view.da
 import 'package:venturiautospurghi/views/screens/version_app_view.dart';
 import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/splash_screen.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'bloc/authentication_bloc/authentication_bloc.dart';
 import 'cubit/messaging/messaging_cubit.dart';
 import 'utils/theme.dart';
@@ -22,6 +23,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
   @override
   Widget build(var context) {
 
