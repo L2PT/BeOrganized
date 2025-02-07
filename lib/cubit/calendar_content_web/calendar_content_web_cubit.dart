@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
@@ -6,22 +7,30 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 part 'calendar_content_web_state.dart';
 
 class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
+  final CloudFirestoreService _databaseRepository;
   final ScrollController horizontalCalendar = ScrollController();
   final ScrollController horizontalHeader = ScrollController();
   final BuildContext context;
   double gridHourHeight = 100;
+  double scrollPixelHorizontal = 0;
+  Timer? _scrollTimer;
   final DateTime _baseFix = new DateTime(1990, 1, 1, Constants.MIN_WORKTIME, 0, 0);
   
-  CalendarContentWebCubit(this.context, Account user) : super(CalendarContentWebLoading(user)) {
+  CalendarContentWebCubit(this._databaseRepository, this.context, Account user) : super(CalendarContentWebLoading(user)) {
     this.calcWidthOpeCalendar();
     horizontalCalendar.addListener(() { horizontalHeader.animateTo(horizontalCalendar.offset, curve: Curves.easeOut,
       duration: const Duration(milliseconds: 1));
+      _scrollTimer?.cancel(); // Cancella eventuali timer precedenti
+      _scrollTimer = Timer(Duration(milliseconds: 200), () {
+        scrollPixelHorizontal = horizontalCalendar.position.pixels;
+      });
     });
     horizontalHeader.addListener(() {
       horizontalCalendar.animateTo(horizontalHeader.offset, curve: Curves.easeOut,
@@ -60,5 +69,26 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
   double calcWidgetHeightInGrid(DateTime selectDay,{ DateTime? start, DateTime? end, int? firstWorkedMinute, int? lastWorkedMinute}) {
     return DateUtils.calcWidgetHeightInGrid(selectDay, 1, this.gridHourHeight,
         start: start, end: end, firstWorkedMinute: firstWorkedMinute , lastWorkedMinute: lastWorkedMinute );
+  }
+
+  Account moveEventToOperator(DraggableDetails details) {
+    double centerXObject = details.offset.dx + scrollPixelHorizontal + (state.widthOpeCalendar/ 2);
+    int pos = min(state.user.webops.length, (centerXObject - 65 - 200) / (state.widthOpeCalendar)).toInt();
+    return state.user.webops.elementAt(pos);
+  }
+
+  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end) {
+    DateTime oldEnd = event.end;
+    event.start = start;
+    event.end = end;
+    if(event.operator == operatorOld){
+      event.operator = operator;
+    }else{
+      event.suboperators.remove(operatorOld);
+      event.suboperators.add(operator);
+    }
+    oldEnd.isBefore(DateTime.now())?
+    _databaseRepository.updateEventPast(event.id, event):
+    _databaseRepository.updateEvent(event.id, event);
   }
 }

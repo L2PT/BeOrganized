@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
@@ -9,6 +12,7 @@ import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 part 'web_state.dart';
@@ -21,10 +25,19 @@ class WebCubit extends Cubit<WebCubitState> {
   ContactsPageCubit contactsPageCubit;
   HistoryPageCubit historyPageCubit;
   EventListPageCubit eventListPageCubit;
+  final ScrollController verticalCalendar = ScrollController();
+  double scrollPixel = 0;
+  Timer? _scrollTimer;
 
   WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, CloudFirestoreService databaseRepository, Account account,) :
         _databaseRepository = databaseRepository, _account = account,
         super(LoadingWebCubitState()){
+    verticalCalendar.addListener(() {
+      _scrollTimer?.cancel(); // Cancella eventuali timer precedenti
+      _scrollTimer = Timer(Duration(milliseconds: 200), () {
+        scrollPixel = verticalCalendar.position.pixels;
+      });
+    });
     if(route == Constants.homeRoute) {
       this.calendarPageCubit.initCubit();
       this.calendarPageCubit.stream.listen((status) {
@@ -96,5 +109,9 @@ class WebCubit extends Cubit<WebCubitState> {
       case Constants.bozzeEventListRoute:
         this.eventListPageCubit.onFiltersChanged(filters);
     }
+  }
+
+  DateTime moveEventToDate(DraggableDetails details, DateTime selectDay, double gridHourHeight,) {
+    return DateUtils.calcTimeFromPixelPosition(selectDay,1, gridHourHeight, (details.offset.dy-265+this.scrollPixel));
   }
 }

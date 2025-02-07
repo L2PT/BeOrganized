@@ -202,4 +202,29 @@ class DateUtils {
     return (end.day != currentDay.day ? Constants.MAX_WORKTIME * 60 : min<int>(
         Constants.MAX_WORKTIME * 60, end.hour * 60 + end.minute));
   }
+
+  static DateTime calcTimeFromPixelPosition(
+      DateTime selectedDay,
+      int gridHourSpan,
+      double gridHourHeight,
+      double pixelPosition,
+      {int? firstWorkedMinute}
+      ) {
+    // Calcola la durata dell'evento in ore a partire dalla posizione in pixel
+    double hoursFromStart = (pixelPosition / gridHourHeight) * gridHourSpan;
+
+    // Converti le ore in minuti e aggiungili all'inizio della giornata lavorativa
+    int totalMinutes = (hoursFromStart * 60).round();
+
+    int roundedMinutes = (totalMinutes ~/ 15) * 15;
+
+    selectedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day,
+      Constants.MIN_WORKTIME, 0, 0, 0,);
+    DateTime maxDate = DateTime(selectedDay.year, selectedDay.month, selectedDay.day,
+      Constants.MAX_WORKTIME, 0, 0, 0,);
+    // Crea la data risultante
+    DateTime newDate = selectedDay.add(Duration(minutes: max(0, roundedMinutes)));
+    return newDate.isBefore(maxDate) ? newDate : maxDate;
+  }
+
 }

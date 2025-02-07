@@ -1,6 +1,7 @@
+import 'package:equatable/equatable.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 
-class Account {
+class Account extends Equatable{
   String id = "";
   String name = "";
   String surname = "";
@@ -79,4 +80,9 @@ class Account {
     return els;
   }
 
+  @override
+  String toString() => id+name+surname+email+phone+codFiscale+supervisor.toString();
+
+  @override
+  List<Object?> get props => [id, name, surname, supervisor, email, webops, phone, codFiscale];
 }

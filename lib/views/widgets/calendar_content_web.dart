@@ -10,11 +10,13 @@ import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/web.dart';
+import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
+import 'package:venturiautospurghi/views/widgets/alert/alert_attention.dart';
 import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
 
 import '../../utils/pdf_utils.dart';
@@ -28,8 +30,9 @@ class CalendarContentWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Account account = context.read<AuthenticationBloc>().account!;
+    var repository = context.read<CloudFirestoreService>();
     return new BlocProvider(
-        create: (_) => CalendarContentWebCubit(context, account),
+        create: (_) => CalendarContentWebCubit(repository, context, account),
         child: Column(children: [
           SizedBox(height: 10,),
           Divider(
@@ -73,7 +76,8 @@ class CalendarContentWeb extends StatelessWidget {
                   );
                 }
               )
-            ])
+            ]),
+              controller: context.read<WebCubit>().verticalCalendar,
             ),
           )
         ])
@@ -376,6 +380,19 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
     });
   }
 
+  void changeEvent(Event event, Account operatorOld, DraggableDetails details, BuildContext context){
+    Account operator = context.read<CalendarContentWebCubit>().moveEventToOperator(details);
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState!.calendarDate;
+    DateTime start = context.read<WebCubit>().moveEventToDate(details,selectDay, context.read<CalendarContentWebCubit>().gridHourHeight);
+    DateTime end = start.add(event.end.difference(event.start));
+    AttectionAlert(context, title: "CAMBIA INCARICO", text: "Stai assegnando l'incarico al operatore:",
+        operator: operator, showDetailsContent: true, showDetailsContentDate: true, start: start, end: end).show().then((value) {
+      if(value){
+        context.read<CalendarContentWebCubit>().changeOperatorEvent(event,operatorOld, operator, start, end);
+      }
+    });
+  }
+
   Widget singleOperatorCalendar(Account operator, int index, BuildContext context){
     DateTime selectDay = context.read<WebCubit>().state.calendarPageState!.calendarDate;
     List<Event> listEvent = (context.read<WebCubit>().state.calendarPageState! as ReadyCalendarPageState)
@@ -384,14 +401,14 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
     return Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          Expanded(child: Container(
-              padding: EdgeInsets.only(top:50),
-              width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
-              decoration: BoxDecoration(
-                  border: Border(right: BorderSide(color: grey_light, width: 1))),
-              child: Column(
+          Expanded(child:
+              Container(
+                padding: EdgeInsets.only(top: 50),
+                width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
+                decoration: BoxDecoration(border: Border(right: BorderSide(color: grey_light, width: 1))),
+                child: Column(
                   mainAxisSize: MainAxisSize.max,
-                  children:[
+                  children: [
                     ...listEvent.map((event) {
                       if(event.start.hour >= Constants.MIN_WORKTIME && event.end.hour <= Constants.MAX_WORKTIME-1){
                         double sizeHeightBefore = context.read<CalendarContentWebCubit>().calcWidgetHeightInGrid(selectDay,firstWorkedMinute: _base.hour*60 + _base.minute, end: event.start);
@@ -399,12 +416,28 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
                         List <Widget> element = <Widget>[
                           SizedBox( height: sizeHeightBefore),
                           MouseRegion(
-                            child:  CardEvent(
-                              event: event,
-                              height: heightEvent,
-                              externalBorder: true,
-                              onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute,  <String,dynamic>{"objectParameter" : event}),
+                            child: Draggable<Event>(
+                              data: event, // Passa l'evento come payload
+                              maxSimultaneousDrags: 1,
+                              feedback:  Opacity(
+                              opacity: .3,
+                              child: SizedBox(
+                                width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
+                                child: CardEvent(
+                                event: event,
+                                height: heightEvent,
+                                externalBorder: true,
+                                ),)
+                              ),
+                              onDragEnd: (dragEvent)  => changeEvent(event, operator, dragEvent, context),
+                              child: CardEvent(
+                                event: event,
+                                height: heightEvent,
+                                externalBorder: true,
+                                onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute, {"objectParameter" : event}),
+                              ),
                             ),
+                            opaque: false,
                             onEnter: (e) => context.read<CalendarContentWebCubit>().hoverCardEnter(selectDay,index, event),
                             onExit: (e) => context.read<CalendarContentWebCubit>().hoverCardExit(),
                             cursor: WidgetStateMouseCursor.clickable,
@@ -417,9 +450,10 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
                       }else{
                         return <Widget>[ Container() ];
                       }
-                    }).expand((i) => i).toList(),
-                  ])
-          ))
+                    }).expand((i) => i).toList()
+                  ],
+                ),
+              ))
         ]);
   }
 
