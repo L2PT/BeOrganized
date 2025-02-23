@@ -169,7 +169,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                             cursor: SystemMouseCursors.click,
                               child:GestureDetector(
                                 onTap: () { context.read<DetailsEventCubit>().callClient(event.customer.address.phone); },
-                                child: Text(event.customer.address.phone.isEmpty?'Nessun telefono indicato':event.customer.address.phone,
+                                child: Text(event.customer.phoneAddress(),
                                   style: subtitle_rev,overflow: TextOverflow.visible,),
                               )
                             )
@@ -186,7 +186,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                 child:  Row(
                     children: <Widget>[
                       Icon(
-                        Icons.map,
+                        Icons.place,
                         size: widget.sizeIcon,
                       ),
                       SizedBox(width: widget.padding,),
@@ -200,7 +200,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                                 cursor: SystemMouseCursors.click,
                                   child:GestureDetector(
                                     onTap: () { context.read<DetailsEventCubit>().launchMap(event.customer.address.address); },
-                                    child: Text(event.customer.address.address.isEmpty?'Nessun indirizzo indicato':event.customer.address.address,
+                                    child: Text(event.addresAddress(),
                                         style: subtitle_rev,overflow: TextOverflow.visible,),
                                     ),
                                 )
@@ -455,7 +455,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                         child: new SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: event.description.isEmpty?new Text('Nessuna nota indicata', style: subtitle_rev)
-                              :buildPhoneNumberText(event.description, true),
+                              :buildPhoneNumberText(event.description, false),
                         ))
                   ],
                 ),

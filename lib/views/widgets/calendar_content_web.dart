@@ -137,7 +137,7 @@ class CalendarContentWeb extends StatelessWidget {
             children: [
               Icon(Icons.place, size: 14),
               SizedBox(width: 5,),
-              Text(eventHover.customer.address.address, style: white_default, ),
+              Text(eventHover.addresAddress(), style: white_default, ),
             ],
           ),
           SizedBox(height: 2,),

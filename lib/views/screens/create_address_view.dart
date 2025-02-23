@@ -114,7 +114,7 @@ class _formAddressWidget extends StatelessWidget {
                                     Container(
                                       width: iconWidth,
                                       margin: EdgeInsets.only(right: 20.0),
-                                      child: Icon(Icons.map, color: black, size: iconWidth,),
+                                      child: Icon(Icons.place, color: black, size: iconWidth,),
                                     ),
                                     Expanded(
                                         child: TextFormField(

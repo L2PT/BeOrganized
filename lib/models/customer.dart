@@ -120,6 +120,10 @@ class Customer extends Equatable{
     return allPhone.join(" - "); // Concatena
   }
 
+  String phoneAddress(){
+    return this.address.phone.isEmpty?this.phone.isEmpty?'Nessun telefono indicato':this.phone:this.address.phone;
+  }
+
   static int getIntTypology(String typology){
     switch(typology){
       case PRIVATO: return 1;

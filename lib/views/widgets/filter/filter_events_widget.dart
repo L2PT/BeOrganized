@@ -144,7 +144,7 @@ class EventsFilterWidget extends FilterWidget {
                         padding: EdgeInsets.only(top: spaceInput),
                         child: Row(
                             children: <Widget>[
-                              Icon(Icons.map, color: grey, size: iconSize,),
+                              Icon(Icons.place, color: grey, size: iconSize,),
                               SizedBox(width: spaceIconText),
                               Expanded(
                                   child: TextFormField(

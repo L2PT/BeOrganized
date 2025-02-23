@@ -100,6 +100,10 @@ class Event {
     });
   }
 
+  String addresAddress(){
+    return this.customer.address.address.isEmpty?this.address.isEmpty?'Nessun indirizzo indicato':this.address:this.customer.address.address;
+  }
+
   bool isBetweenDate(DateTime dataInizio,DateTime dataFine){
     if(((this.start.isAfter(dataInizio) || this.start.isAtSameMomentAs(dataInizio)) && this.start.isBefore(dataFine)) || (this.end.isAfter(dataInizio) && (this.end.isBefore(dataFine)) || this.end.isAtSameMomentAs(dataFine)) || (this.start.isBefore(dataInizio) && this.end.isAfter(dataFine)) || (this.start.isAtSameMomentAs(dataInizio) && this.end.isAtSameMomentAs(dataFine))){
       return true;

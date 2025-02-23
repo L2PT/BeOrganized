@@ -74,7 +74,7 @@ class CardAddress extends StatelessWidget {
           width: 16,
           margin: EdgeInsets.only(right: 10.0),
           child: Icon(
-            Icons.map,
+            Icons.place,
             color: selectItem && onclickMode?white:grey_dark,
             size: 16,
           ),

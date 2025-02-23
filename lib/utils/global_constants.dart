@@ -2,7 +2,7 @@ library app.globals;
 
 class Constants {
   static const String title = "Venturi Autospurghi App";
-  static const bool debug = !bool.fromEnvironment('dart.vm.product');
+  static const bool debug = false;
   static const String web = "web";
   static const String mobile = "mobile";
 

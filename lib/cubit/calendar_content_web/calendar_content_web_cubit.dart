@@ -7,7 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -90,5 +92,15 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
     oldEnd.isBefore(DateTime.now())?
     _databaseRepository.updateEventPast(event.id, event):
     _databaseRepository.updateEvent(event.id, event);
+
+    bool sendNotification = true;
+    if (oldEnd.isBefore(DateTime.now())) {
+      sendNotification = false;
+    } else{
+      event.status = EventStatus.New;
+    }
+    if(sendNotification){
+      FirebaseMessagingService.sendNotifications(tokens: event.operator!.tokens, title: "Nuovo incarico assegnato", eventId: event.id);
+    }
   }
 }
