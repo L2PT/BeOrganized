@@ -8,6 +8,7 @@ import 'package:venturiautospurghi/models/page_parameter.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
+import 'package:venturiautospurghi/views/widgets/filter/filter_account_widget.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_customer_widget.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_events_widget.dart';
 
@@ -23,8 +24,8 @@ final Map<String, LinkMenu> menuWeb = const {
       Icons.assignment, Colors.white, 20, "Bozze", title_rev_menu),
   Constants.customerContactsListRoute: const LinkMenu(
       FontAwesomeIcons.solidAddressBook, Colors.white, 18, "Rubrica Cliente", title_rev_menu),
-  /*Constants.manageUtenzeRoute: const LinkMenu(
-      Icons.people, Colors.white, 20, "Gestione Utenze", title_rev_menu),*/
+  Constants.manageUtenzeRoute: const LinkMenu(
+      Icons.people, Colors.white, 20, "Gestione Utenze", title_rev_menu),
 };
 
 class SideMenuLayerWeb extends StatelessWidget {
@@ -237,6 +238,23 @@ class SideMenuLayerWeb extends StatelessWidget {
                   paddingTopBox: 0,
                   spaceButton: 10,
               ));
+      case FunctionalWidgetType.FilterAccount:
+        return BlocBuilder<WebCubit, WebCubitState>(
+            buildWhen: (previous, current) => previous != current,
+            builder: (context, state) =>
+                AccountsFilterWidget(
+                  hintTextSearch: 'Cerca gli utenti',
+                  onSearchFieldChanged: context.read<WebCubit>().usersManagePageCubit.onFiltersChangedAccount,
+                  onFiltersChanged: context.read<WebCubit>().usersManagePageCubit.onFiltersChangedAccount,
+                  maxHeightContainerExpanded: MediaQuery.of(context).size.height-270,
+                  textSearchFieldVisible: true,
+                  paddingTop: 10,
+                  paddingBottomBox: 0,
+                  paddingLeftBox: 0,
+                  paddingRightBox: 0,
+                  paddingTopBox: 0,
+                  spaceButton: 10,
+                ));
       default:
         return Container();
     }

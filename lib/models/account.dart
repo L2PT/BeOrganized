@@ -1,7 +1,16 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
+import 'package:venturiautospurghi/utils/theme.dart';
 
 class Account extends Equatable{
+
+  static const String ALL = "All";
+  static const String RESPONSABILE = "Responsabile";
+  static const String OPERATORE = "Operatore";
+  static const String VEICOLO = "Veicolo";
+
   String id = "";
   String name = "";
   String surname = "";
@@ -11,6 +20,7 @@ class Account extends Equatable{
   List<Account> webops = [];
   List<dynamic> tokens = [];
   bool supervisor = false;
+  String typology = "Operatore";
 
   Account(this.id, this.name, this.surname, this.email, this.phone, this.codFiscale, this.webops, this.tokens, this.supervisor);
   Account.empty();
@@ -24,7 +34,8 @@ class Account extends Equatable{
     codFiscale = json['CodiceFiscale'],
     webops = json.containsKey('OperatoriWeb')? dynamicToObject(json['OperatoriWeb']) : <Account>[],
     tokens = json['Tokens']??[],
-    supervisor = json['Responsabile'];
+    supervisor = json['Responsabile'],
+    typology = json['Tipologia']??"Operatore";
 
   Map<String, dynamic> toMap() => {
       "id":this.id,
@@ -34,7 +45,8 @@ class Account extends Equatable{
       "Telefono":this.phone,
       "CodiceFiscale":this.codFiscale,
       "Tokens":this.tokens,
-      "Responsabile":this.supervisor
+      "Responsabile":this.supervisor,
+      "Tipologia":this.typology,
   };
 
   Map<String, dynamic> toDocument() {
@@ -47,6 +59,7 @@ class Account extends Equatable{
       "Tokens":this.tokens,
       "Responsabile":this.supervisor,
       "OperatoriWeb":this.webops,
+      "Tipologia":this.typology,
     });
   }
 
@@ -60,6 +73,7 @@ class Account extends Equatable{
       "CodiceFiscale":this.codFiscale,
       "Tokens":this.tokens,
       "Responsabile":this.supervisor,
+      "Tipologia":this.typology,
     });
   }
   
@@ -72,12 +86,53 @@ class Account extends Equatable{
     this.webops = userUpdate.webops;
     this.tokens = userUpdate.tokens;
     this.supervisor = userUpdate.supervisor;
+    this.typology = userUpdate.typology;
   }
 
   static List<Account> dynamicToObject(List<dynamic> json){
     List<Account> els = [];
     json.forEach((webOp)=>els.add(Account.fromMap("", webOp)));
     return els;
+  }
+
+  bool filter(lambda, value){
+    return lambda(this, value);
+  }
+
+  static int getIntTypology(String typology){
+    switch(typology){
+      case OPERATORE: return 1;
+      case RESPONSABILE: return 2;
+      case VEICOLO: return 3;
+      default: return 0;
+    }
+  }
+
+  static String getStringTypology(int status){
+    switch(status){
+      case 1: return OPERATORE;
+      case 2: return RESPONSABILE;
+      case 3: return VEICOLO;
+      default: return ALL;
+    }
+  }
+
+  static Color getColorTypology(int status){
+    switch(status){
+      case 1: return black;
+      case 2: return black_light;
+      case 3: return grey_dark;
+      default: return black;
+    }
+  }
+
+  static Icon getIconTypology(String typology){
+    switch(typology){
+      case OPERATORE: return Icon(FontAwesomeIcons.helmetSafety);
+      case RESPONSABILE: return Icon(FontAwesomeIcons.userTie);
+      case VEICOLO: return Icon(Icons.directions_car_filled);
+      default: return Icon(Icons.people);
+    }
   }
 
   @override

@@ -18,4 +18,10 @@ class Headers{
     MapEntry(new Tab(text: "REFERENTE",icon: Icon(FontAwesomeIcons.imagePortrait),),Customer.getIntTypology(Customer.REFERENTE)),
     MapEntry(new Tab(text: "AMMINISTRATORE",icon: Icon(FontAwesomeIcons.userTie),),Customer.getIntTypology(Customer.AMMINISTRATORE)),
   ];
+
+  static final List<MapEntry<Tab,int>> tabsHeadersUsers = [
+    MapEntry(new Tab(text: "UTENTI TOTALI",icon: Icon(Icons.people),), Customer.getIntTypology(Customer.ALL)),
+    MapEntry(new Tab(text: "OPERATORE",icon: Icon(FontAwesomeIcons.helmetSafety),), Customer.getIntTypology(Customer.PRIVATO)),
+    MapEntry(new Tab(text: "RESPONSABILE",icon: Icon(FontAwesomeIcons.userTie),),Customer.getIntTypology(Customer.AZIENDA)),
+  ];
 }

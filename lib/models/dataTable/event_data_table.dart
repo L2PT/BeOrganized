@@ -65,7 +65,7 @@ class EventDataTable extends DataTableSource {
               style: label.copyWith(fontSize: 13)),
         ],
       ),),
-      DataCell(Text(event.customer.address.address, style: label.copyWith(fontSize: 13),)),
+      DataCell(Text(event.customer.address.address.join(" "), style: label.copyWith(fontSize: 13),)),
       DataCell(Container(
          width: 200, child: Text(event.customer.allPhones(), style: label.copyWith(fontSize: 13), overflow: TextOverflow.ellipsis))),
     ];

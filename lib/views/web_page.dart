@@ -10,6 +10,7 @@ import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/page_parameter.dart';
@@ -27,8 +28,8 @@ final Map<String, PageParameter> parameterPage = {
       false, false, true),
   Constants.bozzeEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuova bozza', FunctionalWidgetType.filterEvent,
       false, true, true),
-  Constants.manageUtenzeRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo dipendente', FunctionalWidgetType.calendar,
-      false, true, false),
+  Constants.manageUtenzeRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo utente', FunctionalWidgetType.FilterAccount,
+      false, true, true),
   Constants.filterEventListRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo dipendente', FunctionalWidgetType.filterEvent,
       false, false, true),
   Constants.customerContactsListRoute: PageParameter(Icons.person_add, Constants.createCustomerViewRoute, 'Nuovo cliente', FunctionalWidgetType.FilterCustomer,
@@ -70,9 +71,10 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
         BlocProvider(create: (_) => ContactsPageCubit(databaseRepository)),
         BlocProvider(create: (_) => HistoryPageCubit(databaseRepository)),
         BlocProvider(create: (_) => EventListPageCubit(databaseRepository)),
+        BlocProvider(create: (_) => UsersManagePageCubit(databaseRepository)),
         BlocProvider(
             create: (tex) => WebCubit(GoRouterState.of(context).uri.toString(),tex.read<CalendarPageCubit>(),tex.read<ContactsPageCubit>(),
-                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), databaseRepository, account)),
+                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), tex.read<UsersManagePageCubit>(), databaseRepository, account)),
     ], child:Scaffold(
           backgroundColor: Color(0x00000000),
           body: Stack(
@@ -162,6 +164,11 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                             case Constants.customerContactsListRoute :{
                               context.read<WebCubit>().contactsPageCubit.onFiltersChangedCustomer(context.read<WebCubit>().state.filters);
                               context.read<WebCubit>().contactsPageCubit.forceRefresh();
+                              state.result = false;
+                            }break;
+                            case Constants.manageUtenzeRoute :{
+                              context.read<WebCubit>().usersManagePageCubit.onFiltersChangedAccount(context.read<WebCubit>().state.filters);
+                              context.read<WebCubit>().usersManagePageCubit.forceRefresh();
                               state.result = false;
                             }break;
                           }

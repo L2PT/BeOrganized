@@ -386,9 +386,9 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
     DateTime start = context.read<WebCubit>().moveEventToDate(details,selectDay, context.read<CalendarContentWebCubit>().gridHourHeight);
     DateTime end = start.add(event.end.difference(event.start));
     AttectionAlert(context, title: "CAMBIA INCARICO", text: "Stai assegnando l'incarico al operatore:",
-        operator: operator, showDetailsContent: true, showDetailsContentDate: true, start: start, end: end).show().then((value) {
-      if(value){
-        context.read<CalendarContentWebCubit>().changeOperatorEvent(event,operatorOld, operator, start, end);
+        operator: operator, showDetailsContent: operator != operatorOld, showDetailsContentDate: start != event.start, start: start, end: end).show().then((value) {
+      if(value.first){
+        context.read<CalendarContentWebCubit>().changeOperatorEvent(event,operatorOld, operator, start, end, value.last);
       }
     });
   }

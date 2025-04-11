@@ -22,17 +22,16 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
   CreateAddressCubit(this._databaseRepository,Event? event, TypeStatus type) : super(CreateAddressState(event)) {
     addressController = new TextEditingController();
     setType(type);
-    addressController.text = state.customer.address.address;
+    addressController.text = "";
       if(isModify()){
-      addressToModify = state.customer.address;
+      addressToModify = Address.fromMap(state.customer.address.toMap());
     }
   }
 
   bool validateAndSave() {
-    if(formKeyAddressInfo.currentState!.validate()) {
-      formKeyAddressInfo.currentState!.save();
+    if(state.customer.address.address.isNotEmpty) {
       if(isModify()) {
-        state.customer.addresses.removeWhere((element) => element.address == addressToModify.address);
+        state.customer.addresses.removeWhere((element) => element == addressToModify);
       }
       state.customer.addresses.add(state.customer.address);
       if(isModify() && state.customer.id.isNotEmpty){
@@ -53,13 +52,26 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
       }else{
         locations = await GeoUtils.getLocationsWeb(text);
       }
-      emit(state.assign(locations: locations, address: text));
+      emit(state.assign(locations: locations));
     }
   }
 
   setAddress(String address) {
-    addressController.text = address;
+    addressController.text = "";
     emit(state.assign(locations: <String>[], address: address));
+  }
+
+  removeAddressOnCustomer(String address) {
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    customer.address.address.removeWhere((element) => element == address);
+    emit(state.assign(customer: customer));
+  }
+
+  void addAddressOnCustomer(){
+    String value = addressController.text;
+    if(value.isNotEmpty){
+      this.setAddress(value);
+    }
   }
 
 }

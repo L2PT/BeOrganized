@@ -7,6 +7,7 @@ import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
@@ -25,11 +26,12 @@ class WebCubit extends Cubit<WebCubitState> {
   ContactsPageCubit contactsPageCubit;
   HistoryPageCubit historyPageCubit;
   EventListPageCubit eventListPageCubit;
+  UsersManagePageCubit usersManagePageCubit;
   final ScrollController verticalCalendar = ScrollController();
   double scrollPixel = 0;
   Timer? _scrollTimer;
 
-  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, CloudFirestoreService databaseRepository, Account account,) :
+  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, this.usersManagePageCubit, CloudFirestoreService databaseRepository, Account account,) :
         _databaseRepository = databaseRepository, _account = account,
         super(LoadingWebCubitState()){
     verticalCalendar.addListener(() {
@@ -80,6 +82,12 @@ class WebCubit extends Cubit<WebCubitState> {
           emit(state.assign(eventListPageState: status));
         });
         break;
+      case Constants.manageUtenzeRoute:
+        this.usersManagePageCubit.initCubit();
+        this.usersManagePageCubit.stream.listen((status) {
+          emit(state.assign(usersManagePageState: status));
+        });
+        break;
     }
   }
 
@@ -108,6 +116,7 @@ class WebCubit extends Cubit<WebCubitState> {
         break;
       case Constants.bozzeEventListRoute:
         this.eventListPageCubit.onFiltersChanged(filters);
+        break;
     }
   }
 

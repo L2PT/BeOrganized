@@ -8,24 +8,26 @@ class WebCubitState extends Equatable {
   ContactsPageState contactsPageState = new ContactsPageState();
   HistoryPageState historyPageState = new HistoryPageState();
   EventListPageState eventListPageState = new EventListPageState();
+  UsersManagePageState usersManagePageState = new UsersManagePageState();
   bool filterEvent = false;
   Map<String, FilterWrapper> filters = {};
 
   WebCubitState({ bool expandedMode = true, List<Account>? webops, Map<String,List<Event>>? eventsOpe,
     Map<String, FilterWrapper>? filters, List<Customer>? customerList, Map<int, int>? countCustomerTypology,
     bool filterEvent = false, CalendarPageState? calendarPageState, ContactsPageState? contactsPageState,
-  HistoryPageState? historyPageState, EventListPageState? eventListPageState}):
+  HistoryPageState? historyPageState, EventListPageState? eventListPageState, UsersManagePageState? usersManagePageState}):
               this.expandedMode = expandedMode,
               this.calendarPageState = calendarPageState??new CalendarPageState(),
               this.contactsPageState = contactsPageState??new ContactsPageState(),
               this.historyPageState = historyPageState??new HistoryPageState(),
               this.eventListPageState = eventListPageState?? new EventListPageState(),
+              this.usersManagePageState = usersManagePageState?? new UsersManagePageState(),
               this.filterEvent = filterEvent,
               this.webops = webops??[],
               this.filters = filters??{};
 
   @override
-  List<Object?> get props => [ expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState,  webops,
+  List<Object?> get props => [ expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState, usersManagePageState, webops,
     filters.keys.join(), filters.values.join()];
 
   ReadyWebCubitState assign({
@@ -36,11 +38,12 @@ class WebCubitState extends Equatable {
     CalendarPageState? calendarPageState,
     ContactsPageState? contactsPageState,
     HistoryPageState? historyPageState,
-    EventListPageState? eventListPageState
+    EventListPageState? eventListPageState,
+    UsersManagePageState? usersManagePageState
   }) => ReadyWebCubitState.update(
       expandedMode??this.expandedMode, filterEvent??this.filterEvent, webops??this.webops,
       filters??this.filters, calendarPageState??this.calendarPageState, contactsPageState??this.contactsPageState,
-      historyPageState??this.historyPageState, eventListPageState??this.eventListPageState);
+      historyPageState??this.historyPageState, eventListPageState??this.eventListPageState, usersManagePageState??this.usersManagePageState);
 
 }
 
@@ -55,11 +58,11 @@ class ReadyWebCubitState extends WebCubitState{
   ReadyWebCubitState([List<Account>? webops]): super(webops: webops);
 
   @override
-  List<Object?> get props => [expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState,  webops];
+  List<Object?> get props => [expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState, usersManagePageState,  webops];
 
   ReadyWebCubitState.update(bool expandedMode, bool filterEvent,List<Account> webops,
                           Map<String, FilterWrapper> filters, CalendarPageState calendarPageState, ContactsPageState contactsPageState,
-      HistoryPageState historyPageState, EventListPageState eventListPageState):
-        super(expandedMode: expandedMode, webops: webops,filters: filters, calendarPageState:  calendarPageState, contactsPageState: contactsPageState, historyPageState: historyPageState, eventListPageState: eventListPageState);
+      HistoryPageState historyPageState, EventListPageState eventListPageState, UsersManagePageState usersManagePageState):
+        super(expandedMode: expandedMode, webops: webops,filters: filters, calendarPageState:  calendarPageState, contactsPageState: contactsPageState, historyPageState: historyPageState, eventListPageState: eventListPageState, usersManagePageState: usersManagePageState);
 
 }

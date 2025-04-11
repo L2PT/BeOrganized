@@ -26,7 +26,7 @@ class FilterWrapper {
     // maybe we can put the dbconstants strings
     Map<String, FilterWrapper> filters = {
       "title": new FilterWrapper("title", null, (Event event, value) => value == null || event.title.toUpperCase().contains(value.toUpperCase()) ),
-      "address" : new FilterWrapper("address", null, (Event event, value) => value == null || event.address.toUpperCase().contains(value.toUpperCase()) || event.customer.addresses.where((address) => address.address.toUpperCase().contains(value.toUpperCase())).isNotEmpty),
+      "address" : new FilterWrapper("address", null, (Event event, value) => value == null || event.address.toUpperCase().contains(value.toUpperCase()) || event.customer.addresses.where((address) => address.address.join(" ").toUpperCase().contains(value.toUpperCase())).isNotEmpty),
       "phone" : new FilterWrapper("phone", null, (Event event, value) => value == null || event.customer.allPhones().toUpperCase().contains(value.toUpperCase())),
       "startDate" : new FilterWrapper("startDate", null, (Event event, value) => value == null || event.start.add(Duration(minutes: 1)).isAfter(value) ),
       "status" : new FilterWrapper("status", null, (Event event, value) => value == null || event.status == value),
@@ -49,7 +49,7 @@ class FilterWrapper {
       "name-surname": new FilterWrapper("name-surname", null, (Customer customer, value) => value == null || (customer.name.toUpperCase()+" "+customer.surname.toUpperCase()).contains(value.toUpperCase()) ),
       "email" : new FilterWrapper("email", null, (Customer customer, value) => value == null || customer.email.toUpperCase().contains(value.toUpperCase()) ),
       "phone" : new FilterWrapper("phone", null, (Customer customer, value) => value == null || value == '' || customer.allPhones().toUpperCase().contains(value.toUpperCase())),
-      "address" : new FilterWrapper("address", null, (Customer customer, value) => value == null || value == '' || customer.addresses.where((address) => address.address.toUpperCase().contains(value.toUpperCase())).isNotEmpty),
+      "address" : new FilterWrapper("address", null, (Customer customer, value) => value == null || value == '' || customer.addresses.where((address) => address.address.join(" ").toUpperCase().contains(value.toUpperCase())).isNotEmpty),
       "partitaIva" : new FilterWrapper("partitaIva", null, (Customer customer, value) => value == null || customer.partitaIva.toUpperCase().contains(value.toUpperCase()) ),
       "codFiscale" : new FilterWrapper("codFiscale", null, (Customer customer, value) => value == null || customer.codFiscale.toUpperCase().contains(value.toUpperCase()) ),
       "searchQuery" : new FilterWrapper("searchQuery", null, (Customer customer, value) => true ),
@@ -57,4 +57,18 @@ class FilterWrapper {
 
     return filters;
   }
+
+  static Map<String, FilterWrapper> initFilterAccount(){
+    // maybe we can put the dbconstants strings
+    Map<String, FilterWrapper> filters = {
+      "name-surname": new FilterWrapper("name-surname", null, (Account account, value) => value == null || (account.name.toUpperCase()+" "+account.surname.toUpperCase()).contains(value.toUpperCase()) ),
+      "email" : new FilterWrapper("email", null, (Account account, value) => value == null || account.email.toUpperCase().contains(value.toUpperCase()) ),
+      "phone" : new FilterWrapper("phone", null, (Account account, value) => value == null || value == '' || account.phone.toUpperCase().contains(value.toUpperCase())),
+      "codFiscale" : new FilterWrapper("codFiscale", null, (Account account, value) => value == null || account.codFiscale.toUpperCase().contains(value.toUpperCase()) ),
+      "searchQuery" : new FilterWrapper("searchQuery", null, (Account account, value) => true ),
+    };
+
+    return filters;
+  }
+
 }

@@ -84,7 +84,7 @@ class CardAddress extends StatelessWidget {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(address.address, overflow: TextOverflow.visible,
+                      Text(address.address.join(" "), overflow: TextOverflow.visible,
                           style: subtitle.copyWith(fontSize: 13, color: selectItem && onclickMode ? white : grey_dark))
                     ])))
       ],
@@ -111,7 +111,7 @@ class CardAddress extends StatelessWidget {
             MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  onTap: () { this.onLuanchAddressAction!(address.address); },
+                  onTap: () { this.onLuanchAddressAction!(address.address.join(" ")); },
                   child:rowAddress(),
             )):rowAddress(),
             !string.isNullOrEmpty(address.phone)?
@@ -134,15 +134,19 @@ class CardAddress extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: onEditAction,
-                    child: Icon(Icons.edit, color: selectItem ? Colors.white : Colors.grey, size: 20),
-                  ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: onEditAction,
+                      child: Icon(Icons.edit, color: selectItem ? Colors.white : Colors.grey, size: 20),
+                  )),
                   SizedBox(width: 8,),
-                  GestureDetector(
-                    onTap: onDeleteAction,
-                    child: Icon(Icons.delete, color: selectItem ? Colors.white : Colors.grey, size: 20),
-                  ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: onDeleteAction,
+                      child: Icon(Icons.delete, color: selectItem ? Colors.white : Colors.grey, size: 20),
+                  ),)
                 ])
             ],
           )):Container(),

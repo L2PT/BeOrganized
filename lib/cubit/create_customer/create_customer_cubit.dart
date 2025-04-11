@@ -141,9 +141,10 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     emit(state.assign(customer: customer));
   }
 
-  Event getEventCustomer() {
+  Event getEventCustomer(Address address) {
     Event event = Event.fromMap("", "", state.event.toMap());
     Customer customer = Customer.fromMap("", state.customer.toMap());
+    customer.address = address;
     event.customer = customer;
     return event;
   }

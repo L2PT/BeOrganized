@@ -512,54 +512,6 @@ class _formAssignedList extends StatelessWidget{
   }
 }
 
-class _geoLocationOptionsList extends StatelessWidget {
-
-  @override
-  Widget build(BuildContext context) {
-    
-    List<Widget> buildAutocompleteList() =>
-    context.read<CreateEventCubit>().state.locations.map((location) {
-      return GestureDetector(
-          onTap: () => context.read<CreateEventCubit>().setAddress(location),
-          child: Container(
-              margin: EdgeInsets.only(bottom: 10, top: 10, left: 45),
-              child: Row(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(right: 15),
-                    child: Icon(
-                      Icons.place,
-                      color: grey_dark,
-                      size: 25,
-                    ),
-                  ),
-                  Expanded(child: Text(location, style: label.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  )
-                ],
-              )));
-    }).toList();
-
-    return BlocBuilder<CreateEventCubit, CreateEventState>(
-      buildWhen: (previous, current) => previous.locations != current.locations,
-      builder: (context, state) {
-        return (context.read<CreateEventCubit>().state.locations) != List<String>.empty() ?
-        Row(
-          children: <Widget>[
-            Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 15),
-                  child: Column(
-                    children: buildAutocompleteList(),
-                  ),
-                ))
-          ],
-        ) : Container();
-      },
-    );
-  }
-}
-
 class _fileStorageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

@@ -30,8 +30,43 @@ class _formAddressWidget extends StatelessWidget {
 
   static const iconWidth = 30.0; //HANDLE
 
+
+
   @override
   Widget build(BuildContext context) {
+
+
+    Widget addressListElement(String address){
+      return Container(
+        height: 50,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(right: 10.0),
+              padding: EdgeInsets.all(3.0),
+              child: Icon(Icons.place, color: white,),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                color: black,
+              ),
+            ),
+            Expanded( // Usa Expanded per occupare lo spazio rimanente
+              child: Text(
+                address,
+                maxLines: 2, // Limita a 2 righe
+                overflow: TextOverflow.ellipsis, // Aggiungi "..." se il testo è troppo lungo
+                style: subtitle.copyWith(fontSize: 13, color: grey_dark),
+              ),
+            ),
+            IconButton(
+                icon: Icon(Icons.delete, color: black, size: 25),
+                onPressed: () => context.read<CreateAddressCubit>().removeAddressOnCustomer(address)
+            )
+          ],
+        ),
+      );
+    }
 
     void onExit(bool result,{ dynamic event }) {
       PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : event, 'res': result});
@@ -110,6 +145,17 @@ class _formAddressWidget extends StatelessWidget {
                                     ),
                                   ]),
                                   Divider(height: 20, indent: 20, endIndent: 20, thickness: 2, color: grey_light2),
+                                  context.read<CreateAddressCubit>().state.customer.address.address.isNotEmpty?Align(
+                                    alignment: Alignment.centerLeft,  // Allinea a sinistra
+                                    child: Text("Indirizzi", style: title.copyWith(color: black, fontSize: 16),),
+                                  ):Container(),
+                                  BlocBuilder<CreateAddressCubit, CreateAddressState>(
+                                      buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString(),
+                                      builder: (context, state) {
+                                        return Column(children: <Widget>[...(context.read<CreateAddressCubit>().state.customer.address.address).asMap()
+                                            .map((i, address) =>
+                                            MapEntry(i,addressListElement(address))).values.toList()]);
+                                      }),
                                   Row(children: <Widget>[
                                     Container(
                                       width: iconWidth,
@@ -124,8 +170,6 @@ class _formAddressWidget extends StatelessWidget {
                                           cursorColor: black,
                                           controller: context.read<CreateAddressCubit>().addressController,
                                           autofillHints: [AutofillHints.addressCity],
-                                          validator: (value) => string.isNullOrEmpty(value)? 'Inserisci un valore valido' : null,
-                                          onSaved: (value) => context.read<CreateAddressCubit>().state.customer.address.address = value ?? "",
                                           decoration: InputDecoration(
                                             hintText: 'Aggiungi posizione',
                                             hintStyle: subtitle,
@@ -137,6 +181,10 @@ class _formAddressWidget extends StatelessWidget {
                                             ),
                                           ),
                                         )),
+                                    IconButton(
+                                        icon: Icon(Icons.add, color: black),
+                                        onPressed: context.read<CreateAddressCubit>().addAddressOnCustomer
+                                    )
                                   ]),
                                   _geoLocationOptionsList(),
                                 ])

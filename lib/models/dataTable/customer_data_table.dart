@@ -45,7 +45,7 @@ class CustomerDataTable extends DataTableSource {
         ],
       ),),
       DataCell(Text(customer.email, style: label.copyWith(fontSize: 13),)),
-      DataCell(Text(customer.address.address, style: label.copyWith(fontSize: 13),)),
+      DataCell(Text(customer.address.address.join(" "), style: label.copyWith(fontSize: 13),)),
       DataCell(Text(customer.allPhones(), style: label.copyWith(fontSize: 13),)),
       DataCell(Row(
           children: [

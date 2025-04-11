@@ -101,7 +101,7 @@ class Event {
   }
 
   String addresAddress(){
-    return this.customer.address.address.isEmpty?this.address.isEmpty?'Nessun indirizzo indicato':this.address:this.customer.address.address;
+    return this.customer.address.address.isEmpty?this.address.isEmpty?'Nessun indirizzo indicato':this.address:this.customer.address.address.join(" ");
   }
 
   bool isBetweenDate(DateTime dataInizio,DateTime dataFine){

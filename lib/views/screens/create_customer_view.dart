@@ -475,10 +475,10 @@ class _formAddressInfo extends StatelessWidget{
           onTapAction: () => context.read<CreateCustomerCubit>().selectAddressOnCustomer(address),
           onDeleteAction: () => context.read<CreateCustomerCubit>().removeAddressOnCustomer(address),
           onEditAction: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{
-            'objectParameter' : context.read<CreateCustomerCubit>().getEventCustomer(),
+            'objectParameter' : context.read<CreateCustomerCubit>().getEventCustomer(address),
             'currentStep': context.read<CreateCustomerCubit>().state.currentStep,
             'typeStatus' : TypeStatus.modify, 'context' : context,
-            'callback' :   context.read<CreateCustomerCubit>().forceRefresh }),
+            'callback' :   PlatformUtils.isMobile?context.read<CreateCustomerCubit>().forceRefresh:null }),
         )
       );
     }

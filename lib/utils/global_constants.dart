@@ -87,6 +87,7 @@ class Constants {
   // TABLE UTENTI
   static const String tabellaUtenti_Nome = 'Nome';
   static const String tabellaUtenti_Cognome = 'Cognome';
+  static const String tabellaUtenti_tipologia = 'Tipologia';
 
   // TABLE CLIENTE
   static const String tabellaClienti_codicefiscale = 'CodiceFiscale';

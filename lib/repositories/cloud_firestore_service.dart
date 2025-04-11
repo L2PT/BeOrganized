@@ -112,6 +112,68 @@ class CloudFirestoreService {
     _collectionUtenti.doc(id).delete();
   }
 
+  Future<void> updateAccountField(String id, String field, dynamic data) async {
+    return _collectionUtenti.doc(id).update(Map.of({field:data}));
+  }
+
+  Future<Account> getUserByPhone(String phoneNumber) async{
+    return _collectionUtenti.where('Telefono', isEqualTo: phoneNumber).get().then((snapshot) => snapshot.docs.map((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>)).first);
+  }
+
+  Future<List<Account>> getAccountsActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) async {
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionUtenti, startFrom);
+    return _getAccountsFiltered(_collectionUtenti, filters, limit, documentSnapshot, null);
+  }
+
+  Future<List<Account>> _getAccountsFiltered(CollectionReference query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining]) async {
+    Query startQuery = query;
+    filters = Map.from(filters);
+    // due to firebase limitations (we can't build a query with all filters) let the repository do ALL filtering work
+    // despite some fields will be handled in the firebase query and some other in code
+    bool endOfList = false;
+
+    if (filters.containsKey("typology") && filters["typology"]!.fieldValue != null){
+      startQuery = startQuery.where(Constants.tabellaUtenti_tipologia, isEqualTo: filters["typology"]!.fieldValue);
+    }
+    startQuery = startQuery.orderBy(
+        Constants.tabellaUtenti_Cognome);
+    startQuery = addPagination(startQuery, limit, startFrom);
+
+    var docs = await startQuery.get().then((snapshot) => snapshot.docs);
+    if (limit != null && docs.length < limit) endOfList = true;
+
+    List<Account> account = docs.map((document) =>
+        Account.fromMap(document.id, document.data() as Map<String, dynamic>)).toList();
+
+    DocumentSnapshot? lastRetrieved = docs.isNotEmpty?await getDocument(query, docs.last.id):null;
+
+    account = account.where((account) => filters.values.every((wrapper) =>
+        account.filter(wrapper.filterFunction, wrapper.fieldValue))
+    ).toList();
+
+    var a = (account.length>=(remaining??limit) || endOfList) ? account :
+    [...account, ...(await _getAccountsFiltered(query, filters, limit, lastRetrieved, limit-account.length))];
+    return a;
+  }
+
+  Future<int> getAccountCountsByType( String? typology) async {
+
+    // Query filtrata con aggregazione per il conteggio
+    Query startQuery = _collectionUtenti;
+
+    if(typology != null){
+      startQuery = startQuery.where(Constants.tabellaUtenti_tipologia, isEqualTo: typology); // Filtra in base al campo e al valore
+    }
+
+    final aggregateQuerySnapshot = await startQuery.count().get();
+
+    // Restituisce il conteggio
+    return aggregateQuerySnapshot.count??0;
+  }
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   Future<Map<String, dynamic>> _getCategories() async {
@@ -566,16 +628,6 @@ class CloudFirestoreService {
 
     // Restituisce il conteggio
     return aggregateQuerySnapshot.count??0;
-  }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  Future<void> updateAccountField(String id, String field, dynamic data) async {
-    return _collectionUtenti.doc(id).update(Map.of({field:data}));
-  }
-
-  Future<Account> getUserByPhone(String phoneNumber) async{
-    return _collectionUtenti.where('Telefono', isEqualTo: phoneNumber).get().then((snapshot) => snapshot.docs.map((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>)).first);
   }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

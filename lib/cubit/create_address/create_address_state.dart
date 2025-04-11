@@ -25,7 +25,7 @@ class CreateAddressState extends Equatable {
     var form = CreateAddressState(event??this.event);
     form.customer = customer??this.customer;
     form.locations = locations??this.locations;
-    if(!string.isNullOrEmpty(address)) form.customer.address.address = address!;
+    if(!string.isNullOrEmpty(address)) form.customer.address.address.add(address!);
     if(!string.isNullOrEmpty(phone)) form.customer.address.phone = phone!;
     return form;
   }

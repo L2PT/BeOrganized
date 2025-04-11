@@ -79,14 +79,20 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
     return state.user.webops.elementAt(pos);
   }
 
-  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end) {
+  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode) {
     DateTime oldEnd = event.end;
     event.start = start;
     event.end = end;
     if(event.operator == operatorOld){
-      event.operator = operator;
+      if(duplicateMode){
+        event.suboperators.add(operator);
+      }else{
+        event.operator = operator;
+      }
     }else{
-      event.suboperators.remove(operatorOld);
+      if(!duplicateMode){
+        event.suboperators.remove(operatorOld);
+      }
       event.suboperators.add(operator);
     }
     oldEnd.isBefore(DateTime.now())?

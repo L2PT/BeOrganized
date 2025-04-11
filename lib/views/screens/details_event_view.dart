@@ -199,7 +199,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                                 MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                   child:GestureDetector(
-                                    onTap: () { context.read<DetailsEventCubit>().launchMap(event.customer.address.address); },
+                                    onTap: () { context.read<DetailsEventCubit>().launchMap(event.customer.address.address.join(" ")); },
                                     child: Text(event.addresAddress(),
                                         style: subtitle_rev,overflow: TextOverflow.visible,),
                                     ),
