@@ -40,7 +40,10 @@ extension string on String {
     return v == null || v == "";
   }
   String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1)}";
+    if(this.isNotEmpty)
+      return "${this[0].toUpperCase()}${this.substring(1)}";
+    else
+      return "";
   }
 
   String formatNumber({ bool short = true }) {

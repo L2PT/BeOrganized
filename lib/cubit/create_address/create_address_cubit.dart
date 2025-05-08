@@ -29,16 +29,17 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
   }
 
   bool validateAndSave() {
-    if(state.customer.address.address.isNotEmpty) {
-      if(isModify()) {
-        state.customer.addresses.removeWhere((element) => element == addressToModify);
-      }
-      state.customer.addresses.add(state.customer.address);
-      if(isModify() && state.customer.id.isNotEmpty){
-        _databaseRepository.updateCustomer(state.customer.id, state.customer);
-      }
-      state.event.customer = state.customer;
-      return true;
+    if(formKeyAddressInfo.currentState!.validate() && state.customer.address.address.isNotEmpty) {
+        formKeyAddressInfo.currentState!.save();
+        if(isModify()) {
+          state.customer.addresses.removeWhere((element) => element == addressToModify);
+        }
+        state.customer.addresses.add(state.customer.address);
+        if(isModify() && state.customer.id.isNotEmpty){
+          _databaseRepository.updateCustomer(state.customer.id, state.customer);
+        }
+        state.event.customer = state.customer;
+        return true;
     } else {
       return false;
     }

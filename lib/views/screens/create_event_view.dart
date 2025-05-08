@@ -494,9 +494,8 @@ class _formAssignedList extends StatelessWidget{
             BlocBuilder<CreateEventCubit, CreateEventState>(
               buildWhen: (previous, current) => previous.event.toString() != current.event.toString(),
               builder: (context, state) {
-                return Column(children: <Widget>[...(context.read<CreateEventCubit>().state.event.operator != null &&
-                    context.read<CreateEventCubit>().state.event.operator!.id.isNotEmpty?
-                  [context.read<CreateEventCubit>().state.event.operator!, ...context.read<CreateEventCubit>().state.event.suboperators] :
+                return Column(children: <Widget>[...(context.read<CreateEventCubit>().state.event.operator.id.isNotEmpty?
+                  [context.read<CreateEventCubit>().state.event.operator, ...context.read<CreateEventCubit>().state.event.suboperators] :
                   context.read<CreateEventCubit>().state.event.suboperators).asMap().map((i, operator) =>
                   MapEntry(i,ListTileOperator(
                     operator,

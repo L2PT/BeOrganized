@@ -152,7 +152,7 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
   }
 
   _removeAllOperators(Event event) {
-    event.operator = null;
+    event.operator = Account.empty();
     event.suboperators = [];
   }
 
@@ -223,8 +223,8 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
   void removeSuboperatorFromEventList(Account suboperator) {
     Event event = Event.fromMap("", "", state.event.toMap());
     List<Account> subOps = new List.from(event.suboperators);
-    if(event.operator!.id == suboperator.id) {
-      event.operator = null;
+    if(event.operator.id == suboperator.id) {
+      event.operator = Account.empty();
       subOps = [];
       event.suboperators = subOps;
     }

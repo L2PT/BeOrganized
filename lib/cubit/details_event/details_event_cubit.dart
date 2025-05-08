@@ -85,7 +85,7 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
     Event e = Event.fromMap("", "", _event.toMap());
     e.id = '';
     e.suboperators = List.empty();
-    e.operator = null;
+    e.operator = Account.empty();
     e.start = TimeUtils.getNextStartWorkTimeSpan();
     e.end = e.start.add(Duration(minutes: Constants.WORKTIME_SPAN));
     PlatformUtils.navigator(context, Constants.createEventViewRoute, <String,dynamic>{"objectParameter" : e, 'typeStatus' : TypeStatus.copy});

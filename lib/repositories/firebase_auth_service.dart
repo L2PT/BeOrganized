@@ -116,7 +116,7 @@ class FirebaseAuthService {
     _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
-  Future<UserCredential> createAccount(String email, String passwordNewUsers, {required String displayName}) async {
+  Future<UserCredential> createAccount(String email, String passwordNewUsers) async {
     FirebaseApp app = Firebase.apps.where((element) => element.name == 'Registration').isNotEmpty? Firebase.apps.where((element) => element.name == 'Registration').first: await Firebase.initializeApp(name: 'Registration',options: Firebase.app().options);
     return FirebaseAuth.instanceFor(app: app).createUserWithEmailAndPassword(email: email, password: passwordNewUsers);
   }

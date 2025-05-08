@@ -23,6 +23,7 @@ class CloudFirestoreService {
   late Map<String,dynamic> categories;
   late Map<String,dynamic> typesEvent;
   late Map<String, dynamic> typesCustomer;
+  late Map<String, dynamic> typesUser;
 
   CloudFirestoreService([FirebaseFirestore? cloudFirestore])
       : _cloudFirestore = cloudFirestore ??  FirebaseFirestore.instance {
@@ -41,6 +42,7 @@ class CloudFirestoreService {
     instance.categories = await instance._getCategories();
     instance.typesEvent = await instance._getTypesEvent();
     instance.typesCustomer = await instance._getTypesCustomer();
+    instance.typesUser = await instance._getTypesUser();
     return instance;
   }
 
@@ -106,6 +108,10 @@ class CloudFirestoreService {
 
   void addOperator(Account u) {
     _collectionUtenti.doc(u.id).set(u.toDocument());
+  }
+
+  void updateUser(String id, Account data) {
+    _collectionUtenti.doc(id).update(data.toDocument());
   }
 
   void deleteOperator(String id) {
@@ -186,6 +192,10 @@ class CloudFirestoreService {
 
   Future<Map<String, dynamic>> _getTypesCustomer() async {
     return _collectionCostanti.doc(Constants.tabellaCostanti_TipologieCliente).get().then((document) => document.data()! as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> _getTypesUser() async {
+    return _collectionCostanti.doc(Constants.tabellaCostanti_TipologieUtente).get().then((document) => document.data()! as Map<String, dynamic>);
   }
 
   Stream<Map<String, dynamic>> getInfoApp() {

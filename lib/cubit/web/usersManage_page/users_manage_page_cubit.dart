@@ -5,6 +5,7 @@ import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/global_methods.dart';
 
 part 'users_manage_page_state.dart';
 
@@ -118,11 +119,19 @@ class UsersManagePageCubit extends Cubit<UsersManagePageState> {
     emit(state.assign(mapSelected: mapSelected));
   }
 
-  bool deleteAccount(Account operator){
-    _databaseRepository.deleteOperator(operator.id);
-    List<Account> filteredOperators = List.of(state.accountList);
-    filteredOperators.removeWhere((element) => element.id == operator.id);
-    return true;
+  Future<bool> deleteAccount(Account operator) async{
+    if(await UserUtils.deleteUser(operator.id)){
+      _databaseRepository.deleteOperator(operator.id);
+      List<Account> filteredOperators = List.of(state.accountList);
+      filteredOperators.removeWhere((element) => element.id == operator.id);
+      Map<int, int> countAccountTypology = Map.from(state.countEntity);
+      final key = Account.getIntTypology(operator.typology);
+      countAccountTypology[key] = (countAccountTypology[key] ?? 0) - 1;
+      countAccountTypology[Account.getIntTypology(Account.ALL)] = (countAccountTypology[Account.getIntTypology(Account.ALL)] ?? 0) -1;
+      emit(state.assign(accountList: filteredOperators, countAccountTypology: countAccountTypology, totalEvent: countAccountTypology[Account.getIntTypology(Account.ALL)]));
+      return true;
+    }
+    return false;
   }
 
   void forceRefresh() {

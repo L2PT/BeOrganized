@@ -21,7 +21,7 @@ class Event {
   String motivazione = "";
   Account? supervisor;
   Customer customer = Customer.empty();
-  Account? operator;
+  Account operator = Account.empty();
   List<Account> suboperators = [];
 
   //Attributi di trasporto

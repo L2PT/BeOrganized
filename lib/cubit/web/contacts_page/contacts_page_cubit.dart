@@ -124,6 +124,11 @@ class ContactsPageCubit extends Cubit<ContactsPageState> {
     _databaseRepository.deleteCustomer(customer.id);
     List<Customer> filteredCustomers = List.of(state.customerList);
     filteredCustomers.removeWhere((element) => element.id == customer.id);
+    Map<int, int> countCustomerTypology = Map.from(state.countEntity);
+    final key = Customer.getIntTypology(customer.typology);
+    countCustomerTypology[key] = (countCustomerTypology[key] ?? 0) - 1;
+    countCustomerTypology[Customer.getIntTypology(Customer.ALL)] = (countCustomerTypology[Customer.getIntTypology(Customer.ALL)] ?? 0) -1;
+    emit(state.assign(customerList: filteredCustomers, countCustomerTypology: countCustomerTypology, totalEvent: countCustomerTypology[Customer.getIntTypology(Customer.ALL)]));
     return true;
   }
 

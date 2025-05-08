@@ -20,12 +20,12 @@ import 'package:venturiautospurghi/views/screen_pages/waiting_event_list_view.da
 import 'package:venturiautospurghi/views/screens/create_address_view.dart';
 import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
 import 'package:venturiautospurghi/views/screens/create_event_view.dart';
+import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/persistent_notification_view.dart';
-import 'package:venturiautospurghi/views/screens/register_view.dart';
 
 part 'mobile_event.dart';
 part 'mobile_state.dart';
@@ -84,7 +84,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
     switch(event.route) {
       case Constants.detailsEventViewRoute: emit(OutBackdropState(event.route, DetailsEvent(event.arg))); break;
       case Constants.createEventViewRoute: emit( OutBackdropState(event.route, CreateEvent(event: objectParameter, type: status, currentStep: currentStep, ))); break;
-      case Constants.registerRoute: emit( OutBackdropState(event.route, Register())); break;
+      case Constants.registerRoute: emit( OutBackdropState(event.route, CreateUser())); break;
       case Constants.waitingNotificationRoute: emit( NotificationWaitingState(event.route, PersistentNotification(event.arg))); break;
       case Constants.homeRoute: emit( InBackdropState(event.route, _account.supervisor? OperatorList() : DailyCalendar(event.arg != null? event.arg['day']:null,event.arg != null?event.arg['operator']:null) )); break;
       case Constants.monthlyCalendarRoute: emit( InBackdropState(event.route, MonthlyCalendar(event.arg != null?event.arg['month']:null,event.arg != null?event.arg['operator']:null) )); break;

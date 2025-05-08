@@ -80,9 +80,9 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
   }
 
   void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode) {
-    DateTime oldEnd = event.end;
     event.start = start;
     event.end = end;
+
     if(event.operator == operatorOld){
       if(duplicateMode){
         event.suboperators.add(operator);
@@ -95,15 +95,14 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
       }
       event.suboperators.add(operator);
     }
-    oldEnd.isBefore(DateTime.now())?
-    _databaseRepository.updateEventPast(event.id, event):
-    _databaseRepository.updateEvent(event.id, event);
 
     bool sendNotification = true;
-    if (oldEnd.isBefore(DateTime.now())) {
+    if (end.isBefore(DateTime.now())) {
       sendNotification = false;
+      _databaseRepository.updateEventPast(event.id, event);
     } else{
       event.status = EventStatus.New;
+      _databaseRepository.updateEvent(event.id, event);
     }
     if(sendNotification){
       FirebaseMessagingService.sendNotifications(tokens: event.operator!.tokens, title: "Nuovo incarico assegnato", eventId: event.id);

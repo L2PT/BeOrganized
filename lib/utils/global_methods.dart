@@ -116,6 +116,31 @@ class GeoUtils {
 
 }
 
+class UserUtils{
+
+  static Future<bool> deleteUser(String uid) async {
+    HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      'deleteUserByUid',);
+    try {
+      final HttpsCallableResult result = await callable.call(
+        <String, dynamic>{
+          'uid': uid,
+        },
+      );
+      return result.data["success"];
+    } on FirebaseFunctionsException catch (e) {
+      print('caught firebase functions exception');
+      print(e.code);
+      print(e.message);
+      print(e.details);
+      return false;
+    } catch (e) {
+      print('caught generic exception');
+      print(e);
+      return false;
+    }
+  }
+}
 class DoubleUtils {
 
   static int roundUpIfOverHalf(double value) {

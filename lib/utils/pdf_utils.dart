@@ -191,8 +191,8 @@ class PDFUtils {
               children: [
                 Icon(IconData(0xe0c8), size: 15, color: PdfColors.grey800),
                 SizedBox(width: 5,),
-                Text(event.customer.address.address.join(" "),
-                    style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.normal, color: PdfColors.grey700,), maxLines: 2),
+                Expanded( child: Text(event.customer.address.address.join(" "),
+                    style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.normal, color: PdfColors.grey700,), maxLines: 2),)
               ],
             ),
             event.customer.phones.length != 0?

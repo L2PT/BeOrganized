@@ -78,9 +78,10 @@ class _CustomerStepper extends StatelessWidget{
 
   void _onSavePressed() async {
     if (await context.read<CreateCustomerCubit>().saveCustomer())
-      if( !(await SuccessAlert(context, text: "Cliente salvato!").show()))
+      if( !(await SuccessAlert(context, text: "Cliente salvato!").show())){
         context.read<CreateCustomerCubit>().state.event.customer = context.read<CreateCustomerCubit>().state.customer;
         PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : context.read<CreateCustomerCubit>().getEvent(), 'res': true});
+      }
   }
 
   _CustomerStepper(this.context);

@@ -106,7 +106,7 @@ class Customer extends Equatable{
   }
 
   bool isCompany(){
-    return this.typology == "Azienda";
+    return this.typology == Customer.AZIENDA;
   }
 
   bool filter(lambda, value){

@@ -17,12 +17,13 @@ class Account extends Equatable{
   String email = "";
   String phone = "";
   String codFiscale = "";
+  String targa = "";
   List<Account> webops = [];
   List<dynamic> tokens = [];
   bool supervisor = false;
   String typology = "Operatore";
 
-  Account(this.id, this.name, this.surname, this.email, this.phone, this.codFiscale, this.webops, this.tokens, this.supervisor);
+  Account(this.id, this.name, this.surname, this.email, this.phone, this.codFiscale, this.targa, this.webops, this.tokens, this.supervisor, this.typology);
   Account.empty();
   
   Account.fromMap(String id, Map<String,dynamic> json) :
@@ -32,6 +33,7 @@ class Account extends Equatable{
     email = json['Email'],
     phone = json['Telefono'],
     codFiscale = json['CodiceFiscale'],
+    targa = json['Targa']??'',
     webops = json.containsKey('OperatoriWeb')? dynamicToObject(json['OperatoriWeb']) : <Account>[],
     tokens = json['Tokens']??[],
     supervisor = json['Responsabile'],
@@ -44,6 +46,7 @@ class Account extends Equatable{
       "Email":this.email,
       "Telefono":this.phone,
       "CodiceFiscale":this.codFiscale,
+      "Targa": this.targa,
       "Tokens":this.tokens,
       "Responsabile":this.supervisor,
       "Tipologia":this.typology,
@@ -56,6 +59,7 @@ class Account extends Equatable{
       "Email":this.email,
       "Telefono":this.phone,
       "CodiceFiscale":this.codFiscale,
+      "Targa": this.targa,
       "Tokens":this.tokens,
       "Responsabile":this.supervisor,
       "OperatoriWeb":this.webops,
@@ -71,6 +75,7 @@ class Account extends Equatable{
       "Email":this.email,
       "Telefono":this.phone,
       "CodiceFiscale":this.codFiscale,
+      "Targa": this.targa,
       "Tokens":this.tokens,
       "Responsabile":this.supervisor,
       "Tipologia":this.typology,
@@ -83,6 +88,7 @@ class Account extends Equatable{
     this.email = userUpdate.email;
     this.phone = userUpdate.phone;
     this.codFiscale = userUpdate.codFiscale;
+    this.targa = userUpdate.targa;
     this.webops = userUpdate.webops;
     this.tokens = userUpdate.tokens;
     this.supervisor = userUpdate.supervisor;
@@ -133,6 +139,10 @@ class Account extends Equatable{
       case VEICOLO: return Icon(Icons.directions_car_filled);
       default: return Icon(Icons.people);
     }
+  }
+
+  bool isVehicle(){
+    return this.typology == Account.VEICOLO;
   }
 
   @override

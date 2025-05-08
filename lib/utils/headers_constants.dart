@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 
@@ -20,8 +21,9 @@ class Headers{
   ];
 
   static final List<MapEntry<Tab,int>> tabsHeadersUsers = [
-    MapEntry(new Tab(text: "UTENTI TOTALI",icon: Icon(Icons.people),), Customer.getIntTypology(Customer.ALL)),
-    MapEntry(new Tab(text: "OPERATORE",icon: Icon(FontAwesomeIcons.helmetSafety),), Customer.getIntTypology(Customer.PRIVATO)),
-    MapEntry(new Tab(text: "RESPONSABILE",icon: Icon(FontAwesomeIcons.userTie),),Customer.getIntTypology(Customer.AZIENDA)),
+    MapEntry(new Tab(text: "UTENTI TOTALI",icon: Icon(Icons.people),), Account.getIntTypology(Account.ALL)),
+    MapEntry(new Tab(text: "OPERATORI",icon: Icon(FontAwesomeIcons.helmetSafety),), Account.getIntTypology(Account.OPERATORE)),
+    MapEntry(new Tab(text: "RESPONSABILI",icon: Icon(FontAwesomeIcons.userTie),),Account.getIntTypology(Account.RESPONSABILE)),
+    MapEntry(new Tab(text: "VEICOLI",icon: Icon(Icons.directions_car_filled),),Account.getIntTypology(Account.VEICOLO)),
   ];
 }
