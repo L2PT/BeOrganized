@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/animation/fade_animation.dart';
@@ -653,6 +654,228 @@ class _timeControls extends StatelessWidget {
                 )) : Container()
           ],));
 
+    Widget repeatFlag() => Container(
+        margin: EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: iconWidth,
+              margin: EdgeInsets.only(right: 20.0),
+              child: Icon(Icons.repeat, color: black, size: iconWidth),
+            ),
+            Expanded(
+              child: Text(context
+                  .read<CreateEventCubit>()
+                  .canModify ? "Ripeti incarico" : "Ripetizione", style: label),
+            ),
+            context.read<CreateEventCubit>().canModify ?
+            Container(
+                height: 30,
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                    fit: BoxFit.fill,
+                    child:Switch(
+                        inactiveTrackColor: grey_light,
+                        value: context.read<CreateEventCubit>().state.event.isRepeatedEvent(),
+                        activeTrackColor: black,
+                        activeColor: yellow,
+                        onChanged: context.read<CreateEventCubit>().setIsRepeated
+                    )
+                )) : Container()
+          ],));
+
+    Widget repeatTypePicker() => Row(
+      children: <Widget>[
+        Container(
+          width: iconWidth,
+          margin: EdgeInsets.only(right: 20.0),
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              Radio<String>(
+                value: Event.RECURRENCE_MENSILE,
+                groupValue: context.read<CreateEventCubit>().state.event.recurrenceType,
+                onChanged: context.read<CreateEventCubit>().setRecurrenceType,
+                fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return black;
+                  }
+                  return grey_light; // colore del cerchio quando NON selezionato
+                }),
+              ),
+              Text(Event.RECURRENCE_MENSILE, style: label,),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              Radio<String>(
+                value: Event.RECURRENCE_ANNO,
+                groupValue: context.read<CreateEventCubit>().state.event.recurrenceType,
+                onChanged: context.read<CreateEventCubit>().setRecurrenceType,
+                fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return black;
+                  }
+                  return grey_light; // colore del cerchio quando NON selezionato
+                }),
+              ),
+              Text(Event.RECURRENCE_ANNO, style: label,),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    Widget repeatNumberPicker() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0), // Spazio sopra e sotto
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: iconWidth,
+            margin: EdgeInsets.only(right: 20.0),
+          ),
+          Text("Giorno", style: label),
+          SizedBox(width: 8),
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.5),
+                width: 1.0,
+              ),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            width: 35,
+            child: TextFormField(
+              maxLines: 1,
+              cursorColor: black,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+              ],
+              initialValue: context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth > 0
+                  ? context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth.toString()
+                  : DateTime.now().day.toString(),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: "Es. 15",
+                hintStyle: subtitle,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final day = int.tryParse(value);
+                if (day == null || day < 1 || day > 31) {
+                  return 'Inserisci un giorno valido (1-31)';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                final day = int.tryParse(value ?? '');
+                context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth = day ?? -1;
+              },
+            ),
+          ),
+          SizedBox(width: 12),
+          Text("ogni", style: label),
+          SizedBox(width: 12),
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.5),
+                width: 1.0,
+              ),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            width: 35,
+            child: TextFormField(
+              maxLines: 1,
+              cursorColor: black,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+              ],
+              initialValue: context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths > 0
+                  ? context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths.toString()
+                  : "",
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: "Es. 3",
+                hintStyle: subtitle,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final interval = int.tryParse(value);
+                if (interval == null || interval < 1) {
+                  return 'Numero non valido';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                final interval = int.tryParse(value ?? '');
+                context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths = interval ?? 1;
+              },
+            ),
+          ),
+          SizedBox(width: 8),
+          Text(
+            context.read<CreateEventCubit>().state.event.recurrenceType == Event.RECURRENCE_ANNO
+                ? "anno/i"
+                : "mese/i",
+            style: label,
+          ),
+        ],
+      ),
+    );
+
+
+    Widget repeatDatePicker() => Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          GestureDetector(
+              child: Text(
+                event.recurrenceStart.toString().split(' ').first,
+                style: title.copyWith(fontSize: 16),
+              ),
+              onTap: () => PlatformDatePicker.selectDate(
+                context,
+                maxTime: DateTime(3000),
+                currentTime: event.recurrenceStart,
+                onConfirm: (date) => context.read<CreateEventCubit>().setStartRepeatedDate(date),
+              )
+          ),
+          SizedBox(width: 8), // spazio prima del trattino
+          Text("-", style: label, textAlign: TextAlign.center),
+          SizedBox(width: 8), // spazio dopo il trattino
+          GestureDetector(
+              child: Text(
+                event.recurrenceEnd.toString().split(' ').first,
+                style: title.copyWith(fontSize: 16)
+              ),
+              onTap: () => PlatformDatePicker.selectDate(
+                context,
+                maxTime: DateTime(3000),
+                currentTime: event.recurrenceEnd,
+                onConfirm: (date) => context.read<CreateEventCubit>().setEndRepeatedDate(date),
+              )
+          ),
+        ],
+      ),
+    );
+
+
 
     Widget eventScheduled() => Container(
       margin: EdgeInsets.symmetric(vertical: 4),
@@ -690,6 +913,23 @@ class _timeControls extends StatelessWidget {
           Column(children: <Widget>[
             context.read<CreateEventCubit>().canModify? eventScheduled() : Container(),
             allDayFlag(),
+            repeatFlag(),
+            context.read<CreateEventCubit>().state.event.isRepeatedEvent()?
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 1.0,
+                ),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              margin: EdgeInsets.symmetric(vertical: 5),
+              child: Column(children: [
+                context.read<CreateEventCubit>().state.event.isRepeatedEvent()?repeatNumberPicker():Container(),
+                context.read<CreateEventCubit>().state.event.isRepeatedEvent() &&
+                    context.read<CreateEventCubit>().isModify()?repeatDatePicker():Container(),
+              ],),
+            ):Container(),
             dateTimeStartPicker(),
             dateTimeEndPicker(),
           ])

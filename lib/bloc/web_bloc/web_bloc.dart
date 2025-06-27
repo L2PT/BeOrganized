@@ -16,6 +16,7 @@ import 'package:venturiautospurghi/views/screens/create_event_view.dart';
 import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
+import 'package:venturiautospurghi/views/screens/generate_ai_event_view.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/table_calendar_view.dart';
 
@@ -83,10 +84,11 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       case Constants.closeOverViewRoute: emit( CloseOverView(<String, dynamic>{"objectParameter": objectParameter,"typeStatus": historyRoute.isEmpty?0:historyRoute.last.status, "currentStep": historyRoute.isEmpty?0:historyRoute.last.currentStep},routeTarget,(event.arg is Map)?event.arg["res"]:false, callback??() {})); break;
       case Constants.detailsEventViewRoute: emit( OverViewReady(event.route, DetailsEvent(objectParameter),_posLeftOverView, _posTopOverView, )); break;
       case Constants.createEventViewRoute: emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:DateTime.now(), type: status), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.generateAiEventViewRoute: emit( OverViewReady(event.route, GenerateAiEvent(dateSelect: (event.arg is Map)?event.arg["dateSelect"]:DateTime.now()), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createCustomerViewRoute: emit( OverViewReady(event.route, CreateCustomer(event: objectParameter,currentStep: currentStep,type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createAddressViewRoute: emit( OverViewReady(event.route, CreateAddress(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.monthlyCalendarRoute: emit( OverViewReady(event.route, TableCalendarWithBuilders(), _posLeftOverView, _posTopOverView,)); break;
-      case Constants.registerRoute: emit( OverViewReady(event.route, CreateUser(), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.registerRoute: emit( OverViewReady(event.route, CreateUser(event: objectParameter, type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.operatorListRoute: emit( OverViewReady(event.route, OperatorSelection(objectParameter, (event.arg is Map)?event.arg["requirePrimaryOperator"]:false),_posLeftOverView, _posTopOverView)); break;
       case Constants.customerListRoute: emit( OverViewReady(event.route, CustomerSelection(objectParameter),_posLeftOverView, _posTopOverView)); break;
       case Constants.addWebOperatorRoute: Event e = new Event.empty()..suboperators = _account.webops; e.start = e.end = DateTime(0); emit( OverViewReady(event.route, OperatorSelection(e), _posLeftOverView, _posTopOverView,)); break;

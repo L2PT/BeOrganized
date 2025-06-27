@@ -86,24 +86,24 @@ class EventListPageCubit extends Cubit<EventListPageState> {
     emit(state.assign(mapSelected: mapSelected));
   }
 
-  bool deleteEvent(Event event){
+  bool deleteEvent(Event event, bool repeatMode ){
     event.start.isBefore(DateTime.now())?
-    _databaseRepository.deleteEventPast(event)
-        :_databaseRepository.deleteEvent(event);
+    _databaseRepository.deleteEventPast(event, repeatMode)
+        :_databaseRepository.deleteEvent(event, repeatMode);
     List<Event> filteredEvents = List.of(state.listEventFiltered);
     filteredEvents.removeWhere((element) => element.id == event.id);
     return true;
   }
 
-  void deleteAllEvent(){
+  void deleteAllEvent(bool repeatMode){
     List<Event> filteredEvents = List.of(state.listEventFiltered);
     Map<String, bool> mapSelected = Map.from(state.mapSelected);
     List<String> idDeleteCustomer = [];
     mapSelected.entries.where((entry) => entry.value).forEach((entry) {
       Event e = filteredEvents.where((element) => element.id == entry.key).first;
       e.start.isBefore(DateTime.now())?
-      _databaseRepository.deleteEventPast(e)
-          :_databaseRepository.deleteEvent(e);
+      _databaseRepository.deleteEventPast(e, repeatMode)
+          :_databaseRepository.deleteEvent(e, repeatMode);
       filteredEvents.removeWhere((element) => element.id == entry.key);
       idDeleteCustomer.add(entry.key);
     });

@@ -24,6 +24,7 @@ import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
+import 'package:venturiautospurghi/views/screens/generate_ai_event_view.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/persistent_notification_view.dart';
 
@@ -43,7 +44,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
   StreamSubscription<List<Event>>? _notificationSubscription;
   late MobileState savedState;
   Map<String, FilterWrapper> filters = {};
-  late BuildContext? context;
+  BuildContext? context;
   late CloudFirestoreService? repository = null;
   
   MobileBloc({
@@ -84,7 +85,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
     switch(event.route) {
       case Constants.detailsEventViewRoute: emit(OutBackdropState(event.route, DetailsEvent(event.arg))); break;
       case Constants.createEventViewRoute: emit( OutBackdropState(event.route, CreateEvent(event: objectParameter, type: status, currentStep: currentStep, ))); break;
-      case Constants.registerRoute: emit( OutBackdropState(event.route, CreateUser())); break;
+      case Constants.registerRoute: emit( OutBackdropState(event.route, CreateUser(event: objectParameter, type: status,))); break;
       case Constants.waitingNotificationRoute: emit( NotificationWaitingState(event.route, PersistentNotification(event.arg))); break;
       case Constants.homeRoute: emit( InBackdropState(event.route, _account.supervisor? OperatorList() : DailyCalendar(event.arg != null? event.arg['day']:null,event.arg != null?event.arg['operator']:null) )); break;
       case Constants.monthlyCalendarRoute: emit( InBackdropState(event.route, MonthlyCalendar(event.arg != null?event.arg['month']:null,event.arg != null?event.arg['operator']:null) )); break;
@@ -95,7 +96,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
       case Constants.customerListRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings: RouteSettings(name: Constants.customerListRoute), builder: (context) => CustomerSelection(objectParameter, repository))).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createCustomerViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true,settings:   RouteSettings(name: Constants.createCustomerViewRoute),builder: (context) => CreateCustomer(event: objectParameter, type: status,currentStep: currentStep, repository: repository,))).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createAddressViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings:  RouteSettings(name: Constants.createAddressViewRoute),builder: (context) => CreateAddress(objectParameter, status, repository))).then((value) { (event.arg["callback"]).call(); }).then((value) { (event.arg["callback"]).call(); }); break;
-      case Constants.createEventViewRoute: emit( InBackdropState(event.route, CreateEvent())); break;
+      case Constants.generateAiEventViewRoute: emit(OutBackdropState(event.route, GenerateAiEvent()));break;
       case Constants.waitingEventListRoute: emit( InBackdropState(event.route, WaitingEventList())); break;
       case Constants.historyEventListRoute: emit( InBackdropState(event.route, HistoryEventList())); break;
       case Constants.filterEventListRoute: emit( InBackdropState(event.route, FilterEventList())); break;

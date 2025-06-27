@@ -28,6 +28,7 @@ class Constants {
   static const String registerRoute = '/view/register';
   static const String detailsEventViewRoute = '/view/details_event';
   static const String createEventViewRoute = '/view/form_event_creator';
+  static const String generateAiEventViewRoute = '/view/form_event_generate_ai';
   static const String createCustomerViewRoute = '/view/form_customer_creator';
   static const String createAddressViewRoute = '/view/form_address_creator';
   static const String customerListRoute = '/view/customer_list';
@@ -76,6 +77,9 @@ class Constants {
   static const String tabellaEventi_cliente = 'Cliente';
   static const String tabellaEventi_notaOperatore = 'NotaOperatore';
   static const String tabellaEventi_documenti = 'Documenti';
+  static const String tabellaEventi_isRepeated = 'isRepeated';
+  static const String tabellaEventi_isExcepeted = 'isExcepeted';
+  static const String tabellaEventi_recurrenceId = 'recurrenceId';
 
   // TABLE COSTANTI
   static const String tabellaCostanti_Categorie = 'Categorie';
@@ -125,4 +129,5 @@ class Constants {
 
   //AGOLIA INDEX
   static const String indexSearchCustomer = debug?'Clienti_Debug_Index':'Clienti_Index';
+  static const String indexSearchUser = 'Utenti_Index';
 }

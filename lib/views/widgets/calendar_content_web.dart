@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:printing/printing.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/calendar_content_web/calendar_content_web_cubit.dart';
@@ -268,10 +267,22 @@ class _HeaderOperatorCalendarState extends State<HeaderOperatorCalendar>  {
               Container(
                 margin: EdgeInsets.only(right: 10.0),
                 padding: EdgeInsets.only(top: 5, left: 5, right: 8, bottom: 5),
-                child: Icon(operator.supervisor? FontAwesomeIcons.userTie : FontAwesomeIcons.helmetSafety, size: 25, color: yellow,),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(5.0)),
                   color: black,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 25, // 👈 massimo consentito per l’icona
+                    maxHeight: 25,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: Icon(
+                      Account.getIconTypology(operator.typology).icon,
+                      color: yellow,
+                    ),
+                  ),
                 ),
               ),
             ],

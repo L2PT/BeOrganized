@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/bloc/mobile_bloc/mobile_bloc.dart';
 import 'package:venturiautospurghi/models/linkmenu.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 final Map<String, LinkMenu> menuOperatore = const {
   Constants.homeRoute: const LinkMenu(Icons.home, Colors.white, 30, "Home", title_rev),
@@ -18,7 +18,7 @@ final Map<String, LinkMenu> menuResponsabile = const {
   Constants.homeRoute: const LinkMenu(Icons.home, Colors.white, 30, "Home", title_rev),
   Constants.historyEventListRoute: const LinkMenu(Icons.history, Colors.white, 30, "Storico incarichi", title_rev),
   Constants.bozzeEventListRoute: const LinkMenu(Icons.assignment, Colors.white, 30, "Incarichi in bozza", title_rev),
-  Constants.createEventViewRoute: const LinkMenu(Icons.edit, Colors.white, 30, "Crea evento", title_rev),
+  Constants.generateAiEventViewRoute: const LinkMenu(FontAwesomeIcons.brain, Colors.white, 30, "Genera evento", title_rev),
   Constants.filterEventListRoute: const LinkMenu(Icons.search, Colors.white, 30, "Ricerca incarichi", title_rev),
   Constants.registerRoute: const LinkMenu(Icons.person_add, Colors.white, 30, "Crea utente", title_rev),
 };

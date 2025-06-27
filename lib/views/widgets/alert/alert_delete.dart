@@ -7,16 +7,19 @@ class ConfirmCancelAlert {
   final String title;
   final String text;
   final bool showDetailsContent;
+  final bool showRepeatContent;
   late List<Widget> _actions;
 
 
-  ConfirmCancelAlert(this.context, {required this.title, required this.text, this.showDetailsContent = false});
+  ConfirmCancelAlert(this.context, {required this.title, required this.text, this.showDetailsContent = false,
+    this.showRepeatContent = false});
 
   Future<List<bool>> show() async => await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         bool updateEndDate = false;
+        bool deleteReapet = false;
         return StatefulBuilder(
         builder: (context, setState) {
           return Alert(
@@ -33,7 +36,7 @@ class ConfirmCancelAlert {
               ElevatedButton(
                 child: new Text('CONFERMA', style: button_card),
                 onPressed: () {
-                  Navigator.pop(context, [true, updateEndDate]);
+                  Navigator.pop(context, [true, updateEndDate || deleteReapet]);
                 },
               ),
             ],
@@ -48,11 +51,41 @@ class ConfirmCancelAlert {
                   Icon(Icons.update_outlined, color: updateEndDate?black:grey_dark, size: 25),
                   SizedBox(width: 5,),
                   Text("Aggiornare la data di fine",style: label.copyWith(color: updateEndDate?black:grey_dark),),
-                  Switch(value: updateEndDate, onChanged: (value) {
-                    setState((){ updateEndDate = value; });
-                  },activeColor: yellow,)
-                ])
-                    : Container(),
+                  Spacer(),
+                  Container(
+                    height: 30,
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                        fit: BoxFit.fill,
+                        child:Switch(
+                          inactiveTrackColor: grey_light,
+                          value: updateEndDate,
+                          activeTrackColor: black,
+                          activeColor: yellow,
+                          onChanged:  (value) { setState((){ updateEndDate = value; });},
+                        )
+                  ))
+                ]) : Container(),
+                showRepeatContent?
+                Row(children: [
+                  Icon(Icons.repeat, color: deleteReapet?black:grey_dark, size: 25),
+                  SizedBox(width: 5,),
+                  Text("Cancella tutta la serie",style: label.copyWith(color: deleteReapet?black:grey_dark),),
+                  Spacer(),
+                  Container(
+                      height: 30,
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                          fit: BoxFit.fill,
+                          child:Switch(
+                              inactiveTrackColor: grey_light,
+                              value: deleteReapet,
+                              activeTrackColor: black,
+                              activeColor: yellow,
+                              onChanged:  (value) { setState((){ deleteReapet = value; });},
+                          )
+                  ))
+                ]) : Container(),
               ]),
             ),
             title: title,

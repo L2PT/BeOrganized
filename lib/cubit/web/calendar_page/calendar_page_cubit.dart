@@ -27,7 +27,7 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
   void loadMoreData([DateTime? start, DateTime? end]){
     DateTime from = TimeUtils.truncateDate(start??DateTime.now().subtract(new Duration(days: range)), "day");
     DateTime to = TimeUtils.truncateDate(end?.add(new Duration(days: 1))??(start??DateTime.now()).add(new Duration(days: range)), "day");
-    _databaseRepository.subscribeEventsByOperator(_account.webops.map((operator) => operator.id).toList(), statusEqualOrAbove:  EventStatus.Refused,
+    _databaseRepository.subscribeEventsByOperatorReapet(_account.webops.map((operator) => operator.id).toList(), statusEqualOrAbove:  EventStatus.Refused,
         from: from, to: to).listen((eventsList) {
       evaluateEventsMap(eventsList);
     });

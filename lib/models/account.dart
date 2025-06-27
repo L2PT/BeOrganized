@@ -136,7 +136,7 @@ class Account extends Equatable{
     switch(typology){
       case OPERATORE: return Icon(FontAwesomeIcons.helmetSafety);
       case RESPONSABILE: return Icon(FontAwesomeIcons.userTie);
-      case VEICOLO: return Icon(Icons.directions_car_filled);
+      case VEICOLO: return Icon(FontAwesomeIcons.truck);
       default: return Icon(Icons.people);
     }
   }

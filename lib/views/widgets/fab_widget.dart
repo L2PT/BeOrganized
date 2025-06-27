@@ -100,10 +100,11 @@ class Fab_details_super  extends StatelessWidget {
                                   cursor: SystemMouseCursors.click,
                                   child:GestureDetector(
                                   onTap: () async {
-                                    ConfirmCancelAlert(parentContext, title: "CANCELLA INCARICO", text: "Confermi la cancellazione dell'incarico?").show().then((value) {
+                                    ConfirmCancelAlert(parentContext, title: "CANCELLA INCARICO", text: "Confermi la cancellazione dell'incarico?",
+                                        showRepeatContent: context.read<DetailsEventCubit>().state.event.isRepeatedEvent()).show().then((value) {
                                       if(value.first){
                                         Navigator.of(dialogContext).pop(); //fab
-                                        context.read<DetailsEventCubit>().deleteEvent();
+                                        context.read<DetailsEventCubit>().deleteEvent(value.last);
                                       }
                                     });
                                   },

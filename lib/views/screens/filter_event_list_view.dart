@@ -49,9 +49,9 @@ class _largeScreen extends StatefulWidget {
 class _largeScreenState extends State<_largeScreen>  {
 
   void deleteEvent(Event event, BuildContext context){
-    ConfirmCancelAlert(context, title: "CANCELLA INCARICO", text: "Confermi la cancellazione del incarico?").show().then((value) {
+    ConfirmCancelAlert(context, title: "CANCELLA INCARICO", text: "Confermi la cancellazione del incarico?", showRepeatContent: event.isRepeatedEvent()).show().then((value) {
       if(value.first){
-        context.read<WebCubit>().eventListPageCubit.deleteEvent(event);
+        context.read<WebCubit>().eventListPageCubit.deleteEvent(event, value.last);
       }
     });
   }
@@ -59,7 +59,7 @@ class _largeScreenState extends State<_largeScreen>  {
   void deleteAllCustomer(BuildContext context){
     ConfirmCancelAlert(context, title: "CANCELLA GLI INCARICHI", text: "Confermi la cancellazione degli incarichi selezionati?").show().then((value) {
       if(value.first){
-        context.read<WebCubit>().eventListPageCubit.deleteAllEvent();
+        context.read<WebCubit>().eventListPageCubit.deleteAllEvent(value.last);
       }
     });
   }

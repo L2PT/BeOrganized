@@ -79,7 +79,7 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
     return state.user.webops.elementAt(pos);
   }
 
-  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode) {
+  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode) async {
     event.start = start;
     event.end = end;
 
@@ -95,7 +95,10 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
       }
       event.suboperators.add(operator);
     }
-
+    if(event.isRepeated)
+      event.isExcepeted = true;
+    if(event.id.isEmpty)
+      event.id = await _databaseRepository.addEvent(event);
     bool sendNotification = true;
     if (end.isBefore(DateTime.now())) {
       sendNotification = false;
@@ -105,7 +108,7 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
       _databaseRepository.updateEvent(event.id, event);
     }
     if(sendNotification){
-      FirebaseMessagingService.sendNotifications(tokens: event.operator!.tokens, title: "Nuovo incarico assegnato", eventId: event.id);
+      FirebaseMessagingService.sendNotifications(tokens: event.operator.tokens, title: "Nuovo incarico assegnato", eventId: event.id);
     }
   }
 }

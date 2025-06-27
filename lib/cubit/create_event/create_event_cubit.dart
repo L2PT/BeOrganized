@@ -52,44 +52,31 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
     }
   }
 
-  void getLocations(String text) async {
-    if(text.length > 5 && text != state.event.address){
-      List<String> locations = [];
-      if(PlatformUtils.isMobile){
-        locations = await GeoUtils.getLocations(text);
-      }else{
-        locations = await GeoUtils.getLocationsWeb(text);
-      }
-      emit(state.assign(locations: locations, address: text));
-    }
-  }
-
-  setAddress(String address) {
-    addressController.text = address;
-    emit(state.assign(locations: <String>[], address: address));
-  }
-
   Future<bool> saveEvent() async {
     if(state.isLoading()) return Future<bool>(()=>false);
     if(state.event.end.isBefore(state.event.start))
       PlatformUtils.notifyErrorMessage("Seleziona un'orario di fine incarico valido");
     else if((this.formTimeControlsKey.currentState!.validate() || !this.canModify) && formKeyAssignedInfo.currentState!.validate()) {
       //get all data before refresh
+      formTimeControlsKey.currentState!.save();
       formKeyAssignedInfo.currentState!.save();
       emit(state.assign(status: _formStatus.loading));
       try {
         if (Constants.debug) print(
             "Firebase save " + state.event.start.toString() + " : " +
                 state.event.end.toString());
+        if(state.event.customer.id.isEmpty){
+          _databaseRepository.addCustomer(state.event.customer);
+        }
         state.event.supervisor = _account;
         state.event.color = this.categories[state.event.category];
         if(state.event.typology == 'Contratto') state.event.title = state.event.typology + " - " + state.event.title;
 
         bool sendNotification = true;
-        if (state.event.operator == null || state.event.operator!.id.isEmpty){
+        if (state.event.operator.id.isEmpty){
           state.event.status = EventStatus.Bozza;
           sendNotification = false;
-        } else if (state.isScheduled) {
+        } else if (state.isScheduled || state.isRepeat) {
           state.event.status = EventStatus.Accepted;
           sendNotification = false;
         } else if (state.event.end.isBefore(DateTime.now())) {
@@ -102,9 +89,28 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
           state.event.id = state.event.end.isBefore(DateTime.now())?
              await _databaseRepository.addEventPast(state.event): await _databaseRepository.addEvent(state.event);
         } else {
-          state.event.end.isBefore(DateTime.now())?
-              _databaseRepository.updateEventPast(state.event.id, state.event):
-              _databaseRepository.updateEvent(state.event.id, state.event);
+          if(state.isRepeat){
+            Event? eventMaster = await _databaseRepository.getEvent(state.event.recurrenceId);
+            if(eventMaster!.recurrenceDayOfMonth!=state.event.recurrenceDayOfMonth ||
+                eventMaster.recurrenceIntervalInMonths!=state.event.recurrenceIntervalInMonths ||
+                eventMaster.start!=state.event.recurrenceStart ||
+                eventMaster.end!=state.event.recurrenceEnd){
+              eventMaster.start = state.event.recurrenceStart;
+              eventMaster.end = state.event.recurrenceEnd;
+              eventMaster.recurrenceDayOfMonth = state.event.recurrenceDayOfMonth;
+              eventMaster.recurrenceIntervalInMonths = state.event.recurrenceIntervalInMonths;
+              _databaseRepository.updateEvent(eventMaster.id, eventMaster);
+            }
+            state.event.isExcepeted = true;
+          }
+          if(state.event.id.isNotEmpty){
+            state.event.end.isBefore(DateTime.now())?
+            _databaseRepository.updateEventPast(state.event.id, state.event):
+            _databaseRepository.updateEvent(state.event.id, state.event);
+          }else{
+            state.event.id = state.event.end.isBefore(DateTime.now())?
+            await _databaseRepository.addEventPast(state.event): await _databaseRepository.addEvent(state.event);
+          }
         }
         if(Constants.debug) print("Firebase save complete");
         if(Constants.debug) print("FireStorage upload");
@@ -174,6 +180,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
     emit(state.assign(isScheduled: value));
   }
 
+  void setIsRepeated(value){
+    state.event.isRepeated = value;
+    emit(state.assign(isRepeat: value));
+  }
+
   setAllDayDate(DateTime date){
     Event event = Event.fromMap("", "", state.event.toMap());
     event.start = TimeUtils.truncateDate(date, "day").add(Duration(hours: Constants.MIN_WORKTIME));
@@ -219,6 +230,24 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
     _removeAllOperators(event);
     emit(state.assign(event: event));
   }
+
+  setStartRepeatedDate(DateTime date) {
+    Event event = Event.fromMap("", "", state.event.toMap());
+    event.recurrenceStart = TimeUtils.truncateDate(date, "day").add(
+        Duration(hours: event.start.hour,
+            minutes: event.start.minute));
+    emit(state.assign(event: event));
+  }
+
+  setEndRepeatedDate(DateTime date) {
+    Event event = Event.fromMap("", "", state.event.toMap());
+    event.recurrenceEnd = TimeUtils.truncateDate(date, "day").add(
+        Duration(hours: event.end.hour,
+            minutes: event.end.minute));
+    emit(state.assign(event: event));
+  }
+
+
 
   void removeSuboperatorFromEventList(Account suboperator) {
     Event event = Event.fromMap("", "", state.event.toMap());
@@ -320,5 +349,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils{
 
   void setFirstClick(DateTime date){
     firstClick = date;
+  }
+
+  void setRecurrenceType(String? value){
+    Event temp = Event.fromMap(state.event.id, state.event.color, state.event.toMap());
+    temp.recurrenceType = value??Event.RECURRENCE_MENSILE;
+    emit(state.assign(event: temp));
   }
 }

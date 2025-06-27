@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
@@ -50,8 +51,11 @@ class CloudFirestoreService {
   /// user logged in. The Firebase AuthUser uid must be the same as the id of the
   /// document in the "Utenti" [Constants.tabellaUtenti] collection.
   /// However the mail is also an unique field.
-  Future<Account> getAccount(String email, {String? phoneId}) async {
-    if(!string.isNullOrEmpty(email))
+  Future<Account> getAccount({String? email, String? phoneId, String? id}) async {
+    if(!string.isNullOrEmpty(id)){
+      return _collectionUtenti.doc(id).get().then((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>));
+    }
+    else if(!string.isNullOrEmpty(email))
       return _collectionUtenti.where('Email', isEqualTo: email).get().then((snapshot) => snapshot.docs.map((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>)).first);
     else
       return _collectionUtenti.where('TelefonoId', isEqualTo: phoneId??"").get().then((snapshot) => snapshot.docs.map((document) => Account.fromMap(document.id, document.data() as Map<String, dynamic>)).first);
@@ -81,7 +85,7 @@ class CloudFirestoreService {
     listEvents.forEach((event) {
       if (event.id != eventIdToIgnore) {
         if (event.isBetweenDate(fromDate, toDate)) {
-          [event.operator, ...event.suboperators].map((e) => e!.id).forEach((idOperator) {
+          [event.operator, ...event.suboperators].map((e) => e.id).forEach((idOperator) {
             bool checkDelete = false;
             for (int i = 0; i < accounts.length && !checkDelete; i++) {
               if (accounts.elementAt(i).id == idOperator) {
@@ -208,31 +212,59 @@ class CloudFirestoreService {
 
   Future<Event?> getEvent(String id) async {
     return _collectionEventi.doc(id).get().then((document) => document.exists?
-        Event.fromMap(document.id,  _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data()! as Map<String, dynamic>) : null);
+        Event.fromMap(document.id,  getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data()! as Map<String, dynamic>) : null);
   }
 
   Future<List<Event>> getEvents() async {
     return _collectionEventi.orderBy(Constants.tabellaEventi_dataInizio).get().then((snapshot) => snapshot.docs.map((document) =>
-        Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList());
+        Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList());
   }
 
   Future<List<Event>> getFutureEvents(DateTime date) async {
-    date = date.subtract(Duration( days: 1));
-    return _collectionEventi.where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo:  date).orderBy(Constants.tabellaEventi_dataInizio).get().then((snapshot) => snapshot.docs.map((document) =>
-        Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList());
+    date = date.subtract(const Duration(days: 1));
+
+    // Query 1: eventi NON ricorrenti
+    final snapshotNotRepeated = await _collectionEventi
+        .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: date)
+        .where(Constants.tabellaEventi_isRepeated, isEqualTo: false)
+        .orderBy(Constants.tabellaEventi_dataInizio)
+        .get();
+
+    // Query 2: eventi ECCEZIONE (es. override da una serie ricorrente)
+    final snapshotExceptions = await _collectionEventi
+        .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: date)
+        .where(Constants.tabellaEventi_isExcepeted, isEqualTo: true)
+        .orderBy(Constants.tabellaEventi_dataInizio)
+        .get();
+
+    // Unione e parsing
+    final events = [
+      ...snapshotNotRepeated.docs,
+      ...snapshotExceptions.docs,
+    ].map((document) => Event.fromMap(
+      document.id,
+      getColorByCategory(document.get(Constants.tabellaEventi_categoria)),
+      document.data() as Map<String, dynamic>,
+    )).toList();
+
+    // Ordina di nuovo per sicurezza
+    events.sort((a, b) => a.start.compareTo(b.start));
+
+    return events;
   }
+
 
   Stream<List<Event>> subscribeEvents() {
     return _collectionEventi.orderBy(Constants.tabellaEventi_dataInizio, descending: true).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }
 
   Stream<List<Event>> subscribeEventsByOperatorWaiting(String idOperator) {
     return _collectionEventi.where(Constants.tabellaEventi_idOperatori, arrayContains: idOperator).where(Constants.tabellaEventi_stato, isGreaterThanOrEqualTo: EventStatus.New).where(Constants.tabellaEventi_stato, isLessThanOrEqualTo: EventStatus.Seen).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }// TODO merge subscription queries
 
@@ -242,41 +274,117 @@ class CloudFirestoreService {
           .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: from)
           .where(Constants.tabellaEventi_dataInizio, isLessThan: to).snapshots().map((snapshot) {
         var documents = snapshot.docs;
-        return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).where((event) => event.status>=statusEqualOrAbove).toList();
+        return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).where((event) => event.status>=statusEqualOrAbove).toList();
       });
     else
       return _collectionEventi.where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
           .where(Constants.tabellaEventi_stato, isGreaterThanOrEqualTo: statusEqualOrAbove).snapshots().map((snapshot) {
         var documents = snapshot.docs;
-        return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+        return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
       });
   }
+
+  Stream<List<Event>> subscribeEventsByOperatorReapet(
+      List<String> idsOperator, {
+        required int statusEqualOrAbove,
+        DateTime? from,
+        DateTime? to,
+      }) {
+    final queryFrom = from ?? DateTime.now().subtract(const Duration(days: 90));
+    final queryTo = to ?? DateTime.now().add(const Duration(days: 90));
+
+    // Query eventi non ricorrenti o override
+    final baseQuery = _collectionEventi
+        .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
+        .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: queryFrom)
+        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo)
+        .where(Constants.tabellaEventi_isRepeated, isEqualTo: false);
+
+    // Query eventi override di ricorrenze (recurringId != null)
+    final overrideQuery = _collectionEventi
+        .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
+        .where(Constants.tabellaEventi_recurrenceId, isNotEqualTo: '')
+        .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: queryFrom)
+        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo);
+
+    // Query eventi ricorrenti master
+    final recurringQuery = _collectionEventi
+        .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
+        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo)
+        .where(Constants.tabellaEventi_recurrenceId, isEqualTo: '')
+        .where(Constants.tabellaEventi_isRepeated, isEqualTo: true);
+
+    // Uniamo gli stream
+    final baseStream = baseQuery.snapshots();
+    final overrideStream = overrideQuery.snapshots();
+    final recurringStream = recurringQuery.snapshots();
+
+    return Rx.combineLatest3(
+      baseStream,
+      overrideStream,
+      recurringStream,
+          (QuerySnapshot baseSnap, QuerySnapshot overrideSnap, QuerySnapshot recurringSnap) {
+        final baseEvents = baseSnap.docs
+            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
+            .where((event) => event.status>=statusEqualOrAbove).toList();
+
+        List<Event> overrideEvents = overrideSnap.docs
+            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
+            .toList();
+
+        final recurringMasters = recurringSnap.docs
+            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
+            .where((event) => event.status>=statusEqualOrAbove).toList();
+
+        // Mappa per sapere quali istanze sono state overrideate
+        final overriddenMap = {
+          for (final e in overrideEvents)
+            "${e.recurrenceId}_${e.start.year}_${e.start.month}": true
+        };
+
+        overrideEvents = overrideEvents.where((event) => event.status>=statusEqualOrAbove).toList();
+
+        // Genera istanze locali per eventi ricorrenti
+        final recurringInstances = recurringMasters.expand((template) {
+          return template.generateRecurringEvents(queryFrom, TimeUtils.minDate(template.end,queryTo))
+              .where((e) => !overriddenMap.containsKey("${e.recurrenceId}_${e.start.year}_${e.start.month}"));
+        });
+
+        return [
+          ...baseEvents,
+          ...overrideEvents,
+          ...recurringInstances,
+        ]..sort((a, b) => a.start.compareTo(b.start));
+      },
+    );
+  }
+
 
   Stream<List<Event>> subscribeEventsHistory() {
     return _collectionSubStoricoEventi.orderBy(Constants.tabellaEventi_dataInizio, descending: true).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }
 
   Stream<List<Event>> subscribeEventsDeleted() {
     return _collectionStoricoEliminati.orderBy(Constants.tabellaEventi_dataInizio).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }
 
   Stream<List<Event>> subscribeEventsRefuse() {
     return _collectionStoricoRifiutati.orderBy(Constants.tabellaEventi_dataInizio).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }
 
   Stream<List<Event>> subscribeEventsEnded() {
     return _collectionStoricoTerminati.orderBy(Constants.tabellaEventi_dataInizio).snapshots().map((snapshot) {
       var documents = snapshot.docs;
-      return documents.map((document) => Event.fromMap(document.id, _getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
+      return documents.map((document) => Event.fromMap(document.id, getColorByCategory(document.get(Constants.tabellaEventi_categoria)), document.data() as Map<String, dynamic>)).toList();
     });
   }
 
@@ -322,7 +430,7 @@ class CloudFirestoreService {
     if (limit != null && docs.length < limit) endOfList = true;
 
     List<Event> events = docs.map((document) =>
-        Event.fromMap(document.id, _getColorByCategory(
+        Event.fromMap(document.id, getColorByCategory(
             document.get(Constants.tabellaEventi_categoria)),
             document.data() as Map<String, dynamic>)).toList();
 
@@ -445,32 +553,76 @@ class CloudFirestoreService {
     _cloudFirestore.runTransaction(createTransaction);
   }
 
-  void deleteEvent(Event e) async {
-    e.status = EventStatus.Deleted;
-    final dynamic createTransaction = (dynamic tx) async {
+  void deleteEvent(Event e, bool deleteAllSeries) async {
+    dynamic createTransaction;
+    if(e.id.isNotEmpty && !e.isRepeatedEvent()) {
+      e.status = EventStatus.Deleted;
+      createTransaction = (dynamic tx) async {
         dynamic doc = _collectionEventi.doc(e.id);
         dynamic deletedDoc = _collectionStoricoEliminati.doc(e.id);
         await tx.set(deletedDoc, e.toDocument());
         await tx.delete(doc);
-    };
+      };
+    }else{
+      if(deleteAllSeries){
+        createTransaction = (dynamic tx) async {
+          dynamic doc = _collectionEventi.doc(e.recurrenceId);
+          Event? eventRecurrence = await getEvent(e.recurrenceId);
+          eventRecurrence!.end = e.end.subtract(const Duration(days: 1));
+          await tx.set(doc, eventRecurrence.toDocument());
+        };
+      }else{
+        e.status = EventStatus.Deleted;
+        createTransaction = (dynamic tx) async {
+          final doc = _collectionEventi.doc();
+          final deletedDoc = _collectionStoricoEliminati.doc();
+          await tx.set(deletedDoc, e.toDocument());
+          await tx.set(doc, e.toDocument());
+        };
+      }
+    }
     _cloudFirestore.runTransaction(createTransaction);
   }
 
-  void deleteEventPast(Event e) async {
-    e.status = EventStatus.Deleted;
-    final dynamic createTransaction = (dynamic tx) async {
-      dynamic doc = _collectionEventi.doc(e.id);
-      dynamic endedDoc = _collectionStoricoTerminati.doc(e.id);
-      dynamic deletedDoc = _collectionStoricoEliminati.doc(e.id);
-      await tx.set(deletedDoc, e.toDocument());
-      await tx.delete(endedDoc);
-      await tx.delete(doc);
-    };
+  void deleteEventPast(Event e, bool deleteAllSeries) async {
+    dynamic createTransaction;
+    if(e.id.isNotEmpty && !e.isRepeatedEvent()) {
+      e.status = EventStatus.Deleted;
+      createTransaction = (dynamic tx) async {
+        dynamic doc = _collectionEventi.doc(e.id);
+        dynamic endedDoc = _collectionStoricoTerminati.doc(e.id);
+        dynamic deletedDoc = _collectionStoricoEliminati.doc(e.id);
+        await tx.set(deletedDoc, e.toDocument());
+        await tx.delete(endedDoc);
+        await tx.delete(doc);
+      };
+    }else{
+      if(deleteAllSeries) {
+        createTransaction = (dynamic tx) async {
+          dynamic doc = _collectionEventi.doc(e.recurrenceId);
+          Event? eventRecurrence = await getEvent(e.recurrenceId);
+          eventRecurrence!.end = e.end.subtract(const Duration(days: 1));
+          await tx.set(doc, eventRecurrence.toDocument());
+        };
+      }else{
+        e.status = EventStatus.Deleted;
+        createTransaction = (dynamic tx) async {
+          final doc = _collectionEventi.doc();
+          final deletedDoc = _collectionStoricoEliminati.doc();
+          await tx.set(deletedDoc, e.toDocument());
+          await tx.set(doc, e.toDocument());
+        };
+      }
+    }
     _cloudFirestore.runTransaction(createTransaction);
   }
 
   void endEvent(Event e, {bool propagate = false}) async {
     e.status = EventStatus.Ended;
+    if(e.id.isEmpty){
+      e.isExcepeted = true;
+      e.id = await addEvent(e);
+    }
     Map<String, Event> eventsMoved = Map();
     if(propagate) {
       e.end = DateTime.now();
@@ -478,7 +630,7 @@ class CloudFirestoreService {
       while(eventsToPropagate.isNotEmpty) {
         Event e = eventsToPropagate.removeLast();
         for(var operator in [e.operator, ...e.suboperators]){
-          if(operator != null) {
+          if(operator.id.isNotEmpty) {
             List<Event> eventsInConflict = await _collectionEventi.where(Constants.tabellaEventi_idOperatori, arrayContains: operator.id).where(Constants.tabellaEventi_dataInizio, isGreaterThan: e.start, isLessThanOrEqualTo: e.end)
                 .get().then(((snapshot) => snapshot.docs.map((document) => Event.fromMap(document.id, "", document.data() as Map<String, dynamic>)).toList()));
             eventsInConflict.sort((a,b) => a.start.compareTo(b.start));
@@ -522,7 +674,7 @@ class CloudFirestoreService {
     _cloudFirestore.runTransaction(createTransaction);
   }
 
-  String _getColorByCategory(String? category) =>
+  String getColorByCategory(String? category) =>
     categories[category??Constants.categoryDefault]??Constants.fallbackHexColor;
 
   static void backgroundUpdateEventAsDelivered(String id) async {
@@ -552,6 +704,11 @@ class CloudFirestoreService {
 
   void updateCustomer(String id, Customer data) {
     _collectionClienti.doc(id).update(data.toDocument());
+  }
+
+  Future<Customer?> getCustomer(String id) async {
+    return _collectionClienti.doc(id).get().then((document) => document.exists?
+      Customer.fromMap(document.id, document.data()! as Map<String, dynamic>) : null);
   }
 
   Future<List<Customer>> getCustomers(Map<String, FilterWrapper> filters, {limit, startFrom }) async {

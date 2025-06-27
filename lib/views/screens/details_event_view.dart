@@ -301,24 +301,26 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                               buildPhoneNumberText(event.description, true),
                             SizedBox(height: 15),
                             event.description.isNotEmpty?
-                            GestureDetector(
-                              child: Container(
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    color: HexColor(event.color),
-                                    borderRadius:
-                                    BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  child: Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                            top: 3, bottom: 3, left: 20, right: 20),
-                                        child: Text("LEGGI",
-                                          style: subtitle_rev.copyWith(color: white),
-                                        ),
-                                      ))),
-                              onTap: () => _controller.animateTo(3),
-                            ):Container()
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                child: Container(
+                                    width: 100,
+                                    decoration: BoxDecoration(
+                                      color: HexColor(event.color),
+                                      borderRadius:
+                                      BorderRadius.all(Radius.circular(15.0)),
+                                    ),
+                                    child: Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                              top: 3, bottom: 3, left: 20, right: 20),
+                                          child: Text("LEGGI",
+                                            style: subtitle_rev.copyWith(color: white),
+                                          ),
+                                        ))),
+                                onTap: () => _controller.animateTo(3),
+                            )):Container()
                           ],
                         ),
                       ),

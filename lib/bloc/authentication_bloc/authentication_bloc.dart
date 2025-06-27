@@ -72,7 +72,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 
   Future<void> _onLoggedIn(LoggedIn event, Emitter<AuthenticationState> emit) async {
     var user = event.user;
-    account = await _dbRepository.getAccount(user.email);
+    account = await _dbRepository.getAccount(email: user.email);
     _loginSubscription = _dbRepository.subscribeAccount(account!.id).listen((userUpdate){ account!.update(userUpdate);});
     isSupervisor = account!.supervisor;
     if (PlatformUtils.isMobile || isSupervisor) emit(Authenticated(account!, isSupervisor, account!.tokens));
@@ -96,7 +96,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     try {
       var user = await _authenticationRepository.currentUser();
       if (user != null) {
-        account = await _dbRepository.getAccount(user.email);
+        account = await _dbRepository.getAccount(email: user.email);
         _loginSubscription = _dbRepository.subscribeAccount(account!.id).listen((userUpdate){ account!.update(userUpdate);});
         isSupervisor = account!.supervisor;
         emit(Authenticated(account!, isSupervisor));

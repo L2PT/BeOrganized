@@ -51,6 +51,7 @@ class UsersManagePageCubit extends Cubit<UsersManagePageState> {
     countAccountTypology[Account.getIntTypology(Account.ALL)] = await _databaseRepository.getAccountCountsByType(null);
     countAccountTypology[Account.getIntTypology(Account.OPERATORE)] = await _databaseRepository.getAccountCountsByType(Account.OPERATORE);
     countAccountTypology[Account.getIntTypology(Account.RESPONSABILE)] = await _databaseRepository.getAccountCountsByType(Account.RESPONSABILE);
+    countAccountTypology[Account.getIntTypology(Account.VEICOLO)] = await _databaseRepository.getAccountCountsByType(Account.VEICOLO);
     return countAccountTypology;
   }
 

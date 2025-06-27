@@ -1,10 +1,17 @@
+import 'package:intl/intl.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
+import 'package:venturiautospurghi/models/event_response_ai.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
+import 'package:venturiautospurghi/utils/global_methods.dart';
 
 class Event {
+
+  static const String RECURRENCE_MENSILE = "Mensile";
+  static const String RECURRENCE_ANNO = "Anno";
+
   String id = "";
   String title = "";
   String description = "";
@@ -28,8 +35,23 @@ class Event {
   Map<String, dynamic> documentsMap = {};
   bool isScheduled = false;
 
+  //Attributi ripetizione
+  String recurrenceId = ""; // ID della serie ricorrente
+  int recurrenceIntervalInMonths = 1; // ogni quanti mesi
+  int recurrenceDayOfMonth = -1; // giorno del mese (1-31)
+  bool isExcepeted = false;
+  bool isRepeated = false;
+  String recurrenceType = RECURRENCE_MENSILE;
+  DateTime recurrenceStart = DateTime.now();
+  DateTime recurrenceEnd = DateTime.now();
 
-  Event(this.id, this.title, this.description, this.notaOperator, this.start, this.end, this.address, this.documents, this.status, this.category,this.typology, this.color, this.supervisor, this.operator, this.suboperators, this.motivazione, this.customer, this.withCartel);
+
+  Event(this.id, this.title, this.description, this.notaOperator, this.start, this.end,
+      this.address, this.documents, this.status, this.category,this.typology, this.color,
+      this.supervisor, this.operator, this.suboperators, this.motivazione, this.customer,
+      this.withCartel, this.isScheduled, this.recurrenceId, this.recurrenceDayOfMonth,
+      this.isExcepeted, this.recurrenceIntervalInMonths, this.isRepeated,
+      this.recurrenceType);
   Event.empty();
 
   Event.fromMap(String id, String color, Map json) :
@@ -52,7 +74,15 @@ class Event {
     customer = json["Cliente"] == null? Customer.empty(): Customer.fromMap(id, json["Cliente"]),
     isScheduled = json["isScheduled"]??false,
     withCartel = json["withCartel"]??false,
-    documentsMap = json["documentsMap"] == null?{}:(json["documentsMap"] as Map<String,dynamic>) ;
+    documentsMap = json["documentsMap"] == null?{}:(json["documentsMap"] as Map<String,dynamic>),
+    recurrenceId = json["recurrenceId"]??"",
+    isExcepeted = json["isExcepeted"]??false,
+    isRepeated = json["isRepeated"]??false,
+    recurrenceDayOfMonth = json["recurrenceDayOfMonth"]??-1,
+    recurrenceType = json["recurrenceType"]??RECURRENCE_MENSILE,
+    recurrenceIntervalInMonths = json["recurrenceIntervalInMonths"]??-1,
+    recurrenceStart = json["recurrenceStart"] is DateTime?json["recurrenceStart"]:DateTime.now(),
+    recurrenceEnd = json["recurrenceEnd"] is DateTime?json["recurrenceEnd"]:DateTime.now();
 
   Map<String, dynamic> toMap() => {
       "id":this.id,
@@ -69,11 +99,19 @@ class Event {
       "color":this.color,
       "Responsabile":this.supervisor?.toMap(),
       "Cliente": this.customer.toMap(),
-      "Operatore":this.operator?.toMap(),
+      "Operatore":this.operator.toMap(),
       "SubOperatori":this.suboperators.map((op)=>op.toMap()).toList(),
       "isScheduled":this.isScheduled,
       "withCartel": this.withCartel,
       "documentsMap":this.documentsMap,
+      "recurrenceId": this.recurrenceId,
+      "isExcepeted": this.isExcepeted,
+      "isRepeated": this.isRepeated,
+      "recurrenceType": this.recurrenceType,
+      "recurrenceDayOfMonth": this.recurrenceDayOfMonth,
+      "recurrenceIntervalInMonths": this.recurrenceIntervalInMonths,
+      "recurrenceStart": this.recurrenceStart,
+      "recurrenceEnd": this.recurrenceEnd,
   };
   Map<String, dynamic> toDocument(){
     return Map<String, dynamic>.of({
@@ -97,8 +135,119 @@ class Event {
       "isScheduled":this.isScheduled,
       "withCartel": this.withCartel,
       "documentsMap":this.documentsMap,
+      "recurrenceId": this.recurrenceId,
+      "isExcepeted": this.isExcepeted,
+      "isRepeated": this.isRepeated,
+      "recurrenceType": this.recurrenceType,
+      "recurrenceDayOfMonth": this.recurrenceDayOfMonth,
+      "recurrenceIntervalInMonths": this.recurrenceIntervalInMonths,
+      "recurrenceStart": this.recurrenceStart,
+      "recurrenceEnd": this.recurrenceEnd,
     });
   }
+
+  void fromGenerateData(EventResponseAi eventResponseAi) {
+    title = '${eventResponseAi.tipo} - ${eventResponseAi.nome} ${eventResponseAi.cognome}';
+    description = eventResponseAi.problematica;
+    typology = eventResponseAi.tipo;
+    category = eventResponseAi.categoria;
+    color = eventResponseAi.color;
+    withCartel = eventResponseAi.cartello;
+    isScheduled = eventResponseAi.programmato;
+    isRepeated = eventResponseAi.isRepeated;
+    recurrenceIntervalInMonths = eventResponseAi.ogniQuantiMesiRipetizione;
+    recurrenceDayOfMonth = eventResponseAi.giornoMeseRipetizione;
+
+    DateTime? parseTimeOfDay(String? time, DateTime base) {
+      if (time != null && time.trim().isNotEmpty && TimeUtils.isValidTimeFormat(time)) {
+        final parsed = DateFormat("HH:mm").parseStrict(time.trim());
+        return TimeUtils.truncateDate(base, "day").add(Duration(hours: parsed.hour, minutes: parsed.minute));
+      }
+      return base;
+    }
+
+    if (isRepeated) {
+      if (eventResponseAi.dataInizioRipetizione.isNotEmpty) {
+        final startDate = DateTime.parse(eventResponseAi.dataInizioRipetizione);
+        start = TimeUtils.getStartWorkTimeSpan(from: startDate);
+        end = TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end);
+
+        final customStart = parseTimeOfDay(eventResponseAi.oraInizio, start);
+        if (customStart != null) start = customStart;
+
+        if (eventResponseAi.dataFineRipetizione.isNotEmpty) {
+          final endDate = DateTime.parse(eventResponseAi.dataFineRipetizione);
+          end = TimeUtils.truncateDate(endDate, "day").add(Duration(hours: end.hour, minutes: end.minute));
+        }
+
+        final customEnd = parseTimeOfDay(eventResponseAi.oraFine, end);
+        if (customEnd != null) {
+          end = customEnd;
+        } else {
+          end = TimeUtils.truncateDate(end, "day").add(
+            Duration(
+              hours: TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end).hour,
+              minutes: TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end).minute,
+            ),
+          );
+        }
+      }
+    } else {
+      if (eventResponseAi.data.isNotEmpty) {
+        final date = DateTime.parse(eventResponseAi.data);
+        if (eventResponseAi.allDay) {
+          start = TimeUtils.truncateDate(date, "day").add(Duration(hours: Constants.MIN_WORKTIME));
+          end = TimeUtils.truncateDate(date, "day").add(Duration(hours: Constants.MAX_WORKTIME));
+        } else {
+          start = TimeUtils.getStartWorkTimeSpan(from: date);
+          end = TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end);
+
+          final customStart = parseTimeOfDay(eventResponseAi.oraInizio, start);
+          if (customStart != null) {
+            start = customStart;
+
+            final customEnd = parseTimeOfDay(eventResponseAi.oraFine, end);
+            if (customEnd != null) {
+              end = customEnd;
+            } else {
+              end = TimeUtils.truncateDate(end, "day").add(
+                Duration(
+                  hours: TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end).hour,
+                  minutes: TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end).minute,
+                ),
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  List<Event> generateRecurringEvents(DateTime from, DateTime to) {
+    final events = <Event>[];
+    final interval = this.recurrenceIntervalInMonths;
+    final day = this.recurrenceDayOfMonth;
+
+    DateTime current = DateTime(this.start.year, this.start.month, day, this.start.hour, this.start.minute);
+
+    while (current.isBefore(to)) {
+      if (current.isAfter(from)) {
+        final nextEvent = Event.fromMap('', this.color, this.toMap());
+        nextEvent.id = "";
+        nextEvent.start = current;
+        nextEvent.end = DateTime(current.year, current.month, current.day, this.end.hour, this.end.minute,);
+        nextEvent.recurrenceId = this.id;
+        nextEvent.recurrenceStart = this.start;
+        nextEvent.recurrenceEnd = this.end;
+        events.add(nextEvent);
+      }
+      current = DateTime(current.year, current.month + interval, day, current.hour, current.minute);
+    }
+
+    return events;
+  }
+
 
   String addresAddress(){
     return this.customer.address.address.isEmpty?this.address.isEmpty?'Nessun indirizzo indicato':this.address:this.customer.address.address.join(" ");
@@ -119,7 +268,7 @@ class Event {
   bool isAllDayLong() {
     final differenceInHour = this.end.difference(this.start).inHours;
     final dayDuration = Constants.MAX_WORKTIME - Constants.MIN_WORKTIME;
-    return differenceInHour >= dayDuration;
+    return differenceInHour >= dayDuration && !isRepeated;
   }
   bool isDeleted() => this.status == EventStatus.Deleted;
   bool isNew() => this.status == EventStatus.New;
@@ -133,6 +282,15 @@ class Event {
   bool isIntervento() => this.typology == "Intervento";
   bool isContratto() => this.typology == "Contratto";
 
+  bool isRecurrenceMensile() => this.recurrenceType == RECURRENCE_MENSILE;
+  bool isRecurrenceAnno() => this.recurrenceType == RECURRENCE_ANNO;
+  bool isRepeatedEvent() => this.isRepeated && !this.isExcepeted;
+
   @override
-  String toString() => id+title+description+notaOperator+customer.toString()+documents.join()+start.toString()+end.toString()+address+(status).toString()+typology+withCartel.toString()+category+color+(operator?.id??"")+suboperators.map((o) => o.id).join()+(motivazione);
+  String toString() => id+title+description+notaOperator+customer.toString()
+      +documents.join()+start.toString()+end.toString()+address+(status).toString()
+      +typology+withCartel.toString()+category+color+(operator?.id??"")
+      +suboperators.map((o) => o.id).join()+(motivazione)+recurrenceId+isExcepeted.toString()
+      +recurrenceDayOfMonth.toString()+recurrenceIntervalInMonths.toString()+isRepeated.toString()+recurrenceType
+      +recurrenceStart.toString()+recurrenceEnd.toString();
 }

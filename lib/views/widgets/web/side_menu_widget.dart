@@ -48,7 +48,7 @@ class SideMenuLayerWeb extends StatelessWidget {
                 child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute), icon: Icon(iconData, color: white, size: 40,),)):
             Column( children: [
               ElevatedButton(
-                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState!.calendarDate} ),
+                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate} ),
                   style: ButtonStyle(
                     backgroundColor:  WidgetStateProperty.all<Color>(black),
                     surfaceTintColor: WidgetStateProperty.all<Color>(black),

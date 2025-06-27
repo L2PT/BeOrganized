@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/models/address.dart';
+import 'package:venturiautospurghi/models/event_response_ai.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 
@@ -89,6 +90,20 @@ class Customer extends Equatable{
       "IndirizziSearch": this.addressesSearch,
       "Tipologia":this.typology,
     });
+  }
+
+  Customer.fromGenerateData(EventResponseAi eventResponseAi) {
+    name = eventResponseAi.nome;
+    surname = eventResponseAi.cognome;
+    email = eventResponseAi.email;
+    partitaIva = eventResponseAi.partitaIva;
+    codFiscale = eventResponseAi.codicefiscale;
+    phones.add(eventResponseAi.telefono);
+    Address address = Address.empty();
+    address.address.add(eventResponseAi.indirizzo);
+    address.phone = eventResponseAi.telefono;
+    this.address = address;
+    addresses.add(address);
   }
 
   void update(Customer clientUpdate) {

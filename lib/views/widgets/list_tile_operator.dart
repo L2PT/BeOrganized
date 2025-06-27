@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
@@ -31,11 +30,23 @@ class ListTileOperator extends StatelessWidget {
           children: <Widget>[
             Container(
               margin: EdgeInsets.only(right: 10.0),
-              padding: EdgeInsets.only(top: 3, left: 3, right: 6, bottom: 3),
-              child: Icon(operator.supervisor? FontAwesomeIcons.userTie : FontAwesomeIcons.helmetSafety, color: darkStyle?black:yellow, size: iconSize,),
+              padding: EdgeInsets.only(top: 5, left: 5, right: 8, bottom: 5),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                color: darkStyle?yellow:black,
+                color: black,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 25, // 👈 massimo consentito per l’icona
+                  maxHeight: 25,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Icon(
+                    Account.getIconTypology(operator.typology).icon,
+                    color: yellow,
+                  ),
+                ),
               ),
             ),
             Column(

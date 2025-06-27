@@ -22,11 +22,11 @@ import 'package:venturiautospurghi/views/widgets/web/header_menu_widget.dart';
 import 'package:venturiautospurghi/views/widgets/web/side_menu_widget.dart';
 
 final Map<String, PageParameter> parameterPage = {
-  Constants.homeRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.calendar,
+  Constants.homeRoute: PageParameter(Icons.add_box, Constants.generateAiEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.calendar,
       true, true, true),
-  Constants.historyEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.filterEvent,
+  Constants.historyEventListRoute: PageParameter(Icons.add_box, Constants.generateAiEventViewRoute, 'Nuovo incarico', FunctionalWidgetType.filterEvent,
       false, false, true),
-  Constants.bozzeEventListRoute: PageParameter(Icons.add_box, Constants.createEventViewRoute, 'Nuova bozza', FunctionalWidgetType.filterEvent,
+  Constants.bozzeEventListRoute: PageParameter(Icons.add_box, Constants.generateAiEventViewRoute, 'Nuova bozza', FunctionalWidgetType.filterEvent,
       false, true, true),
   Constants.manageUtenzeRoute: PageParameter(Icons.person_add, Constants.registerRoute, 'Nuovo utente', FunctionalWidgetType.FilterAccount,
       false, true, true),

@@ -202,6 +202,15 @@ class CardEvent extends StatelessWidget {
                                             color: HexColor(event.color),
                                             fontWeight: FontWeight.normal)),
                                     Expanded(child: Container(),),
+                                    event.isRepeatedEvent()?
+                                    Container(
+                                      margin: EdgeInsets.only(right: 5,top: 2),
+                                      child: Icon(
+                                        Icons.repeat,
+                                        size: 15,
+                                        color: HexColor(event.color),
+                                      ),
+                                    ):Container(),
                                     event.notaOperator.isNotEmpty?
                                     Container(
                                       margin: EdgeInsets.only(right: 5,top: 2),

@@ -3,6 +3,7 @@ library app.utils;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_place/google_place.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/models/event_response_ai.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -20,8 +21,17 @@ class TimeUtils {
   }
 
   static DateTime getNextStartWorkTimeSpan({DateTime? from, Duration? ofDuration}) {
-    DateTime date = from ?? DateTime.now().toLocal();
-
+    DateTime now = DateTime.now().toLocal();
+    DateTime date = DateTime(
+      from?.year ?? now.year,
+      from?.month ?? now.month,
+      from?.day ?? now.day,
+      now.hour,
+      now.minute,
+      now.second,
+      now.millisecond,
+      now.microsecond,
+    );
     return getStartWorkTimeSpan(from:date, ofDuration: ofDuration);
   }
 
@@ -46,6 +56,23 @@ class TimeUtils {
     }
     return nextTimeWork;
   }
+
+  static DateTime minDate(DateTime a, DateTime b) {
+    return a.isBefore(b) ? a : b;
+  }
+
+  static bool isValidTimeFormat(String? time) {
+    if (time == null) return false;
+    final regex = RegExp(r'^\d{2}:\d{2}$');
+    if (!regex.hasMatch(time)) return false;
+
+    final parts = time.split(":");
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+
+    return hour != null && minute != null && hour >= 0 && hour < 24 && minute >= 0 && minute < 60;
+  }
+
 }
 
 class Utils {
@@ -140,6 +167,21 @@ class UserUtils{
       return false;
     }
   }
+}
+class AiUtils {
+
+  static Future<EventResponseAi> estraiIncarico(String text) async {
+    HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      'estraiIncaricoFlow',);
+    try {
+      final HttpsCallableResult result = await callable.call(text);
+      return EventResponseAi.fromMap(result.data);
+    } catch (e) {
+      print("Errore nella chiamata alla funzione: $e");
+      return EventResponseAi.empty();
+    }
+  }
+
 }
 class DoubleUtils {
 

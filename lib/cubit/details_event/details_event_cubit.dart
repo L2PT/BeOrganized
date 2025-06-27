@@ -67,10 +67,10 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
     PlatformUtils.backNavigator(context);
   }
 
-  void deleteEvent() {
+  void deleteEvent(bool reapetMode) {
     state.event.start.isBefore(DateTime.now())?
-    _databaseRepository.deleteEventPast(state.event)
-    :_databaseRepository.deleteEvent(state.event);
+    _databaseRepository.deleteEventPast(state.event, reapetMode)
+    :_databaseRepository.deleteEvent(state.event, reapetMode);
     PlatformUtils.backNavigator(context);
   }
 
@@ -108,7 +108,13 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   }
 
   void addEventNotaOperator(String notaOperator){
-    _databaseRepository.updateEventField(_event.id, Constants.tabellaEventi_notaOperatore, notaOperator);
+    if(_event.id.isNotEmpty)
+      _databaseRepository.updateEventField(_event.id, Constants.tabellaEventi_notaOperatore, notaOperator);
+    else{
+      _event.isExcepeted = true;
+      _event.notaOperator = notaOperator;
+      _databaseRepository.addEvent(_event);
+    }
     emit(state.changeNotaOperator(notaOperator));
   }
 

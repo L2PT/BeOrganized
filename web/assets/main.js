@@ -1,20 +1,3 @@
-
-
-const homeRoute = '/';
-const monthlyCalendarRoute = 'view/monthly_calendar';
-const dailyCalendarRoute = 'view/daily_calendar';
-const operatorListRoute = 'view/op_list';
-const addWebOperatorRoute = 'view/op_web_list';
-const registerRoute = 'view/register';
-const detailsEventViewRoute = 'view/details_event';
-const createEventViewRoute = 'view/form_event_creator';
-const waitingEventListRoute = 'view/waiting_event_list';
-const waitingNotificationRoute = 'view/persistent_notification';
-const historyEventListRoute = 'view/history_event_list';
-const profileRoute = 'view/profile';
-const resetCodeRoute = 'view/reset_code_page';
-const logInRoute = 'view/log_in';
-const logOut = 'log_out';
 const webPushNotificationsVapidKey = 'BJstIUpFNSxgd1Ir1xQd_qt48ijnfLG2B3Md_9unMkA7nMBpZZRVX3_6A5f2HJJLCOZJoFH2CgpmtrimGRe-rWo';
 
 var debug = false;

@@ -28,7 +28,7 @@ class FlatFab extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Icon((tabsHeader.key.icon as Icon).icon, color:selected?yellow:grey_dark, size: 25,),
-                  SizedBox(width: 10),
+                  SizedBox(width: 15),
                   Text(tabsHeader.key.text.toString().toLowerCase().capitalize(), style: selected?button_card:subtitle),
                   Expanded(child: Container()),
                   Container(margin: EdgeInsets.only(right: 10), child: Text(count.toString().formatNumber(short: false), style: selected?button_card:subtitle),)
