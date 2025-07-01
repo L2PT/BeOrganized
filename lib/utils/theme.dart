@@ -33,7 +33,7 @@ ThemeData _buildTheme() {
     textSelectionTheme:  TextSelectionThemeData(
       cursorColor: yellow,
       selectionHandleColor: yellow,
-      selectionColor: yellow.withOpacity(0.7),
+      selectionColor: yellow.withValues(alpha:0.7),
     ),
     dialogBackgroundColor: whitebackground,
     disabledColor: grey,

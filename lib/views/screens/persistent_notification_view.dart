@@ -8,11 +8,11 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/colors.dart';
-import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
+import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
-import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_refuse.dart';
+import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
 
 class PersistentNotification extends StatelessWidget {
 
@@ -29,7 +29,7 @@ class PersistentNotification extends StatelessWidget {
       create: (_) => PersistentNotificationCubit(context, repository, account, events),
       child: Container(
         decoration:
-        BoxDecoration(color: white.withOpacity(0.7)),
+        BoxDecoration(color: white.withValues(alpha:0.7)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[

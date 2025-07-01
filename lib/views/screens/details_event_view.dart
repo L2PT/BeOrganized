@@ -242,7 +242,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text([event.operator, ...event.suboperators].map((operator) =>
-                                "${operator?.name} ${operator?.surname}").reduce((value, element) => value+"; "+element),
+                                "${operator.name} ${operator.surname}").reduce((value, element) => value+"; "+element),
                               style: subtitle_rev, overflow: TextOverflow.visible,),
                         ],
                       ),
@@ -524,7 +524,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                             )
                           ))),
                   onTap: () async {
-                    NotaAlert(context,text: event.notaOperator, editMode: event.notaOperator.isNotEmpty).show().then((notaOperator)=>(notaOperator != null)?context.read<DetailsEventCubit>().addEventNotaOperator(notaOperator):null);
+                    NotaAlert(context,text: event.notaOperator, editMode: event.notaOperator.isNotEmpty).show().then((notaOperator)=>context.read<DetailsEventCubit>().addEventNotaOperator(notaOperator));
                   },
                 )
               ):Container(),
@@ -714,7 +714,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                         ],
                       ),
                     ): event.isAccepted() && DateTime.now().isAfter(event.start) &&
-                        (event.operator!.id == account.id || event.suboperators.where((element) => element.id == account.id).isNotEmpty)?
+                        (event.operator.id == account.id || event.suboperators.where((element) => element.id == account.id).isNotEmpty)?
                     Container(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,

@@ -93,14 +93,14 @@ class WebCubit extends Cubit<WebCubitState> {
 
   void updateAccount(List<Account> webOps) async {
     await _databaseRepository.updateAccountField(_account.id, "OperatoriWeb", webOps.map((webOp) => webOp.toWebDocument()));
-    emit(state.assign(webops: _account.webops));
+    emit(state.assign(webops: webOps));
   }
 
   void removeAccount(String id) async {
     _account.webops.removeWhere((element) => element.id == id);
     List<Account> webOps = _account.webops;
     await _databaseRepository.updateAccountField(_account.id, "OperatoriWeb", webOps.map((webOp) => webOp.toWebDocument()));
-    emit(state.assign(webops: _account.webops));
+    emit(state.assign(webops: webOps));
   }
   void showExpandedBox() {
     emit(state.assign(expandedMode:!state.expandedMode));

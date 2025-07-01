@@ -127,11 +127,11 @@ class Event {
       "Tipologia":this.typology,
       "Responsabile":this.supervisor?.toMap(),
       "Cliente": this.customer.toMap(),
-      "Operatore":this.operator?.toMap(),
+      "Operatore":this.operator.toMap(),
       "SubOperatori": this.suboperators.map((op)=>op.toMap()).toList(),
       "Motivazione" : this.motivazione,
-      "IdOperatore" : this.operator?.id??"",
-      "IdOperatori" : [...this.suboperators.map((op) => op.id),operator?.id??""],
+      "IdOperatore" : this.operator.id,
+      "IdOperatori" : [...this.suboperators.map((op) => op.id),operator.id],
       "isScheduled":this.isScheduled,
       "withCartel": this.withCartel,
       "documentsMap":this.documentsMap,
@@ -289,7 +289,7 @@ class Event {
   @override
   String toString() => id+title+description+notaOperator+customer.toString()
       +documents.join()+start.toString()+end.toString()+address+(status).toString()
-      +typology+withCartel.toString()+category+color+(operator?.id??"")
+      +typology+withCartel.toString()+category+color+operator.id
       +suboperators.map((o) => o.id).join()+(motivazione)+recurrenceId+isExcepeted.toString()
       +recurrenceDayOfMonth.toString()+recurrenceIntervalInMonths.toString()+isRepeated.toString()+recurrenceType
       +recurrenceStart.toString()+recurrenceEnd.toString();

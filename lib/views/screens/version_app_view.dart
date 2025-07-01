@@ -13,7 +13,7 @@ class VersionApp extends StatelessWidget {
           children: [
             Container(
                 decoration:
-                BoxDecoration(color: white.withOpacity(0.7)),
+                BoxDecoration(color: white.withValues(alpha:0.7)),
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

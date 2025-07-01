@@ -37,7 +37,7 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
     Map<String, List<Event>> eventsMap = {};
     _account.webops.forEach((operator) {
       List<Event> eventFiltered = eventList.where((event) =>
-          [...event.suboperators.map((op) => op.id),event.operator?.id??""].contains(operator.id)).toList();
+          [...event.suboperators.map((op) => op.id),event.operator.id].contains(operator.id)).toList();
       eventsMap[operator.id] = eventFiltered;
     });
     emit(state.assign(calendarDate: newDate, eventsOpe: eventsMap));

@@ -29,7 +29,7 @@ class EventListPageCubit extends Cubit<EventListPageState> {
   }
 
   void onFiltersChanged(Map<String, FilterWrapper> filters) async {
-    int tot = await loadCountEvent();
+    await loadCountEvent();
     EventListPageState statePrev = state;
     emit(LoadingEventListPageState());
     // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query

@@ -8,7 +8,6 @@ import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
-import 'package:venturiautospurghi/utils/global_methods.dart';
 
 part 'create_customer_state.dart';
 
@@ -52,18 +51,6 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
       }
     }
     return false;
-  }
-
-  void getLocations(String text) async {
-    if(text.length > 5 && text != state.customer.addresses){
-      List<String> locations = [];
-      if(PlatformUtils.isMobile){
-        locations = await GeoUtils.getLocations(text);
-      }else{
-        locations = await GeoUtils.getLocationsWeb(text);
-      }
-      //emit(state.assign(locations: locations, address: text));
-    }
   }
 
   void removePhoneOnCustomer(String phone){

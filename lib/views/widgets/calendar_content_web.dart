@@ -315,8 +315,8 @@ class _HeaderOperatorCalendarState extends State<HeaderOperatorCalendar>  {
                   color: black, // Button color
                   child: InkWell(
                     splashColor: black_light, // Splash color
-                    onTap: () => Printing.layoutPdf(onLayout: (format) => pdfUtils.createDailyProgram((context.read<WebCubit>().state.calendarPageState! as ReadyCalendarPageState)
-                        .selectedEventsOperator(operator.id), context.read<WebCubit>().state.calendarPageState!.calendarDate, operator)),
+                    onTap: () => Printing.layoutPdf(onLayout: (format) => pdfUtils.createDailyProgram((context.read<WebCubit>().state.calendarPageState as ReadyCalendarPageState)
+                        .selectedEventsOperator(operator.id), context.read<WebCubit>().state.calendarPageState.calendarDate, operator)),
                     child: SizedBox(width: 30, height: 30, child: Icon(Icons.print, color: white, size: 20,)),
                   ),
                 ),
@@ -393,7 +393,7 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
 
   void changeEvent(Event event, Account operatorOld, DraggableDetails details, BuildContext context){
     Account operator = context.read<CalendarContentWebCubit>().moveEventToOperator(details);
-    DateTime selectDay = context.read<WebCubit>().state.calendarPageState!.calendarDate;
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
     DateTime start = context.read<WebCubit>().moveEventToDate(details,selectDay, context.read<CalendarContentWebCubit>().gridHourHeight);
     DateTime end = start.add(event.end.difference(event.start));
     AttectionAlert(context, title: "CAMBIA INCARICO", text: "Stai assegnando l'incarico al operatore:",
@@ -405,8 +405,8 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
   }
 
   Widget singleOperatorCalendar(Account operator, int index, BuildContext context){
-    DateTime selectDay = context.read<WebCubit>().state.calendarPageState!.calendarDate;
-    List<Event> listEvent = (context.read<WebCubit>().state.calendarPageState! as ReadyCalendarPageState)
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
+    List<Event> listEvent = (context.read<WebCubit>().state.calendarPageState as ReadyCalendarPageState)
         .selectedEventsOperator(operator.id);
     DateTime _base = new DateTime(1990, 1, 1, Constants.MIN_WORKTIME, 0, 0);
     return Column(

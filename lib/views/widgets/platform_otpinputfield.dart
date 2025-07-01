@@ -18,7 +18,7 @@
 //         controller: controller,
 //         decoration: UnderlineDecoration(
 //           textStyle: TextStyle(fontSize: 20, color: Colors.black),
-//           colorBuilder: FixedColorBuilder(Colors.black.withOpacity(0.3)),
+//           colorBuilder: FixedColorBuilder(Colors.black.withValues(alpha:0.3)),
 //         ),
 //         // currentCode: "",
 //         // onCodeSubmitted: (code) {},
@@ -33,7 +33,7 @@
 //         pinLength: 6,
 //         decoration: UnderlineDecoration(
 //           textStyle: TextStyle(fontSize: 20, color: Colors.black),
-//           colorBuilder: FixedColorBuilder(Colors.black.withOpacity(0.3)),
+//           colorBuilder: FixedColorBuilder(Colors.black.withValues(alpha:0.3)),
 //         ),
 //         controller: controller,
 //         textInputAction: TextInputAction.go,

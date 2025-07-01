@@ -168,7 +168,7 @@ class _emailInput extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withValues(alpha:0.5),
           width: 1.0,
         ),
         borderRadius: BorderRadius.circular(20.0),
@@ -187,7 +187,7 @@ class _emailInput extends StatelessWidget {
           Container(
             height: 30.0,
             width: 1.0,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha:0.5),
             margin: const EdgeInsets.only(left: 00.0, right: 10.0),
           ),
           new Expanded(
@@ -214,7 +214,7 @@ class _passwordInput extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withValues(alpha:0.5),
           width: 1.0,
         ),
         borderRadius: BorderRadius.circular(20.0),
@@ -234,7 +234,7 @@ class _passwordInput extends StatelessWidget {
           Container(
             height: 30.0,
             width: 1.0,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha:0.5),
             margin: const EdgeInsets.only(left: 00.0, right: 10.0),
           ),
           new Expanded(
@@ -262,7 +262,7 @@ class _phoneInput extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withValues(alpha:0.5),
           width: 1.0,
         ),
         borderRadius: BorderRadius.circular(20.0),
@@ -282,7 +282,7 @@ class _phoneInput extends StatelessWidget {
           Container(
             height: 30.0,
             width: 1.0,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha:0.5),
             margin: const EdgeInsets.only(left: 00.0, right: 10.0),
           ),
           new Expanded(

@@ -226,7 +226,6 @@ class CloudFirestoreService {
     // Query 1: eventi NON ricorrenti
     final snapshotNotRepeated = await _collectionEventi
         .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: date)
-        .where(Constants.tabellaEventi_isRepeated, isEqualTo: false)
         .orderBy(Constants.tabellaEventi_dataInizio)
         .get();
 
@@ -238,14 +237,21 @@ class CloudFirestoreService {
         .get();
 
     // Unione e parsing
-    final events = [
-      ...snapshotNotRepeated.docs,
-      ...snapshotExceptions.docs,
-    ].map((document) => Event.fromMap(
+    final eventsNotRepeated = snapshotNotRepeated.docs.map((document) => Event.fromMap(
+      document.id,
+      getColorByCategory(document.get(Constants.tabellaEventi_categoria)),
+      document.data() as Map<String, dynamic>,
+    )).where((event)=> event.isRepeated==false).toList();
+
+    final eventExceptions = snapshotExceptions.docs.map((document) => Event.fromMap(
       document.id,
       getColorByCategory(document.get(Constants.tabellaEventi_categoria)),
       document.data() as Map<String, dynamic>,
     )).toList();
+    final events = [
+      ...eventsNotRepeated,
+      ...eventExceptions,
+    ];
 
     // Ordina di nuovo per sicurezza
     events.sort((a, b) => a.start.compareTo(b.start));
@@ -297,8 +303,7 @@ class CloudFirestoreService {
     final baseQuery = _collectionEventi
         .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
         .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: queryFrom)
-        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo)
-        .where(Constants.tabellaEventi_isRepeated, isEqualTo: false);
+        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo);
 
     // Query eventi override di ricorrenze (recurringId != null)
     final overrideQuery = _collectionEventi
@@ -326,7 +331,7 @@ class CloudFirestoreService {
           (QuerySnapshot baseSnap, QuerySnapshot overrideSnap, QuerySnapshot recurringSnap) {
         final baseEvents = baseSnap.docs
             .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
-            .where((event) => event.status>=statusEqualOrAbove).toList();
+            .where((event) => event.status>=statusEqualOrAbove && event.isRepeated==false).toList();
 
         List<Event> overrideEvents = overrideSnap.docs
             .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))

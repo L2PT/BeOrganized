@@ -72,7 +72,7 @@ class EventDataTable extends DataTableSource {
     if(operatorVisible){
       listDataCell.insert(4,DataCell(Container(
           width: 100, child:Text([event.operator, ...event.suboperators].map((operator) =>
-      "${operator?.name} ${operator?.surname}").reduce((value, element) => value+"; "+element),
+      "${operator.name} ${operator.surname}").reduce((value, element) => value+"; "+element),
           style: label.copyWith(fontSize: 13)))));
     }
     if(actionVisible){
@@ -92,7 +92,7 @@ class EventDataTable extends DataTableSource {
     return DataRow(cells: _getDataCell(event),
         color: WidgetStateProperty.resolveWith((states) {
           return states.contains(WidgetState.hovered) || states.contains(WidgetState.selected)?
-          grey_light: white.withOpacity(0.5);
+          grey_light: white.withValues(alpha:0.5);
         }),
         selected: mapSelected?[event.id]??false,
         onSelectChanged: (value) => onSelected!(event, value));

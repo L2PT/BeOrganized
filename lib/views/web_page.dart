@@ -86,11 +86,11 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                 Expanded(child: Column(
                   children: [
                     new BlocBuilder<WebCubit, WebCubitState>(
-                      buildWhen: (previous, current) => previous.calendarPageState!.calendarDate != current.calendarPageState!.calendarDate,
+                      buildWhen: (previous, current) => previous.calendarPageState.calendarDate != current.calendarPageState.calendarDate,
                       builder: (context, state) {
                         return HeaderMenuLayerWeb(
                             pageParameter.showBoxCalendar,
-                            state.calendarPageState!.calendarDate,
+                            state.calendarPageState.calendarDate,
                             account,
                             () => context.read<AuthenticationBloc>().add(LoggedOut()),
                             () => context.read<WebCubit>().calendarPageCubit.todayCalendarDate(),

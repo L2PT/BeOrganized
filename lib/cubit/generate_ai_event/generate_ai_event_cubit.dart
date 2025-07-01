@@ -41,7 +41,7 @@ class GenerateAiEventCubit extends Cubit<GenerateAiEventState> {
         state.event.customer = Customer.fromGenerateData(eventResponseAi);
       }
       if(idUsers.isNotEmpty){
-        Account user = await _databaseRepository.getAccount(id: idUsers.first)??Account.empty();
+        Account user = await _databaseRepository.getAccount(id: idUsers.first);
         state.event.operator = user;
       }
       return true;

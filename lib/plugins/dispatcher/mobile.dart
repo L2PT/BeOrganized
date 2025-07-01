@@ -97,7 +97,7 @@ abstract class PlatformUtils {
   }
 
   static dynamic eventButtonsVisible(BuildContext context, Event event, account){
-    return event.isSeen() && context.read<MobileBloc>().savedState.route != Constants.waitingEventListRoute && (event.operator?.id == account.id);
+    return event.isSeen() && context.read<MobileBloc>().savedState.route != Constants.waitingEventListRoute && (event.operator.id == account.id);
   }
 
   static Future<int> getVersionApp() async {

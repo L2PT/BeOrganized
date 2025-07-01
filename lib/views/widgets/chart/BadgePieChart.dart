@@ -33,7 +33,7 @@ class BadgePieChart extends StatelessWidget {
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: black.withOpacity(.5),
+                color: black.withValues(alpha:.5),
                 offset: const Offset(3, 3),
                 blurRadius: 3,
               ),

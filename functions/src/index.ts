@@ -1,65 +1,68 @@
-import * as functions from "firebase-functions";
+import { onCall, CallableRequest, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import axios from "axios";
 
-// Inizializza Firebase Admin SDK
 admin.initializeApp();
 
-/**
- * Funzione HTTPS callable per ottenere dati da una URL esterna.
- * @param {object} data - Deve contenere `url`.
- * @returns {object} - Risposta della richiesta GET o errore.
- */
-exports.getDataFromUrl = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
-  const url = data.url;
+interface GetDataRequest {
+  url: string;
+}
+
+export const getDataFromUrl = onCall(async (request: CallableRequest<GetDataRequest>) => {
+  const url = request.data.url;
 
   if (!url) {
-    throw new functions.https.HttpsError("invalid-argument", "URL non fornita.");
+    throw new HttpsError("invalid-argument", "URL non fornita.");
   }
 
   try {
     const response = await axios.get(url);
     return response.data;
-  } catch (error) {
-    throw new functions.https.HttpsError("unknown", error.message || "Errore durante la richiesta HTTP.");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new HttpsError("internal", error.message || "Errore durante la richiesta HTTP.");
+    }
+    throw new HttpsError("internal", "Errore durante la richiesta HTTP.");
   }
 });
 
-/**
- * Funzione HTTPS callable per cancellare un utente dato uid.
- * Richiede che l'utente chiamante sia un admin autenticato.
- * @param {object} data - Deve contenere `uid`.
- * @returns {object} - Oggetto con `success: true` oppure errore.
- */
-exports.deleteUserByUid = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
-  console.log("Richiesta ricevuta per deleteUserByUid", {
-    requesterUid: context.auth?.uid,
-    isAuthenticated: !!context.auth,
-    data,
-  });
+interface DeleteUserRequest {
+  uid: string;
+}
 
-  // Controllo autorizzazione
-  if (!context.auth) {
-    console.warn("Accesso negato: utente non autenticato.");
-    throw new functions.https.HttpsError("permission-denied", "Accesso non autorizzato.");
+export const deleteUserByUid = onCall(
+  async (request: CallableRequest<DeleteUserRequest>) => {
+    const { uid } = request.data;
+
+    console.log("Richiesta ricevuta per deleteUserByUid", {
+      requesterUid: request.auth?.uid,
+      isAuthenticated: !!request.auth,
+      data: request.data,
+    });
+
+    // Controllo autorizzazione
+    if (!request.auth) {
+      console.warn("Accesso negato: utente non autenticato.");
+      throw new HttpsError("permission-denied", "Accesso non autorizzato.");
+    }
+
+    if (!uid) {
+      console.error("ID utente non fornito.");
+      throw new HttpsError("invalid-argument", "Id non fornito.");
+    }
+
+    try {
+      console.log(`Tentativo di eliminazione utente con uid: ${uid}`);
+      await admin.auth().deleteUser(uid);
+      console.log(`Utente con uid ${uid} eliminato con successo.`);
+      return { success: true };
+    } catch (error: unknown) {
+      console.error("Errore durante l'eliminazione dell'utente:", error);
+      if (error instanceof Error) {
+        throw new HttpsError("internal", error.message || "Errore durante l'eliminazione dell'utente.");
+      }
+      throw new HttpsError("internal", "Errore durante l'eliminazione dell'utente.");
+    }
   }
-
-  const uid = data.uid;
-  if (!uid) {
-    console.error("ID utente non fornito.");
-    throw new functions.https.HttpsError("invalid-argument", "Id non fornito.");
-  }
-
-  try {
-    console.log(`Tentativo di eliminazione utente con uid: ${uid}`);
-    await admin.auth().deleteUser(uid);
-    console.log(`Utente con uid ${uid} eliminato con successo.`);
-    return { success: true };
-  } catch (error) {
-    console.error("Errore durante l'eliminazione dell'utente:", error);
-    throw new functions.https.HttpsError("unknown", error.message || "Errore durante l'eliminazione dell'utente.");
-  }
-});
-
-
+);
 

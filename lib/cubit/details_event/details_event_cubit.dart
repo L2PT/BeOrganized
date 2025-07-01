@@ -26,7 +26,7 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   DetailsEventCubit(this.context, CloudFirestoreService databaseRepository, Account account, Event event) :
       _databaseRepository = databaseRepository, _account = account, _event = event,
         super(DetailsEventState(event, event.notaOperator, event.status, event.documents.cast<String>()) ) {
-    if (state.event.operator!.id == _account.id &&
+    if (state.event.operator.id == _account.id &&
         state.event.status < EventStatus.Seen) {
       emit(state.changeStatus(EventStatus.Seen));
       _databaseRepository.updateEventField(

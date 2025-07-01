@@ -623,7 +623,6 @@ class _CheckboxPainter extends ToggleablePainter {
     paintRadialReaction(canvas: canvas, origin: size.center(Offset.zero));
 
     final Paint strokePaint = _createStrokePaint(false);
-    final Paint strokePaintSuper = _createStrokePaint(true);
     final Offset origin = size / 2.0 - const Size.square(_kEdgeSize) / 2.0 as Offset;
     final AnimationStatus status = position.status;
     final double tNormalized = status == AnimationStatus.forward || status == AnimationStatus.completed

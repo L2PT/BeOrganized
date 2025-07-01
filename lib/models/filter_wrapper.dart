@@ -35,7 +35,7 @@ class FilterWrapper {
       value == null || value.any((category) => category == event.category)),
       "suboperators" : new FilterWrapper("suboperators", <Account>[], (Event event, List<Account>? value) {
         if(value == null) return true;
-        List<String> idOperators = [...event.suboperators.map((op) => op.id),event.operator?.id??""];
+        List<String> idOperators = [...event.suboperators.map((op) => op.id),event.operator.id];
         if(value.every((element) => idOperators.contains(element.id))) return true;
         return false;
       })};

@@ -208,7 +208,7 @@ class _tipologyCustomer extends StatelessWidget{
               decoration: BoxDecoration(
                 color: context.read<CreateCustomerCubit>().state.customer.typology == key ? Colors.grey.shade900 : Colors.grey.shade100,
                 border: Border.all(
-                  color: context.read<CreateCustomerCubit>().state.customer.typology == key ? yellow : yellow.withOpacity(0),
+                  color: context.read<CreateCustomerCubit>().state.customer.typology == key ? yellow : yellow.withValues(alpha:0),
                   width: 4.0,
                 ),
                 borderRadius: BorderRadius.circular(20.0),

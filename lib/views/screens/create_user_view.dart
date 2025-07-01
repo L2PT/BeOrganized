@@ -192,7 +192,7 @@ class _tipologyUser extends StatelessWidget{
               decoration: BoxDecoration(
                 color: context.read<CreateUserCubit>().state.user.typology == key ? Colors.grey.shade900 : Colors.grey.shade100,
                 border: Border.all(
-                  color: context.read<CreateUserCubit>().state.user.typology == key ? yellow : yellow.withOpacity(0),
+                  color: context.read<CreateUserCubit>().state.user.typology == key ? yellow : yellow.withValues(alpha:0),
                   width: 4.0,
                 ),
                 borderRadius: BorderRadius.circular(20.0),
@@ -272,9 +272,9 @@ class _formBasiclyInfo extends StatelessWidget{
                     hintText: 'Inserisci il nome del veicolo',
                     hintStyle: subtitle,
                     border: UnderlineInputBorder(borderSide: BorderSide(width: 2.0, style: BorderStyle.solid,),),),
-                  initialValue: user.name,
+                  initialValue: user.surname,
                   validator: (value) =>  string.isNullOrEmpty(value)? 'Inserisci un valore valido': null,
-                  onSaved: (value) => user.name = value??"",
+                  onSaved: (value) => user.surname = value??"",
                 ),
               ),
             ]),

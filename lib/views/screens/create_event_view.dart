@@ -238,7 +238,7 @@ class _tipologyEvent extends StatelessWidget{
                     (context.read<CreateEventCubit>().state.event.withCartel && key == "contratto-cartello") ? Colors.grey.shade900 : Colors.grey.shade100,
                 border: Border.all(
                   color: context.read<CreateEventCubit>().state.event.typology == key ||
-                      (context.read<CreateEventCubit>().state.event.withCartel && key == "contratto-cartello") ? yellow : yellow.withOpacity(0),
+                      (context.read<CreateEventCubit>().state.event.withCartel && key == "contratto-cartello") ? yellow : yellow.withValues(alpha:0),
                   width: 4.0,
                 ),
                 borderRadius: BorderRadius.circular(20.0),
@@ -743,7 +743,7 @@ class _timeControls extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.grey.withOpacity(0.5),
+                color: Colors.grey.withValues(alpha:0.5),
                 width: 1.0,
               ),
               borderRadius: BorderRadius.circular(8.0),
@@ -788,7 +788,7 @@ class _timeControls extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.grey.withOpacity(0.5),
+                color: Colors.grey.withValues(alpha: 0.5),
                 width: 1.0,
               ),
               borderRadius: BorderRadius.circular(8.0),
@@ -918,7 +918,7 @@ class _timeControls extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha:0.2),
                   width: 1.0,
                 ),
                 borderRadius: BorderRadius.circular(8.0),
@@ -954,7 +954,7 @@ class _categoriesList extends StatelessWidget {
             decoration: BoxDecoration(
               color: context.read<CreateEventCubit>().state.event.category == key ? Colors.grey.shade900 : Colors.grey.shade100,
               border: Border.all(
-                color: context.read<CreateEventCubit>().state.event.category == key ? yellow : yellow.withOpacity(0),
+                color: context.read<CreateEventCubit>().state.event.category == key ? yellow : yellow.withValues(alpha:0),
                 width: 4.0,
               ),
               borderRadius: BorderRadius.circular(20.0),

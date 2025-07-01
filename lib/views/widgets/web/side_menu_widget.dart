@@ -140,7 +140,7 @@ class SideMenuLayerWeb extends StatelessWidget {
     switch(this.functionalWidgetType){
       case FunctionalWidgetType.calendar:
         return BlocBuilder<WebCubit, WebCubitState>(
-            buildWhen: (previous, current) => previous.calendarPageState!.calendarDate != current.calendarPageState!.calendarDate,
+            buildWhen: (previous, current) => previous.calendarPageState.calendarDate != current.calendarPageState.calendarDate,
             builder: (context, state) =>
                 TableCalendar(
             rowHeight: 25,
@@ -201,7 +201,7 @@ class SideMenuLayerWeb extends StatelessWidget {
               leftChevronIcon: Icon(Icons.navigate_before, color: white,),
               rightChevronIcon: Icon(Icons.navigate_next, color: white, ),
             ),)
-          );break;
+          );
       case FunctionalWidgetType.filterEvent:
         return BlocBuilder<WebCubit, WebCubitState>(
             buildWhen: (previous, current) => previous != current,
