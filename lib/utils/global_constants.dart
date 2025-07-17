@@ -31,6 +31,7 @@ class Constants {
   static const String generateAiEventViewRoute = '/view/form_event_generate_ai';
   static const String createCustomerViewRoute = '/view/form_customer_creator';
   static const String createAddressViewRoute = '/view/form_address_creator';
+  static const String createReferralsViewRoute = '/view/form_referrals_creator';
   static const String customerListRoute = '/view/customer_list';
   static const String waitingEventListRoute = '/view/waiting_event_list';
   static const String notUpadateversionAppRoute = '/view/version_app';
@@ -45,6 +46,7 @@ class Constants {
   static const String bozzeEventListRoute = '/view/bozze_event_list';
   static const String customerContactsListRoute = '/view/customer_contacts_list';
   static const String manageUtenzeRoute = '/view/manage_utenze';
+  static const String manageMessageRoute = '/view/manage_message';
   static const String noRoute = 'noRoute';
 
   // TABLES DATABASE
@@ -130,4 +132,20 @@ class Constants {
   //AGOLIA INDEX
   static const String indexSearchCustomer = debug?'Clienti_Debug_Index':'Clienti_Index';
   static const String indexSearchUser = 'Utenti_Index';
+
+  // Prototipo testo generato
+  static const String protoGenerateEvent = '''
+  Cliente: NOME COGNOME (TIPO_CLIENTE)
+  Indirizzo: INDIRIZZO
+  Telefono: TELEFONO1, TELEFONO2
+  Email: EMAIL
+  Referenti: NOME_REF (TELEFONO_REF)
+  Servizio: TIPO - CATEGORIA
+  Problema: DESCRIZIONE_PROBLEMA
+  Operatore: NOME_OPERATORE
+  Data: YYYY-MM-DD dalle HH:MM alle HH:MM
+  Ripetizione: SI/NO dal YYYY-MM-DD al YYYY-MM-DD ogni NUMERO_MESI mesi il giorno GIORNO
+  Note: NOTE_AGGIUNTIVE
+  ''';
+
 }

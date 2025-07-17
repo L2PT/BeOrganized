@@ -13,6 +13,7 @@ import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/views/screens/create_address_view.dart';
 import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
 import 'package:venturiautospurghi/views/screens/create_event_view.dart';
+import 'package:venturiautospurghi/views/screens/create_referrals_view.dart';
 import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
@@ -87,6 +88,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       case Constants.generateAiEventViewRoute: emit( OverViewReady(event.route, GenerateAiEvent(dateSelect: (event.arg is Map)?event.arg["dateSelect"]:DateTime.now()), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createCustomerViewRoute: emit( OverViewReady(event.route, CreateCustomer(event: objectParameter,currentStep: currentStep,type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createAddressViewRoute: emit( OverViewReady(event.route, CreateAddress(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.createReferralsViewRoute: emit( OverViewReady(event.route, CreateReferrals(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.monthlyCalendarRoute: emit( OverViewReady(event.route, TableCalendarWithBuilders(), _posLeftOverView, _posTopOverView,)); break;
       case Constants.registerRoute: emit( OverViewReady(event.route, CreateUser(event: objectParameter, type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.operatorListRoute: emit( OverViewReady(event.route, OperatorSelection(objectParameter, (event.arg is Map)?event.arg["requirePrimaryOperator"]:false),_posLeftOverView, _posTopOverView)); break;

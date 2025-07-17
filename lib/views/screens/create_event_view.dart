@@ -14,6 +14,7 @@ import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
+import 'package:venturiautospurghi/views/widgets/alert/alert_delete.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 import 'package:venturiautospurghi/views/widgets/card_customer_widget.dart';
 import 'package:venturiautospurghi/views/widgets/list_tile_operator.dart';
@@ -67,8 +68,8 @@ class _EventStepper extends StatelessWidget{
 
   final BuildContext context;
 
-  void _onSavePressed() async {
-    if (await context.read<CreateEventCubit>().saveEvent())
+  void _onSavePressed(bool allSeries) async {
+    if (await context.read<CreateEventCubit>().saveEvent(allSeries))
       if( !(await SuccessAlert(context, text: "Incarico salvato e inviato!").show()))
         PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : context.read<CreateEventCubit>().state.event, 'res': true});
   }
@@ -78,6 +79,7 @@ class _EventStepper extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     int currentStep = context.read<CreateEventCubit>().state.currentStep;
+    BuildContext parent = context;
     List<StepIcon> getEventSteps() => [
       StepIcon(
         state: currentStep==0?StepState.editing:StepState.complete,
@@ -184,9 +186,17 @@ class _EventStepper extends StatelessWidget{
               if (controls.currentStep > 2)
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  child: new Text(context.read<CreateEventCubit>().state.event.operator != null && context.read<CreateEventCubit>().state.event.operator!.id.isNotEmpty? 'Salva': 'Salva in bozza', style: button_card),
+                  child: new Text(context.read<CreateEventCubit>().state.event.operator.id.isNotEmpty? 'Salva': 'Salva in bozza', style: button_card),
                   onPressed: (){
-                    if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, DateTime.now())){_onSavePressed();}}),
+                    if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, DateTime.now())){
+                      context.read<CreateEventCubit>().isModify() && context.read<CreateEventCubit>().state.event.recurrenceId.isNotEmpty?
+                      ConfirmCancelAlert(parent, title: "MODIFICA INCARICO", text: "Confermi la modifica dell'incarico?",
+                          showRepeatContent: true, textRepeat: "Modifica tutta la serie" ).show().then((value) {
+                        if(value.first){//fab
+                          _onSavePressed(value.last);
+                        }
+                      }): _onSavePressed(false);
+                    }}),
             ],
           ));
         },
@@ -866,6 +876,7 @@ class _timeControls extends StatelessWidget {
               ),
               onTap: () => PlatformDatePicker.selectDate(
                 context,
+                minTime: TimeUtils.truncateDate(event.recurrenceStart, "day"),
                 maxTime: DateTime(3000),
                 currentTime: event.recurrenceEnd,
                 onConfirm: (date) => context.read<CreateEventCubit>().setEndRepeatedDate(date),
@@ -927,6 +938,7 @@ class _timeControls extends StatelessWidget {
               child: Column(children: [
                 context.read<CreateEventCubit>().state.event.isRepeatedEvent()?repeatNumberPicker():Container(),
                 context.read<CreateEventCubit>().state.event.isRepeatedEvent() &&
+                    context.read<CreateEventCubit>().state.event.recurrenceId.isNotEmpty &&
                     context.read<CreateEventCubit>().isModify()?repeatDatePicker():Container(),
               ],),
             ):Container(),

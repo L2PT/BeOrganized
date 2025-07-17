@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:venturiautospurghi/models/address.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
@@ -59,6 +60,12 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     emit(state.assign(customer: customer));
   }
 
+  void removeReferralOnCustomer(Referrals referral){
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    customer.referrals.removeWhere((element) => element == referral);
+    emit(state.assign(customer: customer));
+  }
+
   void addPhoneOnCustomer(){
     String value = formFieldPhoneKey.currentState?.value;
     if(formFieldPhoneKey.currentState!.validate() && value.isNotEmpty){
@@ -73,6 +80,13 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     state.customer.address = Address.empty();
     state.event.customer = state.customer;
     PlatformUtils.navigator(context, Constants.createAddressViewRoute,
+        <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'typeStatus' : TypeStatus.create, 'context' : context, 'callback': PlatformUtils.isMobile?forceRefresh:null});
+  }
+
+  void addReferralsOnCustomer(BuildContext context){
+    state.customer.referral = Referrals.empty();
+    state.event.customer = state.customer;
+    PlatformUtils.navigator(context, Constants.createReferralsViewRoute,
         <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'typeStatus' : TypeStatus.create, 'context' : context, 'callback': PlatformUtils.isMobile?forceRefresh:null});
   }
 

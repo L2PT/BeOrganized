@@ -87,6 +87,7 @@ class _contentTableCalendar extends StatelessWidget {
               availableGestures: AvailableGestures.horizontalSwipe,
               availableCalendarFormats: {CalendarFormat.month: ''},
               initialSelectedDay: state.selectedMonth,
+              calendarStyle: CalendarStyle(markersMaxAmount: 99),
               headerStyle: HeaderStyle(rightChevronIcon: Icon(null)),
               builders: CalendarBuilders(
                 selectedDayBuilder: (context, date, _) {
@@ -134,15 +135,6 @@ class _contentTableCalendar extends StatelessWidget {
                       child: _buildEventsMarker(date, events),
                     ));
                   }
-                  if (holidays.isNotEmpty && false) {
-                    children.add(
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: _buildHolidaysMarker(),
-                      ),
-                    );
-                  }
                   return children;
                 },
               ),
@@ -180,14 +172,6 @@ class _contentTableCalendar extends StatelessWidget {
               ),
             ),
           )
-    );
-  }
-
-  Widget _buildHolidaysMarker() {
-    return Icon(
-      Icons.add_box,
-      size: 20.0,
-      color: Colors.blueGrey[800],
     );
   }
 

@@ -8,12 +8,12 @@ import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
+import 'package:venturiautospurghi/models/layout/event_layout.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/web.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
-import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_attention.dart';
 import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
@@ -362,7 +362,26 @@ class OperatorCalendar extends StatefulWidget {
   State<StatefulWidget> createState() => _OperatorCalendarState(this.user, this._backGridLength, this._topSpace);
 }
 
-class _OperatorCalendarState extends State<OperatorCalendar>  {
+// Classe per gestire gruppi di eventi sovrapposti
+class OverlappingGroup {
+  List<Event> events = [];
+  int maxColumns = 1;
+
+  void addEvent(Event event) {
+    events.add(event);
+  }
+
+  bool overlaps(Event event) {
+    return events.any((existingEvent) =>
+        _eventsOverlap(existingEvent, event));
+  }
+
+  bool _eventsOverlap(Event a, Event b) {
+    return a.start.isBefore(b.end) && b.start.isBefore(a.end);
+  }
+}
+
+class _OperatorCalendarState extends State<OperatorCalendar> {
   Account user;
   Future ft = Future(() {});
   Tween<Offset> _offset = Tween(begin: Offset(1,0), end: Offset(0,0));
@@ -375,97 +394,109 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
   _OperatorCalendarState(this.user, this._backGridLength, this._topSpace);
 
 
-  _addWidgetCalendarOpe(){
+  void changeEvent(Event event, Account operatorOld, DraggableDetails details, BuildContext context) {
+    Account operator = context.read<CalendarContentWebCubit>().moveEventToOperator(details);
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
+    DateTime start = context.read<WebCubit>().moveEventToDate(details, selectDay, context.read<CalendarContentWebCubit>().gridHourHeight);
+    DateTime end = start.add(event.end.difference(event.start));
+    AttectionAlert(context, title: "CAMBIA INCARICO", text: "Stai assegnando l'incarico al operatore:",
+        operator: operator, showDetailsContent: operator != operatorOld, showDetailsContentDate: start != event.start, start: start, end: end).show().then((value) {
+      if(value.first){
+        context.read<CalendarContentWebCubit>().changeOperatorEvent(event, operatorOld, operator, start, end, value.last);
+      }
+    });
+  }
+
+  Widget singleOperatorCalendar(Account operator, int index, BuildContext context) {
+    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
+
+    List<EventLayout> eventLayouts =
+    (context.read<WebCubit>().state.calendarPageState as ReadyCalendarPageState)
+        .selectedEventsGroupOperator(operator.id)
+        .expand((overlapGroup) => overlapGroup.calculateGroupLayout(
+      context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
+      selectDay,
+    )).toList();
+
+    return Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
+              child: Container(
+                padding: EdgeInsets.only(top: 50),
+                width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
+                decoration: BoxDecoration(
+                    border: Border(right: BorderSide(color: grey_light, width: 1))
+                ),
+                child: Stack(
+                  children: [
+                    // Container per la struttura base
+                    Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                    // Eventi posizionati con Stack
+                    ...eventLayouts.map((layout) =>
+                        Positioned(
+                          top: layout.top,
+                          left: layout.left,
+                          width: layout.width,
+                          height: layout.height,
+                          child: MouseRegion(
+                            child: Draggable<Event>(
+                              data: layout.event,
+                              maxSimultaneousDrags: 1,
+                              feedback: Opacity(
+                                  opacity: .3,
+                                  child: SizedBox(
+                                    width: layout.width,
+                                    child: CardEvent(
+                                      event: layout.event,
+                                      height: layout.height,
+                                      externalBorder: true,
+                                    ),
+                                  )
+                              ),
+                              onDragEnd: (dragEvent) => changeEvent(layout.event, operator, dragEvent, context),
+                              child: CardEvent(
+                                event: layout.event,
+                                height: layout.height,
+                                externalBorder: true,
+                                onTapAction: (event) => PlatformUtils.navigator(
+                                    context,
+                                    Constants.detailsEventViewRoute,
+                                    {"objectParameter": event}
+                                ),
+                              ),
+                            ),
+                            opaque: false,
+                            onEnter: (e) => context.read<CalendarContentWebCubit>().hoverCardEnter(selectDay, index, layout.event),
+                            onExit: (e) => context.read<CalendarContentWebCubit>().hoverCardExit(),
+                            cursor: WidgetStateMouseCursor.clickable,
+                          ),
+                        )
+                    ).toList(),
+                  ],
+                ),
+              )
+          )
+        ]
+    );
+  }
+
+  _addWidgetCalendarOpe() {
     int index = 0;
     _listOperatorCalendar = [];
     _listKey.currentState?.removeAllItems((context, animation) => Container());
     user.webops.forEach((operator) {
       ft = ft.then((_) {
         return Future.delayed(const Duration(milliseconds: 100), () {
-          _listOperatorCalendar.add(singleOperatorCalendar(operator,index, context));
-          _listKey.currentState?.insertItem(_listOperatorCalendar.length -1);
+          _listOperatorCalendar.add(singleOperatorCalendar(operator, index, context));
+          _listKey.currentState?.insertItem(_listOperatorCalendar.length - 1);
           index++;
         });
       });
-
     });
-  }
-
-  void changeEvent(Event event, Account operatorOld, DraggableDetails details, BuildContext context){
-    Account operator = context.read<CalendarContentWebCubit>().moveEventToOperator(details);
-    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
-    DateTime start = context.read<WebCubit>().moveEventToDate(details,selectDay, context.read<CalendarContentWebCubit>().gridHourHeight);
-    DateTime end = start.add(event.end.difference(event.start));
-    AttectionAlert(context, title: "CAMBIA INCARICO", text: "Stai assegnando l'incarico al operatore:",
-        operator: operator, showDetailsContent: operator != operatorOld, showDetailsContentDate: start != event.start, start: start, end: end).show().then((value) {
-      if(value.first){
-        context.read<CalendarContentWebCubit>().changeOperatorEvent(event,operatorOld, operator, start, end, value.last);
-      }
-    });
-  }
-
-  Widget singleOperatorCalendar(Account operator, int index, BuildContext context){
-    DateTime selectDay = context.read<WebCubit>().state.calendarPageState.calendarDate;
-    List<Event> listEvent = (context.read<WebCubit>().state.calendarPageState as ReadyCalendarPageState)
-        .selectedEventsOperator(operator.id);
-    DateTime _base = new DateTime(1990, 1, 1, Constants.MIN_WORKTIME, 0, 0);
-    return Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Expanded(child:
-              Container(
-                padding: EdgeInsets.only(top: 50),
-                width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
-                decoration: BoxDecoration(border: Border(right: BorderSide(color: grey_light, width: 1))),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    ...listEvent.map((event) {
-                      if(event.start.hour >= Constants.MIN_WORKTIME && event.end.hour <= Constants.MAX_WORKTIME-1){
-                        double sizeHeightBefore = context.read<CalendarContentWebCubit>().calcWidgetHeightInGrid(selectDay,firstWorkedMinute: _base.hour*60 + _base.minute, end: event.start);
-                        double heightEvent = context.read<CalendarContentWebCubit>().calcWidgetHeightInGrid(selectDay,start: event.start, end: event.end);
-                        List <Widget> element = <Widget>[
-                          SizedBox( height: sizeHeightBefore),
-                          MouseRegion(
-                            child: Draggable<Event>(
-                              data: event, // Passa l'evento come payload
-                              maxSimultaneousDrags: 1,
-                              feedback:  Opacity(
-                              opacity: .3,
-                              child: SizedBox(
-                                width: context.read<CalendarContentWebCubit>().state.widthOpeCalendar,
-                                child: CardEvent(
-                                event: event,
-                                height: heightEvent,
-                                externalBorder: true,
-                                ),)
-                              ),
-                              onDragEnd: (dragEvent)  => changeEvent(event, operator, dragEvent, context),
-                              child: CardEvent(
-                                event: event,
-                                height: heightEvent,
-                                externalBorder: true,
-                                onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute, {"objectParameter" : event}),
-                              ),
-                            ),
-                            opaque: false,
-                            onEnter: (e) => context.read<CalendarContentWebCubit>().hoverCardEnter(selectDay,index, event),
-                            onExit: (e) => context.read<CalendarContentWebCubit>().hoverCardExit(),
-                            cursor: WidgetStateMouseCursor.clickable,
-                          ),
-                        ];
-                        int newBaseMinutes = _.DateUtils.getLastDailyWorkedMinute(event.end, selectDay);
-                        _base = TimeUtils.truncateDate(_base, "day").add(
-                            Duration(hours: newBaseMinutes ~/ 60, minutes: (newBaseMinutes % 60).toInt()));
-                        return element;
-                      }else{
-                        return <Widget>[ Container() ];
-                      }
-                    }).expand((i) => i).toList()
-                  ],
-                ),
-              ))
-        ]);
   }
 
   @override
@@ -474,38 +505,46 @@ class _OperatorCalendarState extends State<OperatorCalendar>  {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _addWidgetCalendarOpe();
     });
-    return
-      Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          SizedBox(
-              height: (this._backGridLength * context.read<CalendarContentWebCubit>().gridHourHeight) + _topSpace,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(height: (this._backGridLength * context.read<CalendarContentWebCubit>().gridHourHeight) + _topSpace - 120, width: 0,decoration: BoxDecoration(
-                      border: Border(right: BorderSide(color: grey_light, width: 1))
-                  ),  ),
-                  Expanded(
-                      child: RawScrollbar(
-                          thumbColor: black_light,
-                          radius: Radius.circular(20),
-                          thickness: 10,
-                          controller: context.read<CalendarContentWebCubit>().horizontalCalendar,
-                          child: AnimatedList(
-                            controller: context.read<CalendarContentWebCubit>().horizontalCalendar,
-                            key: _listKey,
-                            initialItemCount: _listOperatorCalendar.length,
-                            itemBuilder: (context, i, animation) =>
-                                SlideTransition(position: animation.drive(_offset),
-                                    child: _listOperatorCalendar[i]),
-                            scrollDirection: Axis.horizontal,))
-                  )
-                ],
-              ))
-        ],
-      );
-  }
 
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        SizedBox(
+            height: (this._backGridLength * context.read<CalendarContentWebCubit>().gridHourHeight) + _topSpace,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: (this._backGridLength * context.read<CalendarContentWebCubit>().gridHourHeight) + _topSpace - 120,
+                  width: 0,
+                  decoration: BoxDecoration(
+                      border: Border(right: BorderSide(color: grey_light, width: 1))
+                  ),
+                ),
+                Expanded(
+                    child: RawScrollbar(
+                        thumbColor: black_light,
+                        radius: Radius.circular(20),
+                        thickness: 10,
+                        controller: context.read<CalendarContentWebCubit>().horizontalCalendar,
+                        child: AnimatedList(
+                          controller: context.read<CalendarContentWebCubit>().horizontalCalendar,
+                          key: _listKey,
+                          initialItemCount: _listOperatorCalendar.length,
+                          itemBuilder: (context, i, animation) =>
+                              SlideTransition(
+                                  position: animation.drive(_offset),
+                                  child: _listOperatorCalendar[i]
+                              ),
+                          scrollDirection: Axis.horizontal,
+                        )
+                    )
+                )
+              ],
+            )
+        )
+      ],
+    );
+  }
 }

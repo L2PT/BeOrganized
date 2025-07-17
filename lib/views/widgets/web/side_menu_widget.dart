@@ -26,6 +26,9 @@ final Map<String, LinkMenu> menuWeb = const {
       FontAwesomeIcons.solidAddressBook, Colors.white, 18, "Rubrica Cliente", title_rev_menu),
   Constants.manageUtenzeRoute: const LinkMenu(
       Icons.people, Colors.white, 20, "Gestione Utenze", title_rev_menu),
+  Constants.manageMessageRoute: const LinkMenu(
+      Icons.inbox, Colors.white, 20, "Messaggi", title_rev_menu),
+
 };
 
 class SideMenuLayerWeb extends StatelessWidget {

@@ -7,7 +7,7 @@ class PlatformDatePicker {
   static Widget dialog_theme(BuildContext context, Widget? child) {
     return Theme(
       data: ThemeData.light().copyWith(
-        dialogTheme: DialogTheme(
+        dialogTheme: DialogThemeData(
           surfaceTintColor: Colors.transparent,
         ),
         colorScheme: ColorScheme.light().copyWith(

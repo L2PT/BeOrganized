@@ -36,9 +36,9 @@ class FabCubit extends Cubit<FabState> {
   }
 
   void callOffice() async {
-    String officeNumber = "tel:"+(await _databaseRepository.getPhoneNumbers())["ufficio"];
-    if(await canLaunch(officeNumber)){
-      launch(officeNumber);
+    Uri officeNumber = Uri.parse("tel:"+(await _databaseRepository.getPhoneNumbers())["ufficio"]);
+    if(await canLaunchUrl(officeNumber)){
+      launchUrl(officeNumber);
     }
   }
 

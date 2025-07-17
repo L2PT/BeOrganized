@@ -16,7 +16,6 @@ class AttectionAlert {
   final DateTime start;
   final DateTime end ;
   final IconData icon;
-  late final Widget _content;
 
 
   AttectionAlert(this.context, {required this.title, required this.text, DateTime? start , DateTime? end, this.showDetailsContent = false, this.showDetailsContentDate = false, this.duplicateMode = false, Account? operator,

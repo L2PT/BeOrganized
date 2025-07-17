@@ -7,11 +7,15 @@ export const TaskSchema = z.object({
   nome: z.string(),
   cognome: z.string(),
   indirizzo: z.string(),
-  telefono: z.string(),
+  telefono: z.array(z.string()), // Array di numeri di telefono
   email: z.string().email().or(z.literal("")),
   codicefiscale: z.string(),
   partitaIva: z.string(),
   tipoCliente: z.enum(["Amministratore", "Azienda", "Privato", "Referente"]),
+  referenti: z.array(z.object({
+    nome: z.string(),
+    telefono: z.string(),
+  })), // Array di referenti solo se tipoCliente è "Amministratore"
   tipo: z.enum(["Intervento", "Contratto"]),
   cartello: z.boolean(),
   categoria: z.enum(["Disinfestazione", "Spurgo", "Video"]),
@@ -27,6 +31,7 @@ export const TaskSchema = z.object({
   dataFineRipetizione: z.string(), // YYYY-MM-DD
   giornoMeseRipetizione: z.number(),
   ogniQuantiMesiRipetizione: z.number(),
+  note: z.string(), // Campo note aggiunto
 });
 
 /**
@@ -42,13 +47,14 @@ export function normalizzaDatiGreppiati(
     nome: normalizeString(raw.nome),
     cognome: normalizeString(raw.cognome),
     indirizzo: normalizeString(raw.indirizzo),
-    telefono: normalizeString(raw.telefono),
+    telefono: normalizeArray(raw.telefono), // Gestisce array di stringhe
     email: normalizeString(raw.email).toLowerCase(),
     codicefiscale: normalizeString(raw.codicefiscale).toUpperCase(),
     partitaIva: normalizeString(raw.partitaIva),
     tipoCliente: normalizzaEnum(raw.tipoCliente, [
       "Amministratore", "Azienda", "Privato", "Referente",
     ]),
+    referenti: normalizeReferenti(raw.referenti), // Gestisce array di referenti
     tipo: normalizzaEnum(raw.tipo, ["Intervento", "Contratto"]),
     cartello: normalizzaBoolean(raw.cartello),
     categoria: normalizzaEnum(raw.categoria, [
@@ -66,7 +72,46 @@ export function normalizzaDatiGreppiati(
     dataFineRipetizione: normalizeString(raw.dataFineRipetizione),
     giornoMeseRipetizione: normalizeNumber(raw.giornoMeseRipetizione),
     ogniQuantiMesiRipetizione: normalizeNumber(raw.ogniQuantiMesiRipetizione),
+    note: normalizeString(raw.note), // Campo note aggiunto
   };
+}
+
+/**
+ * Funzione helper per normalizzare array di stringhe.
+ *
+ * @param {unknown} value Oggetto contenente dati da normalizzare.
+ * @return {string[]} Oggetto normalizzato.
+ */
+function normalizeArray(value: unknown): string[] {
+  if (value === null || value === undefined) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeString(item))
+      .filter((item) => item !== "");
+  }
+  return [];
+}
+
+/**
+ * Funzione helper per normalizzare array di referenti.
+ *
+ * @param {unknown} value Oggetto contenente dati da normalizzare.
+ * @return {{nome: string, telefono: string}[]} Array normalizzato di referenti.
+ */
+function normalizeReferenti(value: unknown): Array<{ nome: string; telefono: string }> {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item): item is Record<string, unknown> =>
+      typeof item === "object" && item !== null
+    )
+    .map((referente) => ({
+      nome: normalizeString(referente.nome),
+      telefono: normalizeString(referente.telefono),
+    }))
+    .filter((r): r is { nome: string; telefono: string } =>
+      r.nome !== "" && r.telefono !== ""
+    );
 }
 
 /**
@@ -107,7 +152,12 @@ function normalizzaBoolean(val: unknown): boolean {
  * @return {string} Stringa risultante.
  */
 function normalizeString(val: unknown): string {
-  return typeof val === "string" ? val.trim() : "";
+  if (typeof val !== "string") return "";
+  const trimmed = val.trim();
+  console.log("normalizzazione stringa:",
+    val);
+  console.log("Placeholder:", isPlaceholder(trimmed) );
+  return isPlaceholder(trimmed) ? "" : trimmed;
 }
 
 /**
@@ -119,4 +169,21 @@ function normalizeString(val: unknown): string {
 function normalizeNumber(val: unknown): number {
   const n = Number(val);
   return isNaN(n) ? 0 : Math.floor(n);
+}
+
+/**
+ * Verifica che è un placeholder
+ *
+ * @param {string} val - Valore da verificare.
+ * @return {boolean} Booleano risultante.
+ */
+function isPlaceholder(val: string): boolean {
+  const placeholders = [
+    "NOME", "COGNOME", "INIDIRIZZO", "EMAIL", "CODICE_FISCALE", "PARTITA_IVA",
+    "TELEFONO1", "TELEFONO2", "TIPO_CLIENTE", "NOME_REF", "COGNOME_REF", "TIPO",
+    "TELEFONO_REF", "CATEGORIA", "DESCRIZIONE_PROBLEMA", "GIORNO", "SI/NO",
+    "NOTE_AGGIUNTIVE", "YYYY-MM-DD", "HH:MM", "NUMERO_MESI", "NOME_OPERATORE",
+  ];
+  const normalized = val.trim().toUpperCase();
+  return placeholders.includes(normalized);
 }

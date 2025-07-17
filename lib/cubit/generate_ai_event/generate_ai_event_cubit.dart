@@ -15,7 +15,7 @@ part 'generate_ai_event_state.dart';
 class GenerateAiEventCubit extends Cubit<GenerateAiEventState> {
   final CloudFirestoreService _databaseRepository;
   final Account _account;
-  late String text = "";
+  late String text = Constants.protoGenerateEvent;
   final GlobalKey<FormState> formKeyBasiclyInfo = GlobalKey<FormState>();
 
   GenerateAiEventCubit(this._databaseRepository, this._account, DateTime? dateSelect,) :

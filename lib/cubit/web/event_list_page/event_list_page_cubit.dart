@@ -41,7 +41,7 @@ class EventListPageCubit extends Cubit<EventListPageState> {
     // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query
     listEvent = await _databaseRepository.getEventsActiveFiltered(filters, limit: startingElements);
     canLoadMore = listEvent.length >= startingElements;
-    emit(state.assign(filters: filters, eventsList: listEvent, numPage: 0, totalEvent: canLoadMore?statePrev.totalEvent:listEvent.length));
+    emit(state.assign(isBozze: statePrev.isBozze,filters: filters, eventsList: listEvent, numPage: 0, totalEvent: canLoadMore?statePrev.totalEvent:listEvent.length));
   }
 
   void loadMoreData() async {

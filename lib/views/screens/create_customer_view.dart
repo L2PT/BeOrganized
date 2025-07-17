@@ -7,6 +7,7 @@ import 'package:venturiautospurghi/cubit/create_customer/create_customer_cubit.d
 import 'package:venturiautospurghi/models/address.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
@@ -484,6 +485,101 @@ class _formAddressInfo extends StatelessWidget{
       );
     }
 
+    Widget referralListElement(Referrals referral){
+      return Container(
+        height: 50,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(right: 10.0),
+              child: Icon(Customer.getIconTypology(Customer.REFERENTE).icon, color: black,),
+            ),
+            Text(referral.toString(), style: title.copyWith(fontWeight: FontWeight.normal, color: black, fontSize: 16)),
+            Expanded(child: Container(),),
+            IconButton(
+                icon: Icon(Icons.delete, color: black, size: 25),
+                onPressed: () => context.read<CreateCustomerCubit>().removeReferralOnCustomer(referral)
+            )
+          ],
+        ),
+      );
+    }
+
+    Widget phoneList(){
+      return Column(children: [
+        Row(children: <Widget>[
+          Container(
+            width: iconWidth,
+            margin: EdgeInsets.only(right: 20.0),
+            child: Icon(Icons.phone,
+                color: black, size: iconWidth),
+          ),
+          Expanded(
+            child: TextFormField(
+              key: context.read<CreateCustomerCubit>().formFieldPhoneKey,
+              maxLines: 1,
+              cursorColor: black,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                hintText: 'Aggiungi i telefoni del cliente',
+                hintStyle: subtitle,
+                border: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                    width: 2.0,
+                    style: BorderStyle.solid,
+                  ),
+                ),
+              ),
+              validator: (value) => !string.isNullOrEmpty(value) && !string.isPhoneNumber(value!)
+                  ? 'Inserisci un valore valido'
+                  : null,
+            ),
+          ),
+          IconButton(
+              icon: Icon(Icons.add, color: black),
+              onPressed: context.read<CreateCustomerCubit>().addPhoneOnCustomer
+          )
+        ]),
+        BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
+            buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString(),
+            builder: (context, state) {
+              return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.phones).asMap()
+                  .map((i, phone) =>
+                  MapEntry(i,phoneListElement(phone))).values.toList()]);
+            }),
+      ],);
+    }
+
+    Widget referralsList(){
+      return Column(children: [
+        Row(children: <Widget>[
+          Container(
+            width: iconWidth,
+            margin: EdgeInsets.only(right: 20.0),
+            child: Icon(Customer.getIconTypology(Customer.REFERENTE).icon, color: black, size: iconWidth),
+          ),
+          Expanded(
+            child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                child: Text("Aggiungi un referente", style: label)),
+          ),
+          IconButton(
+              icon: Icon(Icons.add, color: black),
+              onPressed: () => context.read<CreateCustomerCubit>().addReferralsOnCustomer(context))
+        ]),
+        BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
+            buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
+            builder: (context, state) {
+              return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.referrals).asMap()
+                  .map((i, referral) =>
+                  MapEntry(i,referralListElement(referral))).values.toList()]);
+            }),
+      ],);
+    }
+
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -499,48 +595,7 @@ class _formAddressInfo extends StatelessWidget{
                   1.2,  new Form(
                   key: context.read<CreateCustomerCubit>().formKeyAddressInfo,
                   child: new Column(children: <Widget>[
-                    Row(children: <Widget>[
-                      Container(
-                        width: iconWidth,
-                        margin: EdgeInsets.only(right: 20.0),
-                        child: Icon(Icons.phone,
-                            color: black, size: iconWidth),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          key: context.read<CreateCustomerCubit>().formFieldPhoneKey,
-                          maxLines: 1,
-                          cursorColor: black,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          keyboardType: TextInputType.phone,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          decoration: InputDecoration(
-                            hintText: 'Aggiungi i telefoni del cliente',
-                            hintStyle: subtitle,
-                            border: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                width: 2.0,
-                                style: BorderStyle.solid,
-                              ),
-                            ),
-                          ),
-                          validator: (value) => !string.isNullOrEmpty(value) && !string.isPhoneNumber(value!)
-                              ? 'Inserisci un valore valido'
-                              : null,
-                        ),
-                      ),
-                      IconButton(
-                          icon: Icon(Icons.add, color: black),
-                          onPressed: context.read<CreateCustomerCubit>().addPhoneOnCustomer
-                      )
-                    ]),
-                    BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
-                        buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString(),
-                        builder: (context, state) {
-                          return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.phones).asMap()
-                              .map((i, phone) =>
-                              MapEntry(i,phoneListElement(phone))).values.toList()]);
-                        }),
+                    context.read<CreateCustomerCubit>().state.customer.isAdministrator()?referralsList():phoneList(),
                     Divider(height: 20, indent: 20, endIndent: 20, thickness: 2, color: grey_light2),
                     Row(children: <Widget>[
                       Container(

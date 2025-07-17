@@ -194,32 +194,31 @@ class CardEvent extends StatelessWidget {
                                 ),
                                 Row(
                                   children: [
-                                    Text(event.category.toUpperCase(),
+                                    Expanded(
+                                      child: Text(
+                                        event.category.toUpperCase(),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                         style: subtitle_rev.copyWith(
-                                            fontSize: PlatformUtils.isMobile?16:14,
-                                            color: HexColor(event.color),
-                                            fontWeight: FontWeight.normal)),
-                                    Expanded(child: Container(),),
-                                    event.isRepeatedEvent()?
-                                    Container(
-                                      margin: EdgeInsets.only(right: 5,top: 2),
-                                      child: Icon(
-                                        Icons.repeat,
-                                        size: 15,
-                                        color: HexColor(event.color),
+                                          fontSize: PlatformUtils.isMobile ? 16 : 14,
+                                          color: HexColor(event.color),
+                                          fontWeight: FontWeight.normal,
+                                        ),
                                       ),
-                                    ):Container(),
-                                    event.notaOperator.isNotEmpty?
-                                    Container(
-                                      margin: EdgeInsets.only(right: 5,top: 2),
-                                      child: Icon(
-                                        Icons.assignment_ind,
-                                        size: 18,
-                                        color: HexColor(event.color),
+                                    ),
+
+                                    // Icone, visibili solo se necessario
+                                    if (event.isRepeatedEvent())
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 5, top: 2),
+                                        child: Icon(Icons.repeat, size: 15, color: HexColor(event.color)),
                                       ),
-                                    ):Container()
+
+                                    if (event.notaOperator.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 5, top: 2),
+                                        child: Icon(Icons.assignment_ind, size: 18, color: HexColor(event.color)),
+                                      ),
                                   ],
                                 )
                               ],

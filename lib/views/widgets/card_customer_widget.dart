@@ -10,7 +10,7 @@ class CardCustomer extends StatelessWidget {
   final void Function()? onEditAction;
   final void Function()? onDeleteAction;
   final void Function(bool, Customer)? onExpansionChanged;
-  ExpansionTileController? controller;
+  ExpansibleController? controller;
   double paddingTopHeader;
   bool expadedMode;
   bool selectedMode;
@@ -103,7 +103,7 @@ class CardCustomer extends StatelessWidget {
               color: black,
             ),
             padding: EdgeInsets.all(5),
-            child: Icon(customer.isCompany()?Icons.domain_rounded:Icons.person, size: 45, color: yellow,),
+            child: Icon(Customer.getIconTypology(customer.typology).icon, size: 45, color: yellow,),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,21 +122,75 @@ class CardCustomer extends StatelessWidget {
         ],
       ));
     }
-
-    List<Widget> bodyCustomer(){
-      return [
-        Divider(color: grey_light,),
-        SizedBox(height: 5,),
+    Widget referralsCustomer(){
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
-            customer.addresses.length>1?'Indirizzi':'Indirizzo',
+            customer.referrals.length>1?'Referenti':'Referente',
             style: title.copyWith(fontSize: 15)
         ),
         SizedBox(height: 3,),
-        selectedMode && customer.addresses.length > 1?Column(children: <Widget>[...customer.addresses.asMap()
-            .map((i, address) =>
-            MapEntry(i,addressListElement(address))).values.toList()]):
-        CardAddress(address: customer.address, onLuanchPhoneAction: this.onLuanchPhoneAction, onLuanchAddressAction: this.onLuanchAddressAction,),
-        SizedBox(height: 10,),
+        customer.referrals.isNotEmpty?
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            this.onLuanchPhoneAction!=null?
+            Container(
+                height: 80,
+                width: 255,
+                child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: (1 / .2),
+                      mainAxisSpacing: 2,
+                    ),
+                    itemCount: customer.referrals.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return FadeAnimation((1.0 + index) / 4,
+                          MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                  onTap: () { this.onLuanchPhoneAction!(customer.referrals.elementAt(index).phone); },
+                                  child: Container(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 16,
+                                            margin: EdgeInsets.only(right: 10.0),
+                                            child: Icon(
+                                              Customer.getIconTypology(Customer.REFERENTE).icon,
+                                              color: grey_dark,
+                                              size: 16,
+                                            ),
+                                          ),
+                                          Text(customer.referrals.elementAt(index).toString(),
+                                            style: subtitle.copyWith(fontSize: 13),overflow: TextOverflow.visible,),
+                                        ],
+                                      )
+                                  ))));
+                    }
+                )):
+            Row(
+              children: [
+                Container(
+                  width: 16,
+                  margin: EdgeInsets.only(right: 10.0),
+                  child: Icon(
+                    Customer.getIconTypology(Customer.REFERENTE).icon,
+                    color: grey_dark,
+                    size: 16,
+                  ),
+                ),
+                Text(customer.referrals.join(' - '), overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
+              ],
+            )
+          ],
+        ):Text('Nessun referente', overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
+      ]);
+    }
+
+    Widget phoneCustomer(){
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
             customer.phones.length>1?'Telefoni':'Telefono',
             style: title.copyWith(fontSize: 15)
@@ -149,40 +203,40 @@ class CardCustomer extends StatelessWidget {
           children: [
             this.onLuanchPhoneAction!=null?
             Container(
-              height: 80,
+                height: 80,
                 width: 255,
                 child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: (1 / .2),
-                  mainAxisSpacing: 2,
-                ),
-                itemCount: customer.phones.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return FadeAnimation((1.0 + index) / 4,
-                      MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () { this.onLuanchPhoneAction!(customer.phones.elementAt(index)); },
-                        child: Container(
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 16,
-                                  margin: EdgeInsets.only(right: 10.0),
-                                  child: Icon(
-                                    Icons.phone,
-                                    color: grey_dark,
-                                    size: 16,
-                                  ),
-                                ),
-                                Text(customer.phones.elementAt(index),
-                                  style: subtitle.copyWith(fontSize: 13),overflow: TextOverflow.visible,),
-                          ],
-                        )
-                      ))));
-                }
-            )):
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: (1 / .2),
+                      mainAxisSpacing: 2,
+                    ),
+                    itemCount: customer.phones.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return FadeAnimation((1.0 + index) / 4,
+                          MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                  onTap: () { this.onLuanchPhoneAction!(customer.phones.elementAt(index)); },
+                                  child: Container(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 16,
+                                            margin: EdgeInsets.only(right: 10.0),
+                                            child: Icon(
+                                              Icons.phone,
+                                              color: grey_dark,
+                                              size: 16,
+                                            ),
+                                          ),
+                                          Text(customer.phones.elementAt(index),
+                                            style: subtitle.copyWith(fontSize: 13),overflow: TextOverflow.visible,),
+                                        ],
+                                      )
+                                  ))));
+                    }
+                )):
             Row(
               children: [
                 Container(
@@ -199,6 +253,24 @@ class CardCustomer extends StatelessWidget {
             )
           ],
         ):Text('Nessun numero di telefono', overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
+      ]);
+    }
+
+    List<Widget> bodyCustomer(){
+      return [
+        Divider(color: grey_light,),
+        SizedBox(height: 5,),
+        Text(
+            customer.addresses.length>1?'Indirizzi':'Indirizzo',
+            style: title.copyWith(fontSize: 15)
+        ),
+        SizedBox(height: 3,),
+        selectedMode && customer.addresses.length > 1?Column(children: <Widget>[...customer.addresses.asMap()
+            .map((i, address) =>
+            MapEntry(i,addressListElement(address))).values.toList()]):
+        CardAddress(address: customer.address, onLuanchPhoneAction: this.onLuanchPhoneAction, onLuanchAddressAction: this.onLuanchAddressAction,),
+        SizedBox(height: 10,),
+        customer.isAdministrator()?referralsCustomer():phoneCustomer(),
         SizedBox(height: 15,),
       ];
     }
@@ -208,7 +280,7 @@ class CardCustomer extends StatelessWidget {
       if(buttonMode)
         body.addAll(buttonCustomer());
       return ExpansionTile(
-        controller: this.controller??new ExpansionTileController(),
+        controller: this.controller??new ExpansibleController(),
         childrenPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         collapsedIconColor: black,

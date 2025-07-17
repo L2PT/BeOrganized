@@ -2,14 +2,18 @@ part of 'daily_calendar_cubit.dart';
 
 abstract class DailyCalendarState extends Equatable {
   Map<DateTime, List<Event>> eventsMap;
+  Map<DateTime, List<OverlappingGroup>> overlapMap;
   List<DateTime> subscribedDays;
   DateTime selectedDay;
   double gridHourHeight = 0;
   int gridHourSpan = 0;
   bool allDayEvent = false;
 
-  DailyCalendarState([DateTime? selectedDay, Map<DateTime, List<Event>>? eventsMap, List<DateTime>? subscribedDays, ]) :
+  DailyCalendarState([DateTime? selectedDay, Map<DateTime, List<Event>>? eventsMap,
+    Map<DateTime, List<OverlappingGroup>>? overlapMap,
+    List<DateTime>? subscribedDays, ]) :
         this.eventsMap = eventsMap ?? {},
+        this.overlapMap = overlapMap ?? {},
         this.selectedDay = selectedDay ?? TimeUtils.truncateDate(DateTime.now(), "day"),
         this.subscribedDays = subscribedDays ?? [];
 
@@ -27,7 +31,9 @@ class DailyCalendarReady extends DailyCalendarState {
 
   List<Event> selectedEvents() => eventsMap[selectedDay] ?? [];
 
-  DailyCalendarReady(Map<DateTime, List<Event>> eventsMap, DateTime selectedDay, List<DateTime> subscribedDays) : super(selectedDay, eventsMap, subscribedDays) {
+  List<OverlappingGroup> selectedOverlapping() => overlapMap[selectedDay] ?? [];
+
+  DailyCalendarReady(Map<DateTime, List<Event>> eventsMap, Map<DateTime, List<OverlappingGroup>> overlapMap, DateTime selectedDay, List<DateTime> subscribedDays) : super(selectedDay, eventsMap, overlapMap, subscribedDays) {
     //the verticalGridEvents need the events of the selectedDay ordered
     List<Event> listEvent = eventsMap[selectedDay] ?? [];
     listEvent.sort((a, b) => a.start.compareTo(b.start));

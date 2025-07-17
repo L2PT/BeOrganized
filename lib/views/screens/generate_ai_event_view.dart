@@ -84,10 +84,11 @@ class _AutomaticEvent extends StatelessWidget{
               SizedBox(height: 10),
               TextFormField(
                 maxLines: 18,
-                validator: (value) => string.isNullOrEmpty(value) ? 'Il campo è obbligatorio' : null,
+                initialValue: context.read<GenerateAiEventCubit>().text,
+                validator: (value) => string.isNullOrEmpty(value) || value == Constants.protoGenerateEvent ? 'Il campo è obbligatorio' : null,
                 onSaved: (value) => context.read<GenerateAiEventCubit>().text = value ?? "",
                 cursorColor: Colors.black,
-                keyboardType: TextInputType.text,
+                keyboardType: TextInputType.multiline,
                 decoration: InputDecoration(
                   hintText: 'Descrizione incarico...',
                   hintStyle: subtitle,

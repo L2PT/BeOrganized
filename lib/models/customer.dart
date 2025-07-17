@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:venturiautospurghi/models/address.dart';
 import 'package:venturiautospurghi/models/event_response_ai.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 
@@ -20,14 +21,16 @@ class Customer extends Equatable{
   String email = "";
   String phone = "";
   Address address = Address.empty();
+  Referrals referral = Referrals.empty();
   List<dynamic> phones = [];
   String partitaIva = "";
   String codFiscale = "";
   List<Address> addresses = [];
+  List<Referrals> referrals = [];
   String typology = "Privato";
   List<String> addressesSearch = [];
 
-  Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.addresses, this.addressesSearch);
+  Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.referral, this.addresses, this.referrals, this.addressesSearch);
   Customer.empty();
 
   Customer.fromMap(String id, Map<String,dynamic> json) :
@@ -41,6 +44,8 @@ class Customer extends Equatable{
         partitaIva = json['PartitaIva'],
         addresses = (json["Indirizzi"] as List).map((address) => Address.fromMap(address)).toList(),
         address = json["Indirizzo"] == null? Address.empty(): Address.fromMap(json["Indirizzo"]),
+        referral = json["Referente"] == null? Referrals.empty(): Referrals.fromMap(json["Referente"]),
+        referrals = json["Referenti"] == null? []: (json["Referenti"] as List).map((referrals) => Referrals.fromMap(referrals)).toList(),
         addressesSearch = json['IndirizziSearch'] != null?List.from(json['IndirizziSearch']):[],
         typology = json['Tipologia']??"Privato";
 
@@ -54,7 +59,9 @@ class Customer extends Equatable{
     "PartitaIva": this.partitaIva,
     "CodiceFiscale":this.codFiscale,
     "Indirizzi": this.addresses.map((address)=>address.toMap()).toList(),
+    "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
     "Indirizzo": this.address.toMap(),
+    "Referente": this.referral.toMap(),
     "IndirizziSearch": this.addressesSearch,
     "Tipologia":this.typology,
   };
@@ -69,7 +76,9 @@ class Customer extends Equatable{
       "PartitaIva": this.partitaIva,
       "CodiceFiscale":this.codFiscale,
       "Indirizzi": this.addresses.map((address)=>address.toMap()).toList(),
+      "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
       "Indirizzo": this.address.toMap(),
+      "Referente": this.referral.toMap(),
       "IndirizziSearch": this.addressesSearch,
       "Tipologia":this.typology,
     });
@@ -86,7 +95,9 @@ class Customer extends Equatable{
       "PartitaIva": this.partitaIva,
       "CodiceFiscale":this.codFiscale,
       "Indirizzi": this.addresses,
+      "Referenti": this.referrals,
       "Indirizzo": this.address,
+      "Referente": this.referral,
       "IndirizziSearch": this.addressesSearch,
       "Tipologia":this.typology,
     });
@@ -98,10 +109,12 @@ class Customer extends Equatable{
     email = eventResponseAi.email;
     partitaIva = eventResponseAi.partitaIva;
     codFiscale = eventResponseAi.codicefiscale;
-    phones.add(eventResponseAi.telefono);
+    typology = eventResponseAi.tipoCliente;
+    phones.addAll(eventResponseAi.telefono);
+    referrals.addAll(eventResponseAi.referenti);
     Address address = Address.empty();
     address.address.add(eventResponseAi.indirizzo);
-    address.phone = eventResponseAi.telefono;
+    address.phone = eventResponseAi.telefono.first;
     this.address = address;
     addresses.add(address);
   }
@@ -116,12 +129,18 @@ class Customer extends Equatable{
     this.typology = clientUpdate.typology;
     this.partitaIva = clientUpdate.partitaIva;
     this.addresses = clientUpdate.addresses;
+    this.referrals = clientUpdate.referrals;
     this.addressesSearch = clientUpdate.addressesSearch;
     this.address = clientUpdate.address;
+    this.referral = clientUpdate.referral;
   }
 
   bool isCompany(){
     return this.typology == Customer.AZIENDA;
+  }
+
+  bool isAdministrator(){
+    return this.typology == Customer.AMMINISTRATORE;
   }
 
   bool filter(lambda, value){
@@ -181,9 +200,9 @@ class Customer extends Equatable{
 
 
   @override
-  String toString() => id+name+surname+email+phones.join()+phone.toString()+partitaIva+codFiscale+typology+typology+address.toString()+addresses.join();
+  String toString() => id+name+surname+email+phones.join()+phone.toString()+partitaIva+codFiscale+typology+typology+address.toString()+referral.toString()+addresses.join()+referrals.join();
 
   @override
-  List<Object?> get props => [name, surname, email, phone, address, addresses, phones, partitaIva, codFiscale, typology];
+  List<Object?> get props => [name, surname, email, phone, address, addresses,referral, referrals, phones, partitaIva, codFiscale, typology];
 
 }

@@ -32,7 +32,8 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 34
+    namespace "com.l2pt.venturiautospurghi"  // ← AGGIUNGI QUESTA RIGA
+    compileSdkVersion 35
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -44,7 +45,7 @@ android {
     defaultConfig {
         applicationId "com.l2pt.venturiautospurghi"
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -64,6 +65,15 @@ android {
         release {
             signingConfig signingConfigs.release
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 

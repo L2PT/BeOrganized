@@ -10,7 +10,7 @@ import 'package:venturiautospurghi/utils/theme.dart';
 final Map<String, LinkMenu> menuOperatore = const {
   Constants.homeRoute: const LinkMenu(Icons.home, Colors.white, 30, "Home", title_rev),
   Constants.waitingEventListRoute: const LinkMenu(Icons.visibility_off, Colors.white, 30, "Incarichi in sospeso", title_rev),
-  Constants.monthlyCalendarRoute: const LinkMenu(FontAwesomeIcons.calendarAlt, Colors.white, 25, "Calendario", title_rev),
+  Constants.monthlyCalendarRoute: const LinkMenu(FontAwesomeIcons.calendarDays, Colors.white, 25, "Calendario", title_rev),
   Constants.filterEventListRoute: const LinkMenu(Icons.search, Colors.white, 30, "Ricerca incarichi", title_rev),
 };
 

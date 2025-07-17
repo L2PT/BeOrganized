@@ -18,7 +18,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   late List<Customer> customers;
   final int startingElements = 30;
   final int loadingElements = 15;
-  Map<String, ExpansionTileController> mapController = {};
+  Map<String, ExpansibleController> mapController = {};
 
   CustomerSelectionCubit(this._databaseRepository, Event? _event) :
         super(LoadingCustomers()){
@@ -75,7 +75,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   void onExpansionChanged(bool isOpen, Customer customer){
     Customer customerCopy = Customer.fromMap("", customer.toMap());
     if(isOpen){
-      ExpansionTileController? controller = mapController[(state as ReadyCustomers).customer.id];
+      ExpansibleController? controller = mapController[(state as ReadyCustomers).customer.id];
       if(controller != null && controller.isExpanded)
         controller.collapse();
       emit((state as ReadyCustomers).assign(customer: customerCopy));
@@ -87,8 +87,8 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     }
   }
 
-  ExpansionTileController getController(String id){
-    ExpansionTileController controller = new ExpansionTileController();
+  ExpansibleController getController(String id){
+    ExpansibleController controller = new ExpansibleController();
     if(mapController[id] == null){
       mapController[id] = controller;
       return controller;
@@ -120,7 +120,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     _databaseRepository.deleteCustomer(customer.id);
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
     int posOpe = filteredCustomers.indexOf(customer);
-    ExpansionTileController? controller = mapController[(state as ReadyCustomers).customer.id];
+    ExpansibleController? controller = mapController[(state as ReadyCustomers).customer.id];
     if(controller != null && controller.isExpanded)
       controller.collapse();
     filteredCustomers.removeWhere((element) => element.id == customer.id);

@@ -1,11 +1,13 @@
 import 'package:equatable/equatable.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 class EventResponseAi extends Equatable {
   String nome = "";
   String cognome = "";
   String indirizzo = "";
-  String telefono = "";
+  List<String> telefono = [];
+  List<Referrals> referenti = [];
   String email = "";
   String codicefiscale = "";
   String partitaIva = "";
@@ -17,6 +19,7 @@ class EventResponseAi extends Equatable {
   bool programmato = false;
   bool allDay = false;
   String operatore = "";
+  String note = "";
   String color = Constants.fallbackHexColor;
 
   String data = "";
@@ -53,6 +56,7 @@ class EventResponseAi extends Equatable {
       this.dataFineRipetizione,
       this.giornoMeseRipetizione,
       this.ogniQuantiMesiRipetizione,
+      this.referenti,
       );
 
   EventResponseAi.empty();
@@ -61,7 +65,8 @@ class EventResponseAi extends Equatable {
       : nome = json["nome"] ?? "",
         cognome = json["cognome"] ?? "",
         indirizzo = json["indirizzo"] ?? "",
-        telefono = json["telefono"] ?? "",
+        telefono = (json["telefono"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        referenti = (json["referenti"] as List).map((referrals) => Referrals.fromMapEventAi(referrals)).toList(),
         email = json["email"] ?? "",
         codicefiscale = json["codicefiscale"] ?? "",
         partitaIva = json["partitaIva"] ?? "",
@@ -70,6 +75,7 @@ class EventResponseAi extends Equatable {
         cartello = json["cartello"] ?? false,
         categoria = json["categoria"] ?? "Spurgo",
         problematica = json["problematica"] ?? "",
+        note = json["note"] ?? "",
         programmato = json["programmato"] ?? false,
         allDay = json["allDay"] ?? false,
         operatore = json["operatore"] ?? "",

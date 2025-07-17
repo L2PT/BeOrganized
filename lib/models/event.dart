@@ -148,7 +148,7 @@ class Event {
 
   void fromGenerateData(EventResponseAi eventResponseAi) {
     title = '${eventResponseAi.tipo} - ${eventResponseAi.nome} ${eventResponseAi.cognome}';
-    description = eventResponseAi.problematica;
+    description = eventResponseAi.problematica + " - " + eventResponseAi.note;
     typology = eventResponseAi.tipo;
     category = eventResponseAi.categoria;
     color = eventResponseAi.color;
@@ -259,6 +259,36 @@ class Event {
     }else{
       return false;
     }
+  }
+
+  void update(Event eventUpdate) {
+    this.title = eventUpdate.title;
+    this.description = eventUpdate.description;
+    this.notaOperator = eventUpdate.notaOperator;
+    this.start = eventUpdate.start;
+    this.end = eventUpdate.end;
+    this.address = eventUpdate.address;
+    this.documents = eventUpdate.documents;
+    this.status = eventUpdate.status;
+    this.category = eventUpdate.category;
+    this.typology = eventUpdate.typology;
+    this.withCartel = eventUpdate.withCartel;
+    this.color = eventUpdate.color;
+    this.motivazione = eventUpdate.motivazione;
+    this.supervisor = eventUpdate.supervisor;
+    this.customer = eventUpdate.customer;
+    this.operator = eventUpdate.operator;
+    this.suboperators = eventUpdate.suboperators;
+    this.documentsMap = eventUpdate.documentsMap;
+    this.isScheduled = eventUpdate.isScheduled;
+    this.isRepeated = eventUpdate.isRepeated;
+    this.isExcepeted = eventUpdate.isExcepeted;
+    this.recurrenceIntervalInMonths = eventUpdate.recurrenceIntervalInMonths;
+    this.recurrenceDayOfMonth = eventUpdate.recurrenceDayOfMonth;
+  }
+
+  bool isEventsOverlap(DateTime dataInizio,DateTime dataFine) {
+    return this.start.isBefore(dataFine) && dataInizio.isBefore(this.end);
   }
 
   bool filter(lambda, value){

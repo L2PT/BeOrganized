@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
+import 'package:venturiautospurghi/models/layout/group_overlapping.dart';
 import 'package:venturiautospurghi/plugins/table_calendar/table_calendar.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart';
@@ -31,11 +32,11 @@ class DailyCalendarCubit extends Cubit<DailyCalendarState> {
     day = TimeUtils.truncateDate(day, "day");
     if(Constants.debug) print("$day selected");
     if(state is DailyCalendarLoading) state.selectedDay = day;
-    else emit(DailyCalendarReady((state as DailyCalendarReady).eventsMap, day, state.subscribedDays));
+    else emit(DailyCalendarReady((state as DailyCalendarReady).eventsMap,(state as DailyCalendarReady).overlapMap, day, state.subscribedDays));
   }
 
   void loadMoreData([DateTime? start, DateTime? end]){
-    _databaseRepository.subscribeEventsByOperator([(operator??_account).id], statusEqualOrAbove: _account.supervisor? EventStatus.Refused : EventStatus.Accepted,
+    _databaseRepository.subscribeEventsByOperatorReapet([(operator??_account).id], statusEqualOrAbove: _account.supervisor? EventStatus.Refused : EventStatus.Accepted,
         from: TimeUtils.truncateDate(start??DateTime.now().subtract(new Duration(days: 7)), "day"),
         to: end?.add(new Duration(days: 1))??TimeUtils.truncateDate((start??DateTime.now()).add(new Duration(days: 7)), "day")).listen((eventsList) {
       _events = eventsList;
@@ -45,19 +46,29 @@ class DailyCalendarCubit extends Cubit<DailyCalendarState> {
 
   void evaluateEventsMap(DateTime first, DateTime last){
     Map<DateTime, List<Event>> eventsMap = {};
+    Map<DateTime, List<OverlappingGroup>> overlappingGroupsMap = {};
+
     first = TimeUtils.truncateDate(first,"day");
     last = TimeUtils.truncateDate(last,"day").add(Duration(hours: 23));
-    _events.forEach((singleEvent) {
-     if (singleEvent.isBetweenDate(first, last)) {
-       int diff = singleEvent.end.difference(singleEvent.start).inDays;
-       for(var i=0;i<=diff;i++){
-         DateTime dateIndex = TimeUtils.truncateDate(singleEvent.start.add(new Duration(days: i)), "day");
-         if(eventsMap[dateIndex]==null) eventsMap[dateIndex]=[];
-         eventsMap[dateIndex]!.add(singleEvent);
-       }
-     }
+
+    // Raggruppa gli eventi per data
+    for (Event singleEvent in _events) {
+      if (singleEvent.isBetweenDate(first, last)) {
+        int diff = singleEvent.end.difference(singleEvent.start).inDays;
+        for(var i=0;i<=diff;i++){
+          DateTime dateIndex = TimeUtils.truncateDate(singleEvent.start.add(new Duration(days: i)), "day");
+          (eventsMap[dateIndex] ??= []).add(singleEvent);
+        }
+      }
+    }
+
+    // Calcola i gruppi sovrapposti direttamente dalle chiavi della mappa
+    eventsMap.keys.forEach((date) {
+      overlappingGroupsMap[date] = findOverlappingGroups(eventsMap[date]!);
     });
-    emit(DailyCalendarReady(eventsMap, TimeUtils.truncateDate(state.selectedDay, "day"), calendarController.visibleDays));
+
+    emit(DailyCalendarReady(eventsMap, overlappingGroupsMap,
+        TimeUtils.truncateDate(state.selectedDay, "day"), calendarController.visibleDays));
   }
 
   double calcWidgetHeightInGrid({DateTime? start, DateTime? end, int? firstWorkedMinute, int? lastWorkedMinute}) {
@@ -65,5 +76,42 @@ class DailyCalendarCubit extends Cubit<DailyCalendarState> {
         start: start, end: end, firstWorkedMinute: firstWorkedMinute , lastWorkedMinute: lastWorkedMinute );
   }
 
+  void selectNextorPrevious(bool hasNext) {
+    DateTime newDate = state.selectedDay;
+    if(hasNext){
+      newDate = newDate.add(Duration(days: 1));
+    }else{
+      newDate = newDate.subtract(Duration(days: 1));
+    }
+    calendarController.setSelectedDay(newDate);
+    onDaySelected(newDate);
+  }
+
+  /// Raggruppa gli eventi per sovrapposizione
+  List<OverlappingGroup> findOverlappingGroups(List<Event> events) {
+    List<OverlappingGroup> groups = [];
+
+    for (Event event in events) {
+      bool addedToGroup = false;
+
+      // Cerca un gruppo esistente che si sovrappone con questo evento
+      for (OverlappingGroup group in groups) {
+        if (group.overlaps(event)) {
+          group.addEvent(event);
+          addedToGroup = true;
+          break;
+        }
+      }
+
+      // Se non è stato aggiunto a nessun gruppo, crea un nuovo gruppo
+      if (!addedToGroup) {
+        OverlappingGroup newGroup = OverlappingGroup();
+        newGroup.addEvent(event);
+        groups.add(newGroup);
+      }
+    }
+
+    return groups;
+  }
 
 }

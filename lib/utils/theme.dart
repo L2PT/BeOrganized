@@ -35,7 +35,6 @@ ThemeData _buildTheme() {
       selectionHandleColor: yellow,
       selectionColor: yellow.withValues(alpha:0.7),
     ),
-    dialogBackgroundColor: whitebackground,
     disabledColor: grey,
     buttonTheme: ButtonThemeData(
       buttonColor: black,
@@ -74,7 +73,7 @@ ThemeData _buildTheme() {
     textTheme: _buildShrineTextTheme(base.textTheme,black), //ok
     primaryTextTheme: _buildShrineTextTheme(base.primaryTextTheme,Color(0xFFFFFFFF)), //Colore secondario <-- da sistemare quando compare
     iconTheme: IconThemeData(color: Color(0xFFF4F4F4)), //dunno
-    primaryIconTheme: IconThemeData(color: Color(0xFFFFFFFF)) //icon
+    primaryIconTheme: IconThemeData(color: Color(0xFFFFFFFF)), dialogTheme: DialogThemeData(backgroundColor: whitebackground) //icon
   );
 }
 

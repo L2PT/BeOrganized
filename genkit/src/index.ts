@@ -29,11 +29,13 @@ const estraiIncarico = ai.defineFlow({
         - nome
         - cognome
         - indirizzo
-        - telefono
+        - telefono: array di numeri di telefono (es. ["123456789", "987654321"])
         - email
         - codicefiscale
         - partitaIva
         - tipoCliente: "Amministratore" o "Azienda" o "Privato" o "Referente"
+        - referenti: array di oggetti contenenti i referenti (solo se tipoCliente è "Amministratore"),
+            ogni oggetto deve avere i campi: nome, telefono
         - tipo: "Intervento" o "Contratto"
         - cartello
         - categoria: "Disinfestazione" o "Spurgo" o "Video"
@@ -51,10 +53,10 @@ const estraiIncarico = ai.defineFlow({
          in cui ripetere l'incarico (es. 15)
         - ogniQuantiMesiRipetizione: numero intero che indica ogni quanti
         mesi ripetere l'incarico
+        - note: eventuali note aggiuntive o osservazioni presenti nel testo
 
         Testo: """${testo}"""
     `;
-
 
   const result = await ai.generate(prompt);
 
@@ -63,6 +65,8 @@ const estraiIncarico = ai.defineFlow({
 
   const normalizzati = normalizzaDatiGreppiati(result.output);
 
+  console.log("Contenuto normalizzato:",
+    normalizzati);
   return TaskSchema.parse(normalizzati);
 });
 

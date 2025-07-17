@@ -6,13 +6,13 @@ class ConfirmCancelAlert {
   final BuildContext context;
   final String title;
   final String text;
+  final String textRepeat;
   final bool showDetailsContent;
   final bool showRepeatContent;
-  late List<Widget> _actions;
 
 
   ConfirmCancelAlert(this.context, {required this.title, required this.text, this.showDetailsContent = false,
-    this.showRepeatContent = false});
+    this.showRepeatContent = false, this.textRepeat = "Cancella tutta la serie"});
 
   Future<List<bool>> show() async => await showDialog(
       context: context,
@@ -70,7 +70,7 @@ class ConfirmCancelAlert {
                 Row(children: [
                   Icon(Icons.repeat, color: deleteReapet?black:grey_dark, size: 25),
                   SizedBox(width: 5,),
-                  Text("Cancella tutta la serie",style: label.copyWith(color: deleteReapet?black:grey_dark),),
+                  Text(this.textRepeat,style: label.copyWith(color: deleteReapet?black:grey_dark),),
                   Spacer(),
                   Container(
                       height: 30,

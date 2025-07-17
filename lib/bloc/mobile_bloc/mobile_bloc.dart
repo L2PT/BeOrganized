@@ -20,6 +20,7 @@ import 'package:venturiautospurghi/views/screen_pages/waiting_event_list_view.da
 import 'package:venturiautospurghi/views/screens/create_address_view.dart';
 import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
 import 'package:venturiautospurghi/views/screens/create_event_view.dart';
+import 'package:venturiautospurghi/views/screens/create_referrals_view.dart';
 import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
@@ -96,6 +97,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
       case Constants.customerListRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings: RouteSettings(name: Constants.customerListRoute), builder: (context) => CustomerSelection(objectParameter, repository))).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createCustomerViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true,settings:   RouteSettings(name: Constants.createCustomerViewRoute),builder: (context) => CreateCustomer(event: objectParameter, type: status,currentStep: currentStep, repository: repository,))).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createAddressViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings:  RouteSettings(name: Constants.createAddressViewRoute),builder: (context) => CreateAddress(objectParameter, status, repository))).then((value) { (event.arg["callback"]).call(); }).then((value) { (event.arg["callback"]).call(); }); break;
+      case Constants.createReferralsViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings:  RouteSettings(name: Constants.createReferralsViewRoute),builder: (context) => CreateReferrals(objectParameter, status, repository))).then((value) { (event.arg["callback"]).call(); }).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.generateAiEventViewRoute: emit(OutBackdropState(event.route, GenerateAiEvent()));break;
       case Constants.waitingEventListRoute: emit( InBackdropState(event.route, WaitingEventList())); break;
       case Constants.historyEventListRoute: emit( InBackdropState(event.route, HistoryEventList())); break;

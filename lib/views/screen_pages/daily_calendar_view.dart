@@ -12,7 +12,10 @@ import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.
 import 'package:venturiautospurghi/bloc/mobile_bloc/mobile_bloc.dart';
 import 'package:venturiautospurghi/cubit/daily_calendar/daily_calendar_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
+import 'package:venturiautospurghi/models/layout/event_layout.dart';
+import 'package:venturiautospurghi/models/layout/group_overlapping.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/mobile.dart';
 import 'package:venturiautospurghi/plugins/table_calendar/table_calendar.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -34,10 +37,10 @@ class DailyCalendar extends StatefulWidget {
 }
 
 class _DailyCalendarViewState extends State<DailyCalendar> with TickerProviderStateMixin {
-    final DateTime? _day;
-    final Account? _operator;
+  final DateTime? _day;
+  final Account? _operator;
 
-    _DailyCalendarViewState(this._day, this._operator);
+  _DailyCalendarViewState(this._day, this._operator);
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +64,7 @@ class _DailyCalendarViewState extends State<DailyCalendar> with TickerProviderSt
                 topLeft: new Radius.circular(16.0),
                 topRight: new Radius.circular(16.0)),
             child: content
-    ));
+        ));
   }
 }
 
@@ -78,35 +81,9 @@ class _rowCalendar extends StatelessWidget {
   Widget build(BuildContext context) {
     _animationController.forward();
 
-    Widget eventsMarker(DateTime date, List events) {
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          shape: BoxShape.rectangle,
-          color: !context.read<DailyCalendarCubit>().calendarController.isSelected(date) ?
-        context.read<DailyCalendarCubit>().calendarController.isToday(date) ?
-              Colors.brown[300] :
-            Colors.blue[400] :
-          Colors.brown[500],
-        ),
-        width: 16.0,
-        height: 16.0,
-        child: Center(
-          child: Text('${events.length}', style: TextStyle().copyWith(color: Colors.white, fontSize: 12.0,),
-          ),
-        ),
-      );
-    }
-
-    Widget holidaysMarker = Icon(
-      Icons.add_box,
-      size: 20.0,
-      color: Colors.blueGrey[800],
-    );
-
     return BlocBuilder<DailyCalendarCubit, DailyCalendarState>(
       buildWhen: (previous, current) => (previous.runtimeType) != (current.runtimeType) ||
-          previous.eventsMap != current.eventsMap,
+          previous.eventsMap != current.eventsMap || previous.selectedDay != current.selectedDay,
       builder: (context, state) {
         return TableCalendar(
           locale: 'it_IT',
@@ -119,71 +96,61 @@ class _rowCalendar extends StatelessWidget {
           availableCalendarFormats: {CalendarFormat.week: ''},
           initialSelectedDay: state.selectedDay,
           builders: CalendarBuilders(
-            selectedDayBuilder: (context, date, _) {
-              return  FadeTransition(
-                opacity: _animation,
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: black,
-                      borderRadius: BorderRadius.circular(10.0)
-                  ),
-                  child: Center(
-                    child: Text(
-                        '${date.day}',
-                        style: const TextStyle(fontWeight: FontWeight.bold,
-                            color: white,
-                            fontSize: 18)
+              selectedDayBuilder: (context, date, _) {
+                return  FadeTransition(
+                  opacity: _animation,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: black,
+                        borderRadius: BorderRadius.circular(10.0)
+                    ),
+                    child: Center(
+                      child: Text(
+                          '${date.day}',
+                          style: const TextStyle(fontWeight: FontWeight.bold,
+                              color: white,
+                              fontSize: 18)
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-            todayDayBuilder: (context, date, _) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: grey_light,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Center(child:
+                );
+              },
+              markersBuilder: (context, date, events, holidays) {
+                final children = <Widget>[];
+                return children;
+              },
+              todayDayBuilder: (context, date, _) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: grey_light,
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Center(child:
                   Text( '${date.day}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF333333), fontSize: 18)
-                ),
-                ),
-              );
-            },
-            holidayDayBuilder: (context, date, _) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: green,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Center(child:
+                  ),
+                  ),
+                );
+              },
+              holidayDayBuilder: (context, date, _) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: green,
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Center(child:
                   Text( '${date.day}', style: const TextStyle(fontWeight: FontWeight.bold, color: white, fontSize: 18)
-                ),
-                ),
-              );
-            },
-            markersBuilder: (context, date, events, holidays) {
-              final children = <Widget>[];
-              if (events.isNotEmpty && false) {
-                children.add(
-                  Positioned(right: 1, bottom: 1, child: eventsMarker(date, events)),
+                  ),
+                  ),
                 );
               }
-              if (holidays.isNotEmpty && false) {
-                children.add(
-                  Positioned(right: -2, top: -2, child: holidaysMarker),
-                );
-              }
-              return children;
-            },
           ),
           onDaySelected: (date, events) {
             context.read<DailyCalendarCubit>().onDaySelected(date);
             //_animationController.forward(from: 0.0);
-           },//    if(state is DailyCalendarReady)
+          },//    if(state is DailyCalendarReady)
           selectMonthCalendar: () {
             context.read<MobileBloc>().add(NavigateEvent(Constants.monthlyCalendarRoute, {'month': context.read<DailyCalendarCubit>().state.selectedDay, 'operator' : context.read<DailyCalendarCubit>().operator}));
             _animationController.dispose();
@@ -202,7 +169,57 @@ class _verticalEventsGrid extends StatelessWidget {
     _animationController = AnimationController(duration: const Duration(milliseconds: 400), vsync: ticker);
   }
 
-    @override
+  /// Crea un widget per eventi sovrapposti usando Stack
+  Widget _buildOverlappingEventsWidget(
+      OverlappingGroup group,
+      BuildContext context,
+      Account account,
+      DateTime selectedDay,
+      int backGridHourSpan,
+      double gridHourHeight,
+      DateTime baseTime,
+      double containerWidth,
+      ) {
+    // Calcola i layout per tutti gli eventi del gruppo
+    List<EventLayout> layouts = group.calculateGroupLayout(
+      containerWidth,
+      selectedDay,
+      gridHourSpan: backGridHourSpan,
+      gridHourHeight: gridHourHeight,
+      baseTime: baseTime,
+    );
+
+    // Trova l'evento con il top più alto per posizionare il container
+    double minTop = layouts.map((l) => l.top).reduce((a, b) => a < b ? a : b);
+    double maxBottom = layouts.map((l) => l.top + l.height).reduce((a, b) => a > b ? a : b);
+    double totalHeight = maxBottom - minTop;
+
+    return Container(
+      height: totalHeight,
+      child: Stack(
+        children: layouts.map((layout) {
+          return Positioned(
+            left: layout.left,
+            top: layout.top - minTop, // Relativo al container
+            width: layout.width,
+            height: layout.height,
+            child: CardEvent(
+              event: layout.event,
+              height: layout.height,
+              externalBorder: true,
+              onTapAction: (event) => PlatformUtils.navigator(
+                context,
+                Constants.detailsEventViewRoute,
+                event,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     Account account = context.read<AuthenticationBloc>().account!;
     int backGridHourSpan = context.select((DailyCalendarCubit cubit) => cubit.state.gridHourSpan);
@@ -246,10 +263,15 @@ class _verticalEventsGrid extends StatelessWidget {
           );
         }).toList();
 
-    List<Widget> frontEventList() =>
-      (backGridHourSpan == 0 && allDayEvent) ?
-        //evento che dura tutto il giorno
-        <Widget>[
+    List<Widget> frontEventList() {
+      List<Event> events = (context.read<DailyCalendarCubit>().state as DailyCalendarReady).selectedEvents();
+      List<OverlappingGroup> overlappingEvent = (context.read<DailyCalendarCubit>().state as DailyCalendarReady)
+          .selectedOverlapping();
+
+
+      if (backGridHourSpan == 0 && allDayEvent) {
+        // Evento che dura tutto il giorno
+        return <Widget>[
           SizedBox(height: 5),
           Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -262,22 +284,22 @@ class _verticalEventsGrid extends StatelessWidget {
             Expanded(
                 flex: 8,
                 child: CardEvent(
-                  event: (context.read<DailyCalendarCubit>().state as DailyCalendarReady).selectedEvents()[0],
+                  event: events[0],
                   height: gridHourHeight,
                   externalBorder: true,
                   showEventDetails: true,
-                  onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute, event),
-
+                  onTapAction: (event) => PlatformUtils.navigator(context, Constants.detailsEventViewRoute, event),
                 )
             ),
           ])
-        ] : (backGridHourSpan == 0) ?
-        //lista di eventi continua
-        <Widget>[
+        ];
+      }
+
+      if (backGridHourSpan == 0) {
+        // Lista di eventi continua (senza griglia oraria)
+        return <Widget>[
           SizedBox(height: 5),
-          ...(context
-              .read<DailyCalendarCubit>()
-              .state as DailyCalendarReady).selectedEvents().map((event) => Padding(
+          ...events.map((event) => Padding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
               child: Row(children: <Widget>[
                 Expanded(
@@ -295,48 +317,91 @@ class _verticalEventsGrid extends StatelessWidget {
                     height: gridHourHeight,
                     externalBorder: true,
                     showEventDetails: true,
-                    onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute, event),
+                    onTapAction: (event) => PlatformUtils.navigator(context, Constants.detailsEventViewRoute, event),
                   ),
                 ),
               ])))
-        ] :
-        //lista di eventi spaziati
-        <Widget>[
-          SizedBox(height: _barHourHeight),
-          ...(context
-              .read<DailyCalendarCubit>()
-              .state as DailyCalendarReady).selectedEvents().map((event) {
-            List <Widget> element = <Widget>[
-              SizedBox( height: context.read<DailyCalendarCubit>().calcWidgetHeightInGrid(firstWorkedMinute: _base.hour * 60 + _base.minute, end: event.start)),
-              Row(children: <Widget>[
-                Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: EdgeInsets.only(right: 40),
-                      height: context.read<DailyCalendarCubit>().calcWidgetHeightInGrid(start: event.start, end: event.end),
-                      child: account.supervisor ? Icon(EventStatus.getIcon(event.status), color: black) : Container(),
-                    )
-                ),
-                Expanded(
-                  flex: 8,
-                  child: CardEvent(
-                    event: event,
-                    height: context.read<DailyCalendarCubit>().calcWidgetHeightInGrid(start: event.start, end: event.end),
-                    externalBorder: true,
-                    onTapAction: (event) => PlatformUtils.navigator(context,Constants.detailsEventViewRoute, event),
-                  ),
-                ),
-              ])
-            ];
-            int newBaseMinutes = _.DateUtils.getLastDailyWorkedMinute(event.end, context.read<DailyCalendarCubit>().state.selectedDay);
-            _base = TimeUtils.truncateDate(_base, "day").add(
-                Duration(hours: newBaseMinutes ~/ 60, minutes: (newBaseMinutes % 60).toInt()));
-            return element;
-          }).expand((i) => i).toList(),
-          SizedBox(height: (((_top.hour * 60 + _top.minute) - (_base.hour * 60 + _base.minute)) / 60) / backGridHourSpan *
-              gridHourHeight)
         ];
+      }
+      List<Widget> widgets = [SizedBox(height: _barHourHeight)];
 
+      // Ottieni la larghezza del container per gli eventi (80% della larghezza totale)
+      double containerWidth = MediaQuery.of(context).size.width * 0.8;
+
+      DateTime currentBase = _base;
+
+      for (OverlappingGroup group in overlappingEvent) {
+        group.calculateAndAssignColumns();
+
+        // Calcola la posizione di inizio del gruppo
+        Event firstEvent = group.events.first;
+        double spacingHeight = context.read<DailyCalendarCubit>().calcWidgetHeightInGrid(
+            firstWorkedMinute: currentBase.hour * 60 + currentBase.minute,
+            end: firstEvent.start
+        );
+
+        // Aggiungi spazio prima del gruppo
+        if (spacingHeight > 0) {
+          widgets.add(SizedBox(height: spacingHeight));
+        }
+
+        // Aggiungi il widget del gruppo sovrapposto
+        widgets.add(
+          Row(
+            children: [
+              // Colonna per l'icona di stato (solo per il primo evento del gruppo)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: EdgeInsets.only(right: 40),
+                  height: group.events.map((e) =>
+                      context.read<DailyCalendarCubit>().calcWidgetHeightInGrid(
+                          start: e.start,
+                          end: e.end
+                      )
+                  ).reduce((a, b) => a > b ? a : b), // Altezza dell'evento più alto nel gruppo
+                  child: account.supervisor
+                      ? Icon(EventStatus.getIcon(group.events.first.status), color: black)
+                      : Container(),
+                ),
+              ),
+              // Container per gli eventi sovrapposti
+              Expanded(
+                flex: 8,
+                child: _buildOverlappingEventsWidget(
+                  group,
+                  context,
+                  account,
+                  context.read<DailyCalendarCubit>().state.selectedDay,
+                  backGridHourSpan,
+                  gridHourHeight,
+                  currentBase,
+                  containerWidth,
+                ),
+              ),
+            ],
+          ),
+        );
+
+        // Aggiorna la base per il prossimo gruppo
+        Event lastEvent = group.events.last;
+        int newBaseMinutes = _.DateUtils.getLastDailyWorkedMinute(
+            lastEvent.end,
+            context.read<DailyCalendarCubit>().state.selectedDay
+        );
+        currentBase = TimeUtils.truncateDate(currentBase, "day").add(
+            Duration(hours: newBaseMinutes ~/ 60, minutes: (newBaseMinutes % 60).toInt())
+        );
+      }
+
+      // Aggiungi spazio finale
+      widgets.add(SizedBox(
+          height: (((_top.hour * 60 + _top.minute) - (currentBase.hour * 60 + currentBase.minute)) / 60) /
+              backGridHourSpan * gridHourHeight
+      ));
+
+      return widgets;
+    }
 
     return BlocBuilder<DailyCalendarCubit, DailyCalendarState>(
         buildWhen: (previous, current) => previous != current,
@@ -344,37 +409,65 @@ class _verticalEventsGrid extends StatelessWidget {
           if (!(state is DailyCalendarReady))
             return Center(child: CircularProgressIndicator());
           if((state).selectedEvents().isEmpty)
-            return Padding(
-              padding: EdgeInsets.all(20),
-              child: EmptyEvent(
-                onPressedFunction: () {
+            return Expanded( child: GestureDetector(
+              // Gestione dello swipe
+                onHorizontalDragEnd: (DragEndDetails details) {
+                  // Calcola la velocità dello swipe
+                  const double minSwipeVelocity = 500.0;
+                  if (details.primaryVelocity != null) {
+                    if (details.primaryVelocity! > minSwipeVelocity) {
+                      // Swipe verso destra - giorno precedente
+                      context.read<DailyCalendarCubit>().selectNextorPrevious(false);
+                    } else if (details.primaryVelocity! < -minSwipeVelocity) {
+                      // Swipe verso sinistra - giorno successivo
+                      context.read<DailyCalendarCubit>().selectNextorPrevious(true);
+                    }
+                  }
+                }, child: Padding(
+                padding: EdgeInsets.all(20),
+                child: EmptyEvent(
+                  onPressedFunction: () {
                     context.read<MobileBloc>().add( NavigateEvent(Constants.monthlyCalendarRoute, {'month': context.read<DailyCalendarCubit>().state.selectedDay, 'operator' : context.read<DailyCalendarCubit>().operator}));
                     _animationController.dispose();
-                },
-                titleMessage: 'Nessun intervento in programma per questa data',
-                subtitleMessage: "Controlla i tuoi incarichi",
-            ));
+                  },
+                  titleMessage: 'Nessun intervento in programma per questa data',
+                  subtitleMessage: "Controlla i tuoi incarichi",
+                ))));
 
           _backGridLength = backGridHourSpan == 0 ? 0 : (Constants.MAX_WORKTIME - Constants.MIN_WORKTIME + 1) ~/ backGridHourSpan;
           _barHourHeight = gridHourHeight / 2;
           _base = new DateTime(1990, 1, 1, Constants.MIN_WORKTIME, 0, 0);
           _top = new DateTime(1990, 1, 1, Constants.MAX_WORKTIME, 0, 0);
-          return Expanded( child: ListView(
-                  children: <Widget>[
-                    Stack(
-                        children: <Widget>[
-                          backGridHourSpan == 0 ? Container(height: 20) :
-                          Column(
-                            mainAxisSize: MainAxisSize.max,
-                              children: backGrid()
-                          ),
-                          state.selectedEvents().length <= 0 ? Container(height: 20) :
-                          Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: frontEventList()
-                          )
-                        ])
-                  ]));
+          return Expanded( child: GestureDetector(
+              // Gestione dello swipe
+              onHorizontalDragEnd: (DragEndDetails details) {
+            // Calcola la velocità dello swipe
+            const double minSwipeVelocity = 500.0;
+            if (details.primaryVelocity != null) {
+              if (details.primaryVelocity! > minSwipeVelocity) {
+                // Swipe verso destra - giorno precedente
+                context.read<DailyCalendarCubit>().selectNextorPrevious(false);
+              } else if (details.primaryVelocity! < -minSwipeVelocity) {
+                // Swipe verso sinistra - giorno successivo
+                context.read<DailyCalendarCubit>().selectNextorPrevious(true);
+              }
+            }
+          }, child:ListView(
+              children: <Widget>[
+                Stack(
+                    children: <Widget>[
+                      backGridHourSpan == 0 ? Container(height: 20) :
+                      Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: backGrid()
+                      ),
+                      state.selectedEvents().length <= 0 ? Container(height: 20) :
+                      Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: frontEventList()
+                      )
+                    ])
+              ])));
         });
   }
 }
