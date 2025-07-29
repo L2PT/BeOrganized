@@ -57,6 +57,7 @@ class EventResponseAi extends Equatable {
       this.giornoMeseRipetizione,
       this.ogniQuantiMesiRipetizione,
       this.referenti,
+      this.note,
       );
 
   EventResponseAi.empty();

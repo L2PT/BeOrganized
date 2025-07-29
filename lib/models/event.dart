@@ -200,7 +200,7 @@ class Event {
           end = TimeUtils.truncateDate(date, "day").add(Duration(hours: Constants.MAX_WORKTIME));
         } else {
           start = TimeUtils.getStartWorkTimeSpan(from: date);
-          end = TimeUtils.getStartWorkTimeSpan(from: start).olderBetween(end);
+          end = TimeUtils.getStartWorkTimeSpan(from: start);
 
           final customStart = parseTimeOfDay(eventResponseAi.oraInizio, start);
           if (customStart != null) {

@@ -33,7 +33,7 @@ const estraiIncarico = ai.defineFlow({
         - email
         - codicefiscale
         - partitaIva
-        - tipoCliente: "Amministratore" o "Azienda" o "Privato" o "Referente"
+        - tipoCliente: "Privato" o "Amministratore" o "Azienda"  o "Referente"
         - referenti: array di oggetti contenenti i referenti (solo se tipoCliente è "Amministratore"),
             ogni oggetto deve avere i campi: nome, telefono
         - tipo: "Intervento" o "Contratto"

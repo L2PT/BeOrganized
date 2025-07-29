@@ -179,7 +179,7 @@ function normalizeNumber(val: unknown): number {
  */
 function isPlaceholder(val: string): boolean {
   const placeholders = [
-    "NOME", "COGNOME", "INIDIRIZZO", "EMAIL", "CODICE_FISCALE", "PARTITA_IVA",
+    "NOME", "COGNOME", "INDIRIZZO", "EMAIL", "CODICE_FISCALE", "PARTITA_IVA",
     "TELEFONO1", "TELEFONO2", "TIPO_CLIENTE", "NOME_REF", "COGNOME_REF", "TIPO",
     "TELEFONO_REF", "CATEGORIA", "DESCRIZIONE_PROBLEMA", "GIORNO", "SI/NO",
     "NOTE_AGGIUNTIVE", "YYYY-MM-DD", "HH:MM", "NUMERO_MESI", "NOME_OPERATORE",

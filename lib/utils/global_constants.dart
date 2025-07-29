@@ -2,7 +2,7 @@ library app.globals;
 
 class Constants {
   static const String title = "Venturi Autospurghi App";
-  static const bool debug = !bool.fromEnvironment('dart.vm.product');
+  static const bool debug = false;
   static const String web = "web";
   static const String mobile = "mobile";
 
@@ -147,5 +147,12 @@ class Constants {
   Ripetizione: SI/NO dal YYYY-MM-DD al YYYY-MM-DD ogni NUMERO_MESI mesi il giorno GIORNO
   Note: NOTE_AGGIUNTIVE
   ''';
+
+  static const List<String> placeholders = [
+    "NOME", "COGNOME", "INDIRIZZO", "EMAIL", "CODICE_FISCALE", "PARTITA_IVA",
+    "TELEFONO1", "TELEFONO2", "TIPO_CLIENTE", "NOME_REF", "COGNOME_REF", "TIPO",
+    "TELEFONO_REF", "CATEGORIA", "DESCRIZIONE_PROBLEMA", "GIORNO", "SI/NO",
+    "NOTE_AGGIUNTIVE", "YYYY-MM-DD", "HH:MM", "NUMERO_MESI", "NOME_OPERATORE",
+  ];
 
 }
