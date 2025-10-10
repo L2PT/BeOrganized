@@ -10,6 +10,7 @@ import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/colors.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
@@ -175,7 +176,7 @@ class _EventStepper extends StatelessWidget{
                 style: raisedButtonStyle,
                 onPressed: (controls.currentStep > 0 && context.read<CreateEventCubit>().state.event.category.isEmpty)?null:
                     () {
-                      DateTime currentTime = DateTime.now().toLocal();
+                      DateTime currentTime = _.DateUtils.now().toLocal();
                     if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, currentTime)){
                         context.read<CreateEventCubit>().setFirstClick(currentTime);
                         FocusScope.of(context).unfocus();
@@ -188,8 +189,8 @@ class _EventStepper extends StatelessWidget{
                   style: raisedButtonStyle,
                   child: new Text(context.read<CreateEventCubit>().state.event.operator.id.isNotEmpty? 'Salva': 'Salva in bozza', style: button_card),
                   onPressed: (){
-                    if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, DateTime.now())){
-                      context.read<CreateEventCubit>().isModify() && context.read<CreateEventCubit>().state.event.recurrenceId.isNotEmpty?
+                    if(!Utils.isDoubleClick(context.read<CreateEventCubit>().firstClick, _.DateUtils.now())){
+                      context.read<CreateEventCubit>().isModify() && !context.read<CreateEventCubit>().state.event.isExcepeted && context.read<CreateEventCubit>().state.event.recurrenceId.isNotEmpty?
                       ConfirmCancelAlert(parent, title: "MODIFICA INCARICO", text: "Confermi la modifica dell'incarico?",
                           showRepeatContent: true, textRepeat: "Modifica tutta la serie" ).show().then((value) {
                         if(value.first){//fab
@@ -769,7 +770,7 @@ class _timeControls extends StatelessWidget {
               ],
               initialValue: context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth > 0
                   ? context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth.toString()
-                  : DateTime.now().day.toString(),
+                  : _.DateUtils.now().day.toString(),
               decoration: InputDecoration(
                 isDense: true,
                 hintText: "Es. 15",

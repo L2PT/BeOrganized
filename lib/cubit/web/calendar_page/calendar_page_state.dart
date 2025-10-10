@@ -8,7 +8,7 @@ class CalendarPageState extends Equatable {
 
 
   CalendarPageState({ DateTime? calendarDate, Map<String,List<Event>>? eventsOpe, Map<String,List<OverlappingGroup>>? listOverlappingGroup}):
-        this.calendarDate = calendarDate??DateTime.now(),
+        this.calendarDate = calendarDate??_.DateUtils.now(),
         this.eventsOpe = eventsOpe??{},
         this.listOverlappingGroup = listOverlappingGroup??{};
 

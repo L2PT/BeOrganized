@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:venturiautospurghi/cubit/filter_operators/filter_operators_cubit.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_widget.dart';
 import 'package:venturiautospurghi/views/widgets/platform_datepicker.dart';
@@ -54,11 +55,11 @@ class OperatorsFilterWidget extends FilterWidget {
                       SizedBox(width: 5),
                       GestureDetector(
                         child: Text(context.read<OperatorsFilterCubit>().state.filters["date"] != null ?
-                        formatDate.format(context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??DateTime.now()):'Data inizio', style: time_card),
+                        formatDate.format(context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??_.DateUtils.now()):'Data inizio', style: time_card),
                         onTap: () =>
                             PlatformDatePicker.selectDate(context,
                               maxTime: DateTime(3000),
-                              currentTime: context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??DateTime.now(),
+                              currentTime: context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??_.DateUtils.now(),
                               onConfirm: (date) => context.read<OperatorsFilterCubit>().setSearchDate(date),
                             ),
                       ),
@@ -68,7 +69,7 @@ class OperatorsFilterWidget extends FilterWidget {
                     Icon(Icons.watch_later),
                     SizedBox(width: 5),
                     GestureDetector(
-                      child: Text((context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??DateTime.now()).toString().split(' ').last.split('.').first.substring(0, 5), style: time_card),
+                      child: Text((context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue??_.DateUtils.now()).toString().split(' ').last.split('.').first.substring(0, 5), style: time_card),
                       onTap: () =>
                           PlatformDatePicker.selectTime(context,
                             currentTime: context.read<OperatorsFilterCubit>().state.filters["date"]!.fieldValue,

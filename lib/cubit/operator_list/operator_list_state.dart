@@ -6,7 +6,7 @@ abstract class OperatorListState extends Equatable {
 
   OperatorListState([String? searchNameField, DateTime? searchTimeField]) :
         this.searchNameField = searchNameField ?? "",
-        this.searchTimeField = searchTimeField ?? DateTime.now();
+        this.searchTimeField = searchTimeField ?? _.DateUtils.now();
   
   @override
   List<Object> get props => [searchNameField, searchTimeField];

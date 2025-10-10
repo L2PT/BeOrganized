@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_place/google_place.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_response_ai.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -21,7 +22,7 @@ class TimeUtils {
   }
 
   static DateTime getNextStartWorkTimeSpan({DateTime? from, Duration? ofDuration}) {
-    DateTime now = DateTime.now().toLocal();
+    DateTime now = _.DateUtils.now().toLocal();
     DateTime date = DateTime(
       from?.year ?? now.year,
       from?.month ?? now.month,
@@ -58,7 +59,7 @@ class TimeUtils {
   }
 
   static DateTime minDate(DateTime a, DateTime b) {
-    return a.isBefore(b) ? a : b;
+    return _.DateUtils.isBefore(a,b) ? a : b;
   }
 
   static bool isValidTimeFormat(String? time) {
@@ -79,7 +80,7 @@ class Utils {
 
   static Event getEventWithCurrentDay(DateTime day){
     day = TimeUtils.truncateDate(day, "day");
-    if(DateTime.now().isAfter(day)) day = TimeUtils.truncateDate(DateTime.now(), "day");
+    if(_.DateUtils.isAfter(_.DateUtils.now(),day)) day = TimeUtils.truncateDate(_.DateUtils.now(), "day");
     day = day.add(Duration(hours: Constants.MIN_WORKTIME));
     Event event = Event.empty();
     event.start = day;

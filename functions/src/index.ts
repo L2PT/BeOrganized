@@ -66,3 +66,90 @@ export const deleteUserByUid = onCall(
   }
 );
 
+interface NotificationData {
+  tokens: string[];
+  title: string;
+  description: string;
+  style: string;
+  type: string;
+  eventId: string;
+}
+
+export const sendNotifications = onCall<NotificationData>(async (request) => {
+  // Verifica autenticazione (opzionale ma consigliato)
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Utente non autenticato');
+  }
+
+  const { tokens, title, description, style, type, eventId } = request.data;
+
+  // Validazione dei dati
+  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+    throw new HttpsError('invalid-argument', 'I token sono obbligatori');
+  }
+
+  const messages = tokens.map((token: string) => ({
+    token: token,
+    notification: {
+      title: title,
+      body: description,
+    },
+    data: {
+      id: eventId,
+      style: style,
+      type: type,
+      click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    },
+    android: {
+      notification: {
+        sound: 'default'
+      }
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default'
+        }
+      }
+    }
+  }));
+
+  try {
+    const response = await admin.messaging().sendEach(messages);
+
+    // Log dei risultati
+    console.log(`Inviate ${response.successCount} notifiche su ${tokens.length}`);
+
+    if (response.failureCount > 0) {
+      const failedTokens: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          failedTokens.push(tokens[idx]);
+          console.error(`Errore per token ${tokens[idx]}:`, resp.error);
+        }
+      });
+
+      return {
+        success: true,
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        failedTokens: failedTokens
+      };
+    }
+
+    return {
+      success: true,
+      successCount: response.successCount,
+      failureCount: 0
+    };
+
+  } catch (error) {
+    console.error('Errore invio notifiche:', error);
+
+    if (error instanceof Error) {
+      throw new HttpsError('internal', error.message);
+    }
+
+    throw new HttpsError('internal', 'Errore sconosciuto durante l\'invio delle notifiche');
+  }
+});

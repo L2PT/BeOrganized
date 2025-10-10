@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:venturiautospurghi/models/account.dart';
@@ -6,6 +8,7 @@ import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/layout/group_overlapping.dart';
 import 'package:venturiautospurghi/plugins/table_calendar/table_calendar.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
 
@@ -16,8 +19,9 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
   final CloudFirestoreService _databaseRepository;
   final Account _account;
   final int range = 3;
-  DateTime newDate = DateTime.now();
+  DateTime newDate = _.DateUtils.now();
   CalendarController calendarController = new CalendarController();
+  StreamSubscription<List<Event>>? _eventsSub;
 
   CalendarPageCubit(this._databaseRepository, this._account,) : super(LoadingCalendarPageState());
 
@@ -27,11 +31,14 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
   }
 
   void loadMoreData([DateTime? start, DateTime? end]){
-    DateTime from = TimeUtils.truncateDate(start??DateTime.now().subtract(new Duration(days: range)), "day");
-    DateTime to = TimeUtils.truncateDate(end?.add(new Duration(days: 1))??(start??DateTime.now()).add(new Duration(days: range)), "day");
-    _databaseRepository.subscribeEventsByOperatorReapet(_account.webops.map((operator) => operator.id).toList(), statusEqualOrAbove:  EventStatus.Refused,
+    DateTime from = TimeUtils.truncateDate(start??_.DateUtils.now().subtract(new Duration(days: range)), "day");
+    DateTime to = TimeUtils.truncateDate(end?.add(new Duration(days: 1))??(start??_.DateUtils.now()).add(new Duration(days: range)), "day");
+    _eventsSub?.cancel();
+    _eventsSub = _databaseRepository.subscribeEventsByOperatorReapet(_account.webops.map((operator) => operator.id).toList(), statusEqualOrAbove:  EventStatus.Refused,
         from: from, to: to).listen((eventsList) {
-      evaluateEventsMap(eventsList);
+      if (!isClosed) {
+        evaluateEventsMap(eventsList);
+      }
     });
   }
 
@@ -41,14 +48,16 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
     _account.webops.forEach((operator) {
       List<Event> eventFiltered = eventList.where((event) =>
           [...event.suboperators.map((op) => op.id),event.operator.id].contains(operator.id) &&
-          TimeUtils.truncateDate(event.start, "day").isAtSameMomentAs(TimeUtils.truncateDate(newDate, "day")) &&
+          _.DateUtils.isAtSameMomentAs(TimeUtils.truncateDate(event.start, "day"),TimeUtils.truncateDate(newDate, "day")) &&
           event.start.hour >= Constants.MIN_WORKTIME && event.end.hour <= (Constants.MAX_WORKTIME - 1)
       ).toList();
       eventFiltered.sort((a, b) => a.start.compareTo(b.start));
       eventsMap[operator.id] = eventFiltered;
       listOverlappingGroup[operator.id] = _findOverlappingGroups(eventFiltered);
     });
-    emit(state.assign(calendarDate: newDate, eventsOpe: eventsMap, listOverlappingGroup: listOverlappingGroup));
+    if (!isClosed) {
+      emit(state.assign(calendarDate: newDate, eventsOpe: eventsMap, listOverlappingGroup: listOverlappingGroup));
+    }
   }
 
   void selectCalendarDate(DateTime day){
@@ -58,8 +67,8 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
 
 
   void todayCalendarDate(){
-    calendarController.setSelectedDay(DateTime.now());
-    newDate = DateTime.now();
+    calendarController.setSelectedDay(_.DateUtils.now());
+    newDate = _.DateUtils.now();
     loadMoreData(newDate, newDate);
   }
 
@@ -100,6 +109,12 @@ class CalendarPageCubit extends Cubit<CalendarPageState> {
     }
 
     return groups;
+  }
+
+  @override
+  Future<void> close() {
+    _eventsSub?.cancel();
+    return super.close();
   }
 
 }

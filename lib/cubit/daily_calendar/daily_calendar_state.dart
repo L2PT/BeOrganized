@@ -14,7 +14,7 @@ abstract class DailyCalendarState extends Equatable {
     List<DateTime>? subscribedDays, ]) :
         this.eventsMap = eventsMap ?? {},
         this.overlapMap = overlapMap ?? {},
-        this.selectedDay = selectedDay ?? TimeUtils.truncateDate(DateTime.now(), "day"),
+        this.selectedDay = selectedDay ?? TimeUtils.truncateDate(_.DateUtils.now(), "day"),
         this.subscribedDays = subscribedDays ?? [];
 
   @override

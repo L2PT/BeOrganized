@@ -1,6 +1,7 @@
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 
 class FilterWrapper {
 
@@ -28,9 +29,9 @@ class FilterWrapper {
       "title": new FilterWrapper("title", null, (Event event, value) => value == null || event.title.toUpperCase().contains(value.toUpperCase()) ),
       "address" : new FilterWrapper("address", null, (Event event, value) => value == null || event.address.toUpperCase().contains(value.toUpperCase()) || event.customer.addresses.where((address) => address.address.join(" ").toUpperCase().contains(value.toUpperCase())).isNotEmpty),
       "phone" : new FilterWrapper("phone", null, (Event event, value) => value == null || event.customer.allPhones().toUpperCase().contains(value.toUpperCase())),
-      "startDate" : new FilterWrapper("startDate", null, (Event event, value) => value == null || event.start.add(Duration(minutes: 1)).isAfter(value) ),
+      "startDate" : new FilterWrapper("startDate", null, (Event event, value) => value == null || _.DateUtils.isAfter(event.start.add(Duration(minutes: 1)),value) ),
       "status" : new FilterWrapper("status", null, (Event event, value) => value == null || event.status == value),
-      "endDate" : new FilterWrapper("endDate", null, (Event event, value) => value == null || value.add(Duration(minutes: 1)).isAfter(event.end) ),
+      "endDate" : new FilterWrapper("endDate", null, (Event event, value) => value == null || _.DateUtils.isAfter(value.add(Duration(minutes: 1)),event.end) ),
       "categories" : new FilterWrapper("categories", <String,bool>{}, (Event event, List<String>? value) =>
       value == null || value.any((category) => category == event.category)),
       "suboperators" : new FilterWrapper("suboperators", <Account>[], (Event event, List<Account>? value) {

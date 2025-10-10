@@ -18,13 +18,15 @@ class PersistentNotificationCubit extends Cubit<PersistentNotificationState> {
   final CloudFirestoreService _databaseRepository;
   final Account _account;
   late Timer safeChecker;
+  StreamSubscription<List<Event>>? _eventsSub;
 
   // these RestoreEvent aren't so clean but i'll accept it
   
   PersistentNotificationCubit(this.context, CloudFirestoreService databaseRepository, Account account, List<Event>? events) :
         _databaseRepository = databaseRepository, _account = account,
         super(PersistentNotificationState(events??[])) {
-    _databaseRepository.subscribeEventsByOperatorWaiting(_account.id).listen((waitingEventsList) {
+    _eventsSub?.cancel();
+    _eventsSub = _databaseRepository.subscribeEventsByOperatorWaiting(_account.id).listen((waitingEventsList) {
       safeChecker.cancel();
       if(waitingEventsList.length == 0) context.read<MobileBloc>().add(RestoreEvent());
       emit(PersistentNotificationState(waitingEventsList));
@@ -37,7 +39,8 @@ class PersistentNotificationCubit extends Cubit<PersistentNotificationState> {
 
   void cardActionConfirm(Event event) {
     _databaseRepository.updateEventField(event.id, Constants.tabellaEventi_stato, EventStatus.Accepted);
-    FirebaseMessagingService.sendNotifications(tokens: event.supervisor!.tokens,
+    FirebaseMessagingService.sendNotifications(_databaseRepository.updateToken, tokens: event.supervisor!.tokens,
+        accountId: event.supervisor!.id,
         style: Constants.notificationSuccessTheme, type: Constants.feedNotification,
         title: "${_account.surname} ${_account.name} ha accettato il lavoro \"${event.title}\"",
         eventId: event.id
@@ -48,12 +51,19 @@ class PersistentNotificationCubit extends Cubit<PersistentNotificationState> {
   void cardActionRefuse(Event event, String justification) {
     event.motivazione = justification;
     _databaseRepository.refuseEvent(event);
-    FirebaseMessagingService.sendNotifications(tokens: event.supervisor!.tokens,
+    FirebaseMessagingService.sendNotifications(_databaseRepository.updateToken, tokens: event.supervisor!.tokens,
+        accountId: event.supervisor!.id,
         style: Constants.notificationErrorTheme, type: Constants.feedNotification,
         title: "${_account.surname} ${_account.name} ha rifiutato il lavoro \"${event.title}\"",
         eventId: event.id
     );
     context.read<MobileBloc>().add(RestoreEvent());
+  }
+
+  @override
+  Future<void> close() {
+    _eventsSub?.cancel();
+    return super.close();
   }
 
 }

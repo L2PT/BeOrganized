@@ -5,6 +5,7 @@ import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
@@ -124,6 +125,10 @@ class CloudFirestoreService {
 
   Future<void> updateAccountField(String id, String field, dynamic data) async {
     return _collectionUtenti.doc(id).update(Map.of({field:data}));
+  }
+
+  void updateToken(String id, List tokens){
+    _collectionUtenti.doc(id).update(Map.of({"Tokens":tokens}));
   }
 
   Future<Account> getUserByPhone(String phoneNumber) async{
@@ -296,8 +301,21 @@ class CloudFirestoreService {
         DateTime? from,
         DateTime? to,
       }) {
-    final queryFrom = from ?? DateTime.now().subtract(const Duration(days: 90));
-    final queryTo = to ?? DateTime.now().add(const Duration(days: 90));
+    final queryFrom = from ?? _.DateUtils.now().subtract(const Duration(days: 90));
+    final queryTo = to ?? _.DateUtils.now().add(const Duration(days: 90));
+
+    // Giorni inclusi nell’intervallo
+    final daysInRange = List.generate(
+      queryTo.difference(queryFrom).inDays + 1,
+          (i) => queryFrom.add(Duration(days: i)).day,
+    );
+
+    // Spezza i giorni in batch da max 10 per whereIn
+    List<List<int>> chunkedDays = [];
+    for (var i = 0; i < daysInRange.length; i += 10) {
+      chunkedDays.add(
+          daysInRange.sublist(i, i + 10 > daysInRange.length ? daysInRange.length : i + 10));
+    }
 
     // Query eventi non ricorrenti o override
     final baseQuery = _collectionEventi
@@ -312,57 +330,74 @@ class CloudFirestoreService {
         .where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: queryFrom)
         .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo);
 
-    // Query eventi ricorrenti master
-    final recurringQuery = _collectionEventi
-        .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
-        .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo)
-        .where(Constants.tabellaEventi_recurrenceId, isEqualTo: '')
-        .where(Constants.tabellaEventi_isRepeated, isEqualTo: true);
+    // Query eventi ricorrenti master (una per ogni batch di giorni)
+    final recurringStreams = chunkedDays.map((days) {
+      return _collectionEventi
+          .where(Constants.tabellaEventi_idOperatori, arrayContainsAny: idsOperator)
+          .where(Constants.tabellaEventi_dataInizio, isLessThan: queryTo)
+          .where(Constants.tabellaEventi_recurrenceDayOfMonth, whereIn: days)
+          .where(Constants.tabellaEventi_recurrenceId, isEqualTo: '')
+          .where(Constants.tabellaEventi_isRepeated, isEqualTo: true)
+          .snapshots();
+    }).toList();
 
-    // Uniamo gli stream
+    // Stream base + override
     final baseStream = baseQuery.snapshots();
     final overrideStream = overrideQuery.snapshots();
-    final recurringStream = recurringQuery.snapshots();
 
-    return Rx.combineLatest3(
+    // Combiniamo tutto
+    return Rx.combineLatestList([
       baseStream,
       overrideStream,
-      recurringStream,
-          (QuerySnapshot baseSnap, QuerySnapshot overrideSnap, QuerySnapshot recurringSnap) {
-        final baseEvents = baseSnap.docs
-            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
-            .where((event) => event.status>=statusEqualOrAbove && event.isRepeated==false).toList();
+      ...recurringStreams,
+    ]).map((snapshots) {
+      final baseSnap = snapshots[0] as QuerySnapshot;
+      final overrideSnap = snapshots[1] as QuerySnapshot;
+      final recurringSnaps = snapshots.sublist(2).cast<QuerySnapshot>();
 
-        List<Event> overrideEvents = overrideSnap.docs
-            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
-            .toList();
+      final baseEvents = baseSnap.docs
+          .map((doc) => Event.fromMap(doc.id,
+          getColorByCategory(doc.get(Constants.tabellaEventi_categoria)),
+          doc.data() as Map<String, dynamic>))
+          .where((event) => event.status >= statusEqualOrAbove && !event.isRepeated)
+          .toList();
 
-        final recurringMasters = recurringSnap.docs
-            .map((doc) => Event.fromMap(doc.id, getColorByCategory(doc.get(Constants.tabellaEventi_categoria)), doc.data() as Map<String, dynamic>))
-            .where((event) => event.status>=statusEqualOrAbove).toList();
+      List<Event> overrideEvents = overrideSnap.docs
+          .map((doc) => Event.fromMap(doc.id,
+          getColorByCategory(doc.get(Constants.tabellaEventi_categoria)),
+          doc.data() as Map<String, dynamic>))
+          .where((event) => event.status >= statusEqualOrAbove || event.status == EventStatus.Deleted)
+          .toList();
 
-        // Mappa per sapere quali istanze sono state overrideate
-        final overriddenMap = {
-          for (final e in overrideEvents)
-            "${e.recurrenceId}_${e.start.year}_${e.start.month}": true
-        };
+      final recurringMasters = recurringSnaps.expand((snap) => snap.docs).map((doc) =>
+          Event.fromMap(doc.id,
+              getColorByCategory(doc.get(Constants.tabellaEventi_categoria)),
+              doc.data() as Map<String, dynamic>))
+          .where((event) => event.status >= statusEqualOrAbove)
+          .toList();
 
-        overrideEvents = overrideEvents.where((event) => event.status>=statusEqualOrAbove).toList();
+      // Mappa override
+      final overriddenMap = {
+        for (final e in overrideEvents)
+          "${e.recurrenceId}_${e.start.year}_${e.start.month}": true
+      };
 
-        // Genera istanze locali per eventi ricorrenti
-        final recurringInstances = recurringMasters.expand((template) {
-          return template.generateRecurringEvents(queryFrom, TimeUtils.minDate(template.end,queryTo))
-              .where((e) => !overriddenMap.containsKey("${e.recurrenceId}_${e.start.year}_${e.start.month}"));
-        });
+      // Genera istanze locali per eventi ricorrenti
+      final recurringInstances = recurringMasters.expand((template) {
+        return template.generateRecurringEvents(
+            queryFrom, TimeUtils.minDate(template.end, queryTo))
+            .where((e) =>
+        !overriddenMap.containsKey("${e.recurrenceId}_${e.start.year}_${e.start.month}"));
+      });
 
-        return [
-          ...baseEvents,
-          ...overrideEvents,
-          ...recurringInstances,
-        ]..sort((a, b) => a.start.compareTo(b.start));
-      },
-    );
+      return [
+        ...baseEvents,
+        ...overrideEvents.where((event) => event.status >= statusEqualOrAbove),
+        ...recurringInstances,
+      ]..sort((a, b) => a.start.compareTo(b.start));
+    });
   }
+
 
 
   Stream<List<Event>> subscribeEventsHistory() {
@@ -611,6 +646,7 @@ class CloudFirestoreService {
         };
       }else{
         e.status = EventStatus.Deleted;
+        e.isExcepeted = true;
         createTransaction = (dynamic tx) async {
           final doc = _collectionEventi.doc();
           final deletedDoc = _collectionStoricoEliminati.doc();
@@ -628,42 +664,14 @@ class CloudFirestoreService {
       e.isExcepeted = true;
       e.id = await addEvent(e);
     }
-    Map<String, Event> eventsMoved = Map();
     if(propagate) {
-      e.end = DateTime.now();
-      var eventsToPropagate = [e];
-      while(eventsToPropagate.isNotEmpty) {
-        Event e = eventsToPropagate.removeLast();
-        for(var operator in [e.operator, ...e.suboperators]){
-          if(operator.id.isNotEmpty) {
-            List<Event> eventsInConflict = await _collectionEventi.where(Constants.tabellaEventi_idOperatori, arrayContains: operator.id).where(Constants.tabellaEventi_dataInizio, isGreaterThan: e.start, isLessThanOrEqualTo: e.end)
-                .get().then(((snapshot) => snapshot.docs.map((document) => Event.fromMap(document.id, "", document.data() as Map<String, dynamic>)).toList()));
-            eventsInConflict.sort((a,b) => a.start.compareTo(b.start));
-            Event eventConflict = e;
-            eventsInConflict.forEach((eventInConflict) {
-              Duration d = eventInConflict.end.difference(eventInConflict.start.add(Duration(minutes: 5)));
-              eventInConflict.start = TimeUtils.getStartWorkTimeSpan(from: eventConflict.end.add(new Duration(minutes: 5)), ofDuration: d);
-              eventInConflict.end =  eventInConflict.start.add(d);
-              eventsToPropagate.add(eventInConflict);
-              eventConflict = eventInConflict;
-            });
-          }
-        }
-        if(eventsMoved[e.id] == null || eventsMoved[e.id]!.start.isBefore(e.start))
-            eventsMoved[e.id] = e;
-
-      }
+      e.end = _.DateUtils.now();
     }
     final dynamic createTransaction = (dynamic tx) async {
       dynamic doc = _collectionEventi.doc(e.id);
       dynamic endedDoc = _collectionStoricoTerminati.doc(e.id);
       await tx.set(endedDoc, e.toDocument());
-      await tx.update(doc, {Constants.tabellaEventi_stato: e.status});
-      for (Event eventMoved in eventsMoved.values){
-        dynamic doc = _collectionEventi.doc(eventMoved.id);
-        await tx.update(doc, {Constants.tabellaEventi_dataInizio: eventMoved.start});
-        await tx.update(doc, {Constants.tabellaEventi_dataFine: eventMoved.end});
-      }
+      await tx.update(doc, e.toDocument());
     };
     _cloudFirestore.runTransaction(createTransaction);
   }

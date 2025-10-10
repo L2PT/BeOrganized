@@ -3,6 +3,7 @@ import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event_response_ai.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
@@ -16,8 +17,8 @@ class Event {
   String title = "";
   String description = "";
   String notaOperator = "";
-  DateTime start = DateTime.now();
-  DateTime end = DateTime.now();
+  DateTime start = _.DateUtils.now();
+  DateTime end = _.DateUtils.now();
   String address = "";
   List<dynamic> documents = [];
   int status = EventStatus.New;
@@ -42,8 +43,8 @@ class Event {
   bool isExcepeted = false;
   bool isRepeated = false;
   String recurrenceType = RECURRENCE_MENSILE;
-  DateTime recurrenceStart = DateTime.now();
-  DateTime recurrenceEnd = DateTime.now();
+  DateTime recurrenceStart = _.DateUtils.now();
+  DateTime recurrenceEnd = _.DateUtils.now();
 
 
   Event(this.id, this.title, this.description, this.notaOperator, this.start, this.end,
@@ -59,8 +60,8 @@ class Event {
     title = json["Titolo"],
     description = json["Descrizione"],
     notaOperator = json["NotaOperatore"]??'',
-    start = json["DataInizio"] is DateTime?json["DataInizio"]:DateTime.fromMillisecondsSinceEpoch(json["DataInizio"].seconds*1000).toLocal(),
-    end = json["DataFine"] is DateTime?json["DataFine"]:DateTime.fromMillisecondsSinceEpoch(json["DataFine"].seconds*1000).toLocal(),
+    start = json["DataInizio"] is DateTime?json["DataInizio"]:_.DateUtils.firestoreToItalianTime(json["DataInizio"]),
+    end = json["DataFine"] is DateTime?json["DataFine"]:_.DateUtils.firestoreToItalianTime(json["DataFine"]),
     address = json["Indirizzo"],
     documents = json["Documenti"]??[],
     status = json["Stato"],
@@ -81,8 +82,8 @@ class Event {
     recurrenceDayOfMonth = json["recurrenceDayOfMonth"]??-1,
     recurrenceType = json["recurrenceType"]??RECURRENCE_MENSILE,
     recurrenceIntervalInMonths = json["recurrenceIntervalInMonths"]??-1,
-    recurrenceStart = json["recurrenceStart"] is DateTime?json["recurrenceStart"]:DateTime.now(),
-    recurrenceEnd = json["recurrenceEnd"] is DateTime?json["recurrenceEnd"]:DateTime.now();
+    recurrenceStart = json["recurrenceStart"] is DateTime?json["recurrenceStart"]:_.DateUtils.now(),
+    recurrenceEnd = json["recurrenceEnd"] is DateTime?json["recurrenceEnd"]:_.DateUtils.now();
 
   Map<String, dynamic> toMap() => {
       "id":this.id,
@@ -118,8 +119,8 @@ class Event {
       "Titolo":this.title,
       "Descrizione":this.description,
       "NotaOperatore":this.notaOperator,
-      "DataInizio":this.start.toUtc(),
-      "DataFine":this.end.toUtc(),
+      "DataInizio":_.DateUtils.setLocation(this.start),
+      "DataFine":_.DateUtils.setLocation(this.end),
       "Indirizzo":this.address,
       "Documenti":this.documents,
       "Stato":this.status,
@@ -141,8 +142,8 @@ class Event {
       "recurrenceType": this.recurrenceType,
       "recurrenceDayOfMonth": this.recurrenceDayOfMonth,
       "recurrenceIntervalInMonths": this.recurrenceIntervalInMonths,
-      "recurrenceStart": this.recurrenceStart,
-      "recurrenceEnd": this.recurrenceEnd,
+      "recurrenceStart": _.DateUtils.setLocation(this.recurrenceStart),
+      "recurrenceEnd": _.DateUtils.setLocation(this.recurrenceEnd),
     });
   }
 
@@ -231,8 +232,8 @@ class Event {
 
     DateTime current = DateTime(this.start.year, this.start.month, day, this.start.hour, this.start.minute);
 
-    while (current.isBefore(to)) {
-      if (current.isAfter(from)) {
+    while (_.DateUtils.isBefore(current,to)) {
+      if (_.DateUtils.isAfter(current,from)) {
         final nextEvent = Event.fromMap('', this.color, this.toMap());
         nextEvent.id = "";
         nextEvent.start = current;
@@ -254,7 +255,7 @@ class Event {
   }
 
   bool isBetweenDate(DateTime dataInizio,DateTime dataFine){
-    if(((this.start.isAfter(dataInizio) || this.start.isAtSameMomentAs(dataInizio)) && this.start.isBefore(dataFine)) || (this.end.isAfter(dataInizio) && (this.end.isBefore(dataFine)) || this.end.isAtSameMomentAs(dataFine)) || (this.start.isBefore(dataInizio) && this.end.isAfter(dataFine)) || (this.start.isAtSameMomentAs(dataInizio) && this.end.isAtSameMomentAs(dataFine))){
+    if(((_.DateUtils.isAfter(this.start,dataInizio) || _.DateUtils.isAtSameMomentAs(this.start,dataInizio)) && _.DateUtils.isBefore(this.start,dataFine)) || (_.DateUtils.isAfter(this.end,dataInizio) && (_.DateUtils.isBefore(this.end,dataFine)) || _.DateUtils.isAtSameMomentAs(this.end,dataFine)) || (_.DateUtils.isBefore(this.start,dataInizio) && _.DateUtils.isAfter(this.end,dataFine)) || (_.DateUtils.isAtSameMomentAs(this.start,dataInizio) && _.DateUtils.isAtSameMomentAs(this.end,dataFine))){
       return true;
     }else{
       return false;
@@ -288,7 +289,7 @@ class Event {
   }
 
   bool isEventsOverlap(DateTime dataInizio,DateTime dataFine) {
-    return this.start.isBefore(dataFine) && dataInizio.isBefore(this.end);
+    return _.DateUtils.isBefore(this.start,dataFine) && _.DateUtils.isBefore(dataInizio,this.end);
   }
 
   bool filter(lambda, value){

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:venturiautospurghi/models/referrals.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 class EventResponseAi extends Equatable {
@@ -87,7 +88,7 @@ class EventResponseAi extends Equatable {
         isRepeated = json["isRepeated"] ?? false,
         dataInizioRipetizione = json["dataInizioRipetizione"] ?? "",
         dataFineRipetizione = json["dataFineRipetizione"] ?? "",
-        giornoMeseRipetizione = json["giornoMeseRipetizione"] ?? DateTime.now().day,
+        giornoMeseRipetizione = json["giornoMeseRipetizione"] ?? _.DateUtils.now().day,
         ogniQuantiMesiRipetizione = json["ogniQuantiMesiRipetizione"] ?? -1;
 
   @override

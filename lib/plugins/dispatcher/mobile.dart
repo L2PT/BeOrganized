@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -44,6 +45,10 @@ abstract class PlatformUtils {
       }
     }
     return false;
+  }
+
+  static Future<void> uploadFileStorage(Reference refence, dynamic file) async{
+    await refence.putFile(file);
   }
 
   static void inizializateFile(){

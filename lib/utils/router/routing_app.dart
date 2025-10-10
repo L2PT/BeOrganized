@@ -14,8 +14,8 @@ import 'package:venturiautospurghi/views/screen_pages/log_in_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/reset_auth_account_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/users_manage_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
-import 'package:venturiautospurghi/views/widgets/calendar_content_web.dart';
 import 'package:venturiautospurghi/views/widgets/splash_screen.dart';
+import 'package:venturiautospurghi/views/widgets/web/calendar_content_web.dart';
 
 import '../../views/web_page.dart';
 

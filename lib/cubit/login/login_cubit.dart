@@ -77,17 +77,6 @@ class LoginCubit extends Cubit<LoginState> {
     }
   }
 
-  void logInWithGoogle() {
-    try {
-      emit(state.assign(status: _formStatus.loading));
-      _authenticationRepository.signInWithGoogle()
-          .whenComplete(() => emit(state.assign(status: _formStatus.success)))
-          .catchError((error) => emit(state.assign(status: _formStatus.failure)));
-    } on Exception {
-      emit(state.assign(status: _formStatus.failure));
-    }
-  }
-
   void switchLoginView() {
     emit(state.assign(loginView: state.isEmailLoginView()?_loginView.phone:_loginView.email));
     animationController.reset();

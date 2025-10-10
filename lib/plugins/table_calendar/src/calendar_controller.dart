@@ -103,7 +103,7 @@ class CalendarController {
     _pageId = 0;
     _dx = 0;
 
-    final now = DateTime.now();
+    final now = _.DateUtils.now();
     _focusedDay = initialDay ?? DateTime(now.year, now.month, now.day);
     _selectedDay = _focusedDay;
     _calendarFormat = ValueNotifier(initialFormat);
@@ -140,8 +140,8 @@ class CalendarController {
   /// }
   /// ```
   void dispose() {
-    if(_calendarFormat != null) _calendarFormat.dispose();
-    if(_visibleDays != null) _visibleDays.dispose();
+    _calendarFormat.dispose();
+    _visibleDays.dispose();
   }
 
   /// Toggles calendar format. Same as using `FormatButton`.
@@ -151,7 +151,6 @@ class CalendarController {
 
   /// Sets calendar format by emulating swipe.
   void swipeCalendarFormat({required bool isSwipeUp}) {
-    assert(isSwipeUp != null);
 
     final formats = _availableCalendarFormats.keys.toList();
     int id = formats.indexOf(_calendarFormat.value);
@@ -180,9 +179,9 @@ class CalendarController {
     bool runCallback = false,
   }) {
     if (animate) {
-      if (value.isBefore(_getFirstDay(includeInvisible: false))) {
+      if (_.DateUtils.isBefore(value,_getFirstDay(includeInvisible: false))) {
         _decrementPage();
-      } else if (value.isAfter(_getLastDay(includeInvisible: false))) {
+      } else if (_.DateUtils.isAfter(value,_getLastDay(includeInvisible: false))) {
         _incrementPage();
       }
     }
@@ -191,7 +190,7 @@ class CalendarController {
     _focusedDay = value;
     _updateVisibleDays(isProgrammatic);
 
-    if (isProgrammatic && runCallback && _selectedDayCallback != null) {
+    if (isProgrammatic && runCallback) {
       _selectedDayCallback(value);
     }
   }
@@ -375,9 +374,9 @@ class CalendarController {
     return _.DateUtils.isSameDay(day, selectedDay);
   }
 
-  /// Returns true if `day` is the same day as `DateTime.now()`.
+  /// Returns true if `day` is the same day as `_.DateUtils.now()`.
   bool isToday(DateTime day) {
-    return _.DateUtils.isSameDay(day, DateTime.now());
+    return _.DateUtils.isSameDay(day, _.DateUtils.now());
   }
 
   bool _isWeekend(DateTime day) {

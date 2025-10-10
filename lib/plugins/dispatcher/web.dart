@@ -7,6 +7,7 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:js/js.dart';
@@ -37,6 +38,10 @@ class PlatformUtils {
   static Future<bool> backNavigator(BuildContext context, [ res ]) {
     PlatformUtils.navigator(context, Constants.closeOverViewRoute, res);
     return Future<bool>(()=>false);
+  }
+
+  static Future<void> uploadFileStorage(Reference refence, dynamic file) async{
+    await refence.putData(file);
   }
 
   static String getRoute(BuildContext context) =>

@@ -18,9 +18,7 @@ import 'package:venturiautospurghi/utils/colors.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
-import 'package:venturiautospurghi/views/widgets/alert/alert_delete.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_nota.dart';
-import 'package:venturiautospurghi/views/widgets/alert/alert_refuse.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 import 'package:venturiautospurghi/views/widgets/card_customer_widget.dart';
 import 'package:venturiautospurghi/views/widgets/fab_widget.dart';
@@ -694,84 +692,9 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                           )
                         ],
                       ),
-                    ),PlatformUtils.eventButtonsVisible(context, event, account)?
-                    Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          ElevatedButton(
-                            child: new Text('RIFIUTA', style: button_card),
-                            onPressed: () async {
-                              RefuseAlert(context).show().then((justification)=>!string.isNullOrEmpty(justification)? context.read<DetailsEventCubit>().refuseEventAndNotify(justification):null);
-                            }
-                          ),
-                          SizedBox(width: 15,),
-                          ElevatedButton(
-                            child: new Text('ACCETTA', style: button_card),
-                            onPressed: context.read<DetailsEventCubit>().acceptEventAndNotify,
-                          ),
-                          SizedBox(width: 30,),
-                        ],
-                      ),
-                    ): event.isAccepted() && DateTime.now().isAfter(event.start) &&
-                        (event.operator.id == account.id || event.suboperators.where((element) => element.id == account.id).isNotEmpty)?
-                    Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          ElevatedButton(
-                            child: new Text('TERMINA', style: button_card),
-                            onPressed: () async {
-                              bool delay = event.end.add(new Duration(hours: 1)).isBefore(DateTime.now());
-                              ConfirmCancelAlert(context, title: "TERMINA INCARICO",
-                                  text: "Confermi la terminazione dell'incarico?",showDetailsContent: delay).show().then(
-                                  (res) {
-                                    if(res.first) context.read<DetailsEventCubit>().endEventAndNotify(res.last);
-                                  });
-                            },
-                          ),
-                        ],
-                      ),
-                    ):event.isEnded()?
-                    Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                                  color: HexColor(event.color),
-                                  boxShadow: <BoxShadow> [BoxShadow(color: Colors.black45,
-                                    offset: Offset(1.0, 2.5),
-                                    blurRadius: 5.0,)]
-
-                              ),
-                              child: Text('INCARICO TERMINATO', style: button_card),
-                              padding: EdgeInsets.all(10),
-
-                            ),
-                          )
-                          ,
-                        ],
-                      ),
-                    ):
+                    ),
                     Container(height: PlatformUtils.isIOS? 45 : 30,)
-                    /*child: Row(
-                  children: <Widget>[
-                    SizedBox(
-                      width: 30,
-                    ),
-                    Icon(
-                      Icons.notifications,
-                      size: 40,
-                    ),
-                    Text("Avvisami (15m)", style: subtitle_rev),
-                    SizedBox(width: 30),
-                    Switch(value: true, activeColor: c, onChanged: (v) {})
-                  ],
-                ),*/])),
+                  ])),
             ])));
   }
 

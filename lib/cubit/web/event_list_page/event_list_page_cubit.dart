@@ -4,6 +4,7 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 
 part 'event_list_page_state.dart';
 
@@ -87,7 +88,7 @@ class EventListPageCubit extends Cubit<EventListPageState> {
   }
 
   bool deleteEvent(Event event, bool repeatMode ){
-    event.start.isBefore(DateTime.now())?
+    _.DateUtils.isBefore(event.start,_.DateUtils.now())?
     _databaseRepository.deleteEventPast(event, repeatMode)
         :_databaseRepository.deleteEvent(event, repeatMode);
     List<Event> filteredEvents = List.of(state.listEventFiltered);
@@ -101,7 +102,7 @@ class EventListPageCubit extends Cubit<EventListPageState> {
     List<String> idDeleteCustomer = [];
     mapSelected.entries.where((entry) => entry.value).forEach((entry) {
       Event e = filteredEvents.where((element) => element.id == entry.key).first;
-      e.start.isBefore(DateTime.now())?
+      _.DateUtils.isBefore(e.start,_.DateUtils.now())?
       _databaseRepository.deleteEventPast(e, repeatMode)
           :_databaseRepository.deleteEvent(e, repeatMode);
       filteredEvents.removeWhere((element) => element.id == entry.key);

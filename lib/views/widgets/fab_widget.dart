@@ -4,11 +4,15 @@ import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.
 import 'package:venturiautospurghi/cubit/details_event/details_event_cubit.dart';
 import 'package:venturiautospurghi/cubit/fab_widget/fab_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
+import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_delete.dart';
+import 'package:venturiautospurghi/views/widgets/alert/alert_refuse.dart';
 
 class Fab extends StatelessWidget {
   @override
@@ -16,6 +20,7 @@ class Fab extends StatelessWidget {
     Account account = context.select((AuthenticationBloc bloc)=>bloc.account!);
     String route = PlatformUtils.getRoute(context);
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
+
 
     return new BlocProvider(
         create: (_) => FabCubit(context, repository, account, route),
@@ -173,7 +178,7 @@ class Fab_details_oper extends StatelessWidget {
         padding: EdgeInsets.all(2),
         child: FloatingActionButton(
           shape: const CircleBorder(),
-          child: Icon(Icons.phone,size: 40, color: white),
+          child: Icon(Icons.build_rounded,size: 40, color: white),
           onPressed: () =>  showDialog(
               context: parentContext,
               barrierDismissible: true,
@@ -242,6 +247,107 @@ class Fab_details_oper extends StatelessWidget {
                             ],
                           ),
                         ),
+                        context.read<DetailsEventCubit>().showAcceptRefused()?
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 5.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text("Rifiuta",
+                                  style: Theme.of(context).textTheme.titleLarge!
+                                      .copyWith(color: white)),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  RefuseAlert(context).show().then((justification) {
+                                    if(!string.isNullOrEmpty(justification)){
+                                      Navigator.pop(dialogContext);
+                                      context.read<DetailsEventCubit>().refuseEventAndNotify(justification);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: black,
+                                  ),
+                                  child: Icon(EventStatus.getIcon(EventStatus.Refused), color: white),
+                                ),
+                              )
+                            ],
+                          ),
+                        ): Container(),
+                        context.read<DetailsEventCubit>().showAcceptRefused()?
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 5.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text("Accetta",
+                                  style: Theme.of(context).textTheme.titleLarge!
+                                      .copyWith(color: white)),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(dialogContext);
+                                  context.read<DetailsEventCubit>().acceptEventAndNotify();
+                                },
+                                child: Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: black,
+                                  ),
+                                  child: Icon(EventStatus.getIcon(EventStatus.Accepted), color: white),
+                                ),
+                              )
+                            ],
+                          ),
+                        ): Container(),
+                        context.read<DetailsEventCubit>().showEnded()?
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 5.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text("Termina",
+                                  style: Theme.of(context).textTheme.titleLarge!
+                                      .copyWith(color: white)),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  bool delay = _.DateUtils.isBefore(context.read<DetailsEventCubit>().event.end.add(new Duration(hours: 1)),_.DateUtils.now());
+                                  ConfirmCancelAlert(context, title: "TERMINA INCARICO",
+                                      text: "Confermi la terminazione dell'incarico?",showDetailsContent: delay).show().then(
+                                          (res) {
+                                        if(res.first){
+                                          Navigator.pop(dialogContext);
+                                          context.read<DetailsEventCubit>().endEventAndNotify(res.last);
+                                        }
+                                      });
+                                },
+                                child: Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: black,
+                                  ),
+                                  child: Icon(EventStatus.getIcon(EventStatus.Ended), color: white),
+                                ),
+                              )
+                            ],
+                          ),
+                        ): Container(),
                         SizedBox(
                           height: 65,
                         )

@@ -16,6 +16,7 @@ import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_widget.dart';
 import 'package:venturiautospurghi/views/widgets/list_tile_operator.dart';
 import 'package:venturiautospurghi/views/widgets/platform_datepicker.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 
 class EventsFilterWidget extends FilterWidget {
 
@@ -207,7 +208,7 @@ class EventsFilterWidget extends FilterWidget {
                                       onTap: () =>
                                           PlatformDatePicker.selectDate(context,
                                             maxTime: DateTime(3000),
-                                            currentTime: context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??DateTime.now(),
+                                            currentTime: context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??_.DateUtils.now(),
                                             onConfirm: (date) => context.read<EventsFilterCubit>().setStartDate(date),
                                           ),
                                     ),),
@@ -234,9 +235,9 @@ class EventsFilterWidget extends FilterWidget {
                                         textAlign: TextAlign.start,),
                                       onTap: () =>
                                           PlatformDatePicker.selectDate(context,
-                                            minTime: TimeUtils.truncateDate(context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??DateTime.now(), "day"),
+                                            minTime: TimeUtils.truncateDate(context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??_.DateUtils.now(), "day"),
                                             maxTime: DateTime(3000),
-                                            currentTime: context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??DateTime.now(),
+                                            currentTime: context.read<EventsFilterCubit>().state.filters["startDate"]!.fieldValue??_.DateUtils.now(),
                                             onConfirm: (date) => context.read<EventsFilterCubit>().setEndDate(date),
                                           ),
                                     ),),

@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -17,6 +18,7 @@ abstract class PlatformUtils {
   static const bool isIOS = true;
 
   static dynamic download(url,filename) => null;
+  static dynamic uploadFileStorage(Reference refence, dynamic file) => null;
   static void initDownloader() => null;
   static dynamic file(path) => null;
   static void inizializateFile() => null;

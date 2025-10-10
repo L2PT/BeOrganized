@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 class DateUtils {
@@ -15,6 +17,7 @@ class DateUtils {
   static final DateFormat _pdfDateFormat = DateFormat('EEEE, dd MMMM yyyy', 'it_IT');
   static final DateFormat _hoverTimeFormat = DateFormat('HH:mm');
   static final DateFormat _hoverDateFormatDiff = DateFormat('dd MMMM hh:mm', 'it_IT');
+  static final zone = tz.getLocation('Europe/Rome');
 
   static String formatMonth(DateTime d) => _monthFormat.format(d);
 
@@ -113,7 +116,7 @@ class DateUtils {
   static Iterable<DateTime> daysInRange(DateTime start, DateTime end) sync* {
     var i = start;
     var offset = start.timeZoneOffset;
-    while (i.isBefore(end)) {
+    while (isBefore(i,end)) {
       yield i;
       i = i.add(Duration(days: 1));
       var timeZoneDiff = i.timeZoneOffset - offset;
@@ -140,8 +143,8 @@ class DateUtils {
       return false;
     }
 
-    var min = a.isBefore(b) ? a : b;
-    var max = a.isBefore(b) ? b : a;
+    var min = isBefore(a,b) ? a : b;
+    var max = isBefore(a,b) ? b : a;
     var result = max.weekday % 7 - min.weekday % 7 >= 0;
     return result;
   }
@@ -224,7 +227,33 @@ class DateUtils {
       Constants.MAX_WORKTIME, 0, 0, 0,);
     // Crea la data risultante
     DateTime newDate = selectedDay.add(Duration(minutes: max(0, roundedMinutes)));
-    return newDate.isBefore(maxDate) ? newDate : maxDate;
+    return isBefore(newDate,maxDate) ? newDate : maxDate;
+  }
+
+  static DateTime firestoreToItalianTime(Timestamp ts) {
+    final utc = ts.toDate().toUtc();
+    return tz.TZDateTime.from(utc, zone);
+  }
+
+  static DateTime setLocation(DateTime date) {
+    return tz.TZDateTime(zone, date.year, date.month, date.day, date.hour,
+        date.minute, date.second, date.millisecond, date.microsecond);
+  }
+
+  static bool isBefore(DateTime from, DateTime to) {
+    return setLocation(from).isBefore(setLocation(to));
+  }
+
+  static bool isAfter(DateTime from, DateTime to) {
+    return setLocation(from).isAfter(setLocation(to));
+  }
+
+  static bool isAtSameMomentAs(DateTime from, DateTime to) {
+    return setLocation(from).isAtSameMomentAs(setLocation(to));
+  }
+
+  static DateTime now(){
+    return tz.TZDateTime.now(zone);
   }
 
 }

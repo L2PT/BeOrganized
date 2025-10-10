@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/waiting_event_list/waiting_event_list_cubit.dart';
+import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
+import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
-import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
-import 'package:venturiautospurghi/models/event.dart';
-import 'package:venturiautospurghi/models/account.dart';
-import 'package:venturiautospurghi/views/widgets/no_events_widget.dart';
-import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_refuse.dart';
 import 'package:venturiautospurghi/views/widgets/card_event_widget.dart';
+import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
+import 'package:venturiautospurghi/views/widgets/no_events_widget.dart';
 
 class WaitingEventList extends StatelessWidget {
 
@@ -51,7 +52,7 @@ class _eventList extends StatelessWidget{
     late List<List<Event>> eventsGroupedByDay;
 
     void _onCalendarPressed(){
-      DateTime date = DateTime.now();
+      DateTime date = _.DateUtils.now();
       PlatformUtils.navigator(context, Constants.monthlyCalendarRoute, {'month' : date, 'operator' : null});
     }
 

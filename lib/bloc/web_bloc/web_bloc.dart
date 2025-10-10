@@ -9,6 +9,7 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/route_navigation.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/views/screens/create_address_view.dart';
 import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
@@ -84,8 +85,8 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     switch(event.route){
       case Constants.closeOverViewRoute: emit( CloseOverView(<String, dynamic>{"objectParameter": objectParameter,"typeStatus": historyRoute.isEmpty?0:historyRoute.last.status, "currentStep": historyRoute.isEmpty?0:historyRoute.last.currentStep},routeTarget,(event.arg is Map)?event.arg["res"]:false, callback??() {})); break;
       case Constants.detailsEventViewRoute: emit( OverViewReady(event.route, DetailsEvent(objectParameter),_posLeftOverView, _posTopOverView, )); break;
-      case Constants.createEventViewRoute: emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:DateTime.now(), type: status), _posLeftOverView, _posTopOverView,)); break;
-      case Constants.generateAiEventViewRoute: emit( OverViewReady(event.route, GenerateAiEvent(dateSelect: (event.arg is Map)?event.arg["dateSelect"]:DateTime.now()), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.createEventViewRoute: emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now(), type: status), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.generateAiEventViewRoute: emit( OverViewReady(event.route, GenerateAiEvent(dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now()), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createCustomerViewRoute: emit( OverViewReady(event.route, CreateCustomer(event: objectParameter,currentStep: currentStep,type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createAddressViewRoute: emit( OverViewReady(event.route, CreateAddress(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createReferralsViewRoute: emit( OverViewReady(event.route, CreateReferrals(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;

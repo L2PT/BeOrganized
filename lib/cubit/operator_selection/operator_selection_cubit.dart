@@ -28,7 +28,7 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
   }
 
   void getOperators(bool isTriState) async {
-    if (isTriState) {
+    if (isTriState && !_event.isRepeated) {
       operators = await _databaseRepository.getOperatorsFree(
           _event.id, _event.start, _event.end);
       operators.sort((a, b) => a.surname.compareTo(b.surname));

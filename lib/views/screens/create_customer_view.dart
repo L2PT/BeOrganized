@@ -11,6 +11,7 @@ import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
@@ -169,7 +170,7 @@ class _CustomerStepper extends StatelessWidget{
                         style: raisedButtonStyle,
                         onPressed:
                             () {
-                          DateTime currentTime = DateTime.now().toLocal();
+                          DateTime currentTime = _.DateUtils.now().toLocal();
                           if(!Utils.isDoubleClick(context.read<CreateCustomerCubit>().firstClick, currentTime)){
                             context.read<CreateCustomerCubit>().setFirstClick(currentTime);
                             FocusScope.of(context).unfocus();
@@ -182,7 +183,7 @@ class _CustomerStepper extends StatelessWidget{
                           style: raisedButtonStyle,
                           child: new Text('Salva', style: button_card),
                           onPressed: context.read<CreateCustomerCubit>().state.customer.addresses.isNotEmpty?(){
-                            if(!Utils.isDoubleClick(context.read<CreateCustomerCubit>().firstClick, DateTime.now())){_onSavePressed();}}:null),
+                            if(!Utils.isDoubleClick(context.read<CreateCustomerCubit>().firstClick, _.DateUtils.now())){_onSavePressed();}}:null),
                   ],
                 ));
           },

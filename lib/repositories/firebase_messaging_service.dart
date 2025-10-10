@@ -1,7 +1,5 @@
-import 'dart:convert';
-
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:http/http.dart' as http;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 class FirebaseMessagingService {
@@ -70,39 +68,46 @@ class FirebaseMessagingService {
 
   static Future<String?> getToken()=> FirebaseMessaging.instance.getToken();
 
-  static void sendNotifications({
-      tokens = const [],
-      title = "Nuovo incarico assegnato",
-      description = "Clicca la notifica per vedere i dettagli",
-      style = Constants.notificationInfoTheme,
-      type = Constants.eventNotification,
-      eventId = ""}
-      ) async {
-    Uri url =  Uri.parse("https://fcm.googleapis.com/fcm/send");
-    tokens.forEach((token) async {
-      Map<String, String> notification = new Map<String, String>();
-      Map<String, String> data = new Map<String, String>();
-      notification['title'] = title;
-      notification['body'] = description;
-      notification['sound'] = "default";
-      data['id'] = eventId;
-      data['style'] = style;
-      data['type'] = type;
-      data['click_action'] = "FLUTTER_NOTIFICATION_CLICK";
+  static Future<void> sendNotifications(void Function(String, List failedTokens)? onTokensRemoved,{
+    tokens = const [],
+    String accountId = "",
+    String title = "Nuovo incarico assegnato",
+    String description = "Clicca la notifica per vedere i dettagli",
+    String style = Constants.notificationInfoTheme,
+    String type = Constants.eventNotification,
+    String eventId = "",
+  }) async {
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('sendNotifications');
 
+      final result = await callable.call({
+        'tokens': tokens,
+        'title': title,
+        'description': description,
+        'style': style,
+        'type': type,
+        'eventId': eventId,
+      });
 
-      String json = "{\"to\":\"$token\", \"notification\":" + jsonEncode(notification) + ", \"data\":" + jsonEncode(data) + "}";
-      var response = await http.post(
-          url,
-          body: json,
-          headers: {
-            "Authorization": "key=${Constants.googleMessagingApiKey}",
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          encoding: Encoding.getByName('utf-8'));
-      if(Constants.debug) print("response: " + jsonEncode(json));
-      if(Constants.debug) print("response: " + response.body);
-    });
+      if (Constants.debug) {
+        print("Notifiche inviate: ${result.data['successCount']} successi, ${result.data['failureCount']} fallimenti");
+      }
+
+      // Rimuovi i token che sono falliti
+      if (result.data['failedTokens'] != null && result.data['failedTokens'].isNotEmpty) {
+        List<String> failedTokens = List<String>.from(
+            result.data['failedTokens']);
+        tokens.removeWhere((token) => failedTokens.contains(token));
+
+        if (Constants.debug) {
+          print("Rimossi ${failedTokens.length} token non validi");
+          print("Token rimanenti: ${tokens.length}");
+        }
+        onTokensRemoved!(accountId, tokens);
+      }
+    } catch (e) {
+      print("Errore invio notifiche: $e");
+    }
   }
 
 }

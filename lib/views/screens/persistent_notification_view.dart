@@ -33,9 +33,8 @@ class PersistentNotification extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            Container(
-                child: _notificationWidget()
-            )
+            _notificationWidget(),
+            SizedBox(height: 10,)
           ]
         )
       )
@@ -55,7 +54,7 @@ class _notificationWidget extends StatelessWidget {
       buttonArea: <String,Function(Event)>{
         "RIFIUTA": (event) async {RefuseAlert(context).show().then((justification)=>!string.isNullOrEmpty(justification)? context.read<PersistentNotificationCubit>().cardActionRefuse(event, justification):null);},
         "CONFERMA": context.read<PersistentNotificationCubit>().cardActionConfirm},
-      onTapAction: (event) => PlatformUtils.navigator(context, Constants.detailsEventViewRoute, context.read<PersistentNotificationCubit>().state.waitingEventsList[0]),
+      onTapAction: (event) => PlatformUtils.navigator(context, Constants.detailsEventViewRoute, event),
     );
 
     return BlocBuilder<PersistentNotificationCubit, PersistentNotificationState>(

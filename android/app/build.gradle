@@ -38,13 +38,15 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    ndkVersion "29.0.14206865"
+
     lintOptions {
         disable 'InvalidPackage'
     }
 
     defaultConfig {
         applicationId "com.l2pt.venturiautospurghi"
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

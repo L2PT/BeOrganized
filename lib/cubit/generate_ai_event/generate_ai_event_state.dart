@@ -11,7 +11,7 @@ class GenerateAiEventState extends Equatable {
     this.event = Event.empty();
     event.start = TimeUtils.getNextStartWorkTimeSpan(from: dateSelect);
     event.end = event.start.add(Duration(minutes: Constants.WORKTIME_SPAN));
-    event.recurrenceDayOfMonth = (dateSelect??DateTime.now()).day;
+    event.recurrenceDayOfMonth = (dateSelect??_.DateUtils.now()).day;
   }
 
   bool isLoading() => this.status == _formStatus.loading;

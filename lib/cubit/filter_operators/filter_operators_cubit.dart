@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_methods.dart';
 
 part 'filter_operators_state.dart';
@@ -29,7 +30,7 @@ class OperatorsFilterCubit extends Cubit<OperatorsFilterState> {
 
   setSearchTime(TimeOfDay time) {
     Map<String, FilterWrapper> filters = Map.from(state.filters);
-    filters["date"] = filters["date"]!.update(TimeUtils.truncateDate(state.filters["date"]!.fieldValue??DateTime.now(), "day")
+    filters["date"] = filters["date"]!.update(TimeUtils.truncateDate(state.filters["date"]!.fieldValue??_.DateUtils.now(), "day")
         .add(Duration(hours: DateTimeField.convert(time)!.hour, minutes: DateTimeField.convert(time)!.minute)));
     emit(state.assign(filters: filters));
     notifyFiltersChanged();

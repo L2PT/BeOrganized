@@ -11,6 +11,7 @@ import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_storage_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/file_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/global_methods.dart';
@@ -21,10 +22,10 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   final BuildContext context;
   final CloudFirestoreService _databaseRepository;
   final Account _account;
-  final Event _event;
+  final Event event;
 
   DetailsEventCubit(this.context, CloudFirestoreService databaseRepository, Account account, Event event) :
-      _databaseRepository = databaseRepository, _account = account, _event = event,
+      _databaseRepository = databaseRepository, _account = account, event = event,
         super(DetailsEventState(event, event.notaOperator, event.status, event.documents.cast<String>()) ) {
     if (state.event.operator.id == _account.id &&
         state.event.status < EventStatus.Seen) {
@@ -34,10 +35,11 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
     }
   }
 
-  void endEventAndNotify(bool updateEndTime) {
+  void endEventAndNotify(bool updateEndTime) async {
     _databaseRepository.endEvent(state.event, propagate: updateEndTime);
     emit(state.changeStatus(EventStatus.Ended));
-    FirebaseMessagingService.sendNotifications(tokens: state.event.supervisor!.tokens,
+    FirebaseMessagingService.sendNotifications(_databaseRepository.updateToken,tokens: state.event.supervisor!.tokens,
+        accountId: state.event.supervisor!.id,
         style: Constants.notificationInfoTheme, type: Constants.feedNotification,
         title: "${_account.surname} ${_account.name} ha terminato il lavoro \"${state.event.title}\"",
         eventId: state.event.id
@@ -48,7 +50,8 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   void acceptEventAndNotify() {
     _databaseRepository.updateEventField(state.event.id, Constants.tabellaEventi_stato, EventStatus.Accepted);
     emit(state.changeStatus(EventStatus.Accepted));
-    FirebaseMessagingService.sendNotifications(tokens: state.event.supervisor!.tokens,
+    FirebaseMessagingService.sendNotifications(_databaseRepository.updateToken, tokens: state.event.supervisor!.tokens,
+        accountId: state.event.supervisor!.id,
         style: Constants.notificationSuccessTheme, type: Constants.feedNotification,
         title: "${_account.surname} ${_account.name} ha accettato il lavoro \"${state.event.title}\"",
         eventId: state.event.id
@@ -59,7 +62,8 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
     state.event.motivazione = justification;
     _databaseRepository.refuseEvent(state.event);
     emit(state.changeStatus(EventStatus.Refused));
-    FirebaseMessagingService.sendNotifications(tokens: state.event.supervisor!.tokens,
+    FirebaseMessagingService.sendNotifications(_databaseRepository.updateToken, tokens: state.event.supervisor!.tokens,
+        accountId: state.event.supervisor!.id,
         style: Constants.notificationErrorTheme, type: Constants.feedNotification,
         title: "${_account.surname} ${_account.name} ha rifiutato il lavoro \"${state.event.title}\"",
         eventId: state.event.id
@@ -68,7 +72,7 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   }
 
   void deleteEvent(bool reapetMode) {
-    state.event.start.isBefore(DateTime.now())?
+    _.DateUtils.isBefore(state.event.start,_.DateUtils.now())?
     _databaseRepository.deleteEventPast(state.event, reapetMode)
     :_databaseRepository.deleteEvent(state.event, reapetMode);
     PlatformUtils.backNavigator(context);
@@ -77,12 +81,12 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   void modifyEvent() {
     //shh this is wrong, it breaks the mvvm
     PlatformUtils.backNavigator(context);
-    PlatformUtils.navigator(context, Constants.createEventViewRoute, <String,dynamic>{"objectParameter" : _event, 'typeStatus' : TypeStatus.modify});
+    PlatformUtils.navigator(context, Constants.createEventViewRoute, <String,dynamic>{"objectParameter" : event, 'typeStatus' : TypeStatus.modify});
   }
 
   void copyEvent() {
     PlatformUtils.backNavigator(context);
-    Event e = Event.fromMap("", "", _event.toMap());
+    Event e = Event.fromMap("", "", event.toMap());
     e.id = '';
     e.suboperators = List.empty();
     e.operator = Account.empty();
@@ -108,26 +112,36 @@ class DetailsEventCubit extends Cubit<DetailsEventState> {
   }
 
   void addEventNotaOperator(String notaOperator){
-    if(_event.id.isNotEmpty)
-      _databaseRepository.updateEventField(_event.id, Constants.tabellaEventi_notaOperatore, notaOperator);
+    if(event.id.isNotEmpty)
+      _databaseRepository.updateEventField(event.id, Constants.tabellaEventi_notaOperatore, notaOperator);
     else{
-      _event.isExcepeted = true;
-      _event.notaOperator = notaOperator;
-      _databaseRepository.addEvent(_event);
+      event.isExcepeted = true;
+      event.notaOperator = notaOperator;
+      _databaseRepository.addEvent(event);
     }
     emit(state.changeNotaOperator(notaOperator));
   }
 
   void openFileExplorer() async {
     Map<String, dynamic> file = new Map();
-    List<String> listDocuments = _event.documents.cast<String>();
+    List<String> listDocuments = event.documents.cast<String>();
     file = await FileUtils.openFileExplorer(file);
     file.forEach((name, file) {
-      FirebaseStorageService.uploadFile(file, _event.id + "/" + name);
+      FirebaseStorageService.uploadFile(file, event.id + "/" + name);
       listDocuments.add(name);
     });
-    _databaseRepository.updateEventField(_event.id, Constants.tabellaEventi_documenti, listDocuments);
+    _databaseRepository.updateEventField(event.id, Constants.tabellaEventi_documenti, listDocuments);
     emit(state.changeListDocuments(listDocuments));
+  }
+
+  bool showAcceptRefused(){
+    return PlatformUtils.eventButtonsVisible(context, event, _account);
+  }
+
+  bool showEnded(){
+    return event.isAccepted() && _.DateUtils.isAfter(_.DateUtils.now(),event.start) &&
+        (event.operator.id == _account.id || event.suboperators.where((element) => element.id == _account.id).isNotEmpty);
+
   }
 
 }

@@ -8,7 +8,7 @@ class CreateEventState extends Equatable {
       this.event = Event.empty();
       event.start = TimeUtils.getNextStartWorkTimeSpan(from: dateSelect);
       event.end = event.start.add(Duration(minutes: Constants.WORKTIME_SPAN));
-      event.recurrenceDayOfMonth = (dateSelect??DateTime.now()).day;
+      event.recurrenceDayOfMonth = (dateSelect??_.DateUtils.now()).day;
     } else this.event = e;
     documents = Map<String, dynamic>.fromIterable(event.documents, key: (v) => v, value: (v)=>null);
     isAllDay = event.isAllDayLong();

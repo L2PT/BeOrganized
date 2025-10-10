@@ -2,7 +2,7 @@ library app.globals;
 
 class Constants {
   static const String title = "Venturi Autospurghi App";
-  static const bool debug = false;
+  static const bool debug = false;//!bool.fromEnvironment('dart.vm.product');
   static const String web = "web";
   static const String mobile = "mobile";
 
@@ -82,6 +82,7 @@ class Constants {
   static const String tabellaEventi_isRepeated = 'isRepeated';
   static const String tabellaEventi_isExcepeted = 'isExcepeted';
   static const String tabellaEventi_recurrenceId = 'recurrenceId';
+  static const String tabellaEventi_recurrenceDayOfMonth = 'recurrenceDayOfMonth';
 
   // TABLE COSTANTI
   static const String tabellaCostanti_Categorie = 'Categorie';

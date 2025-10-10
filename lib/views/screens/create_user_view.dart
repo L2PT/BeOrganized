@@ -15,6 +15,7 @@ import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 
 import '../../utils/extensions.dart';
 
@@ -152,7 +153,7 @@ class _UserStepper extends StatelessWidget{
                         style: raisedButtonStyle,
                         onPressed:
                             () {
-                          DateTime currentTime = DateTime.now().toLocal();
+                          DateTime currentTime = _.DateUtils.now().toLocal();
                           if(!Utils.isDoubleClick(context.read<CreateUserCubit>().firstClick, currentTime)){
                             context.read<CreateUserCubit>().setFirstClick(currentTime);
                             FocusScope.of(context).unfocus();
@@ -165,7 +166,7 @@ class _UserStepper extends StatelessWidget{
                           style: raisedButtonStyle,
                           child: new Text('Salva', style: button_card),
                           onPressed: (){
-                            if(!Utils.isDoubleClick(context.read<CreateUserCubit>().firstClick, DateTime.now())){_onSavePressed();}}),
+                            if(!Utils.isDoubleClick(context.read<CreateUserCubit>().firstClick, _.DateUtils.now())){_onSavePressed();}}),
                   ],
                 ));
           },

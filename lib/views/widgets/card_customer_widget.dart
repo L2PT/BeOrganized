@@ -138,12 +138,8 @@ class CardCustomer extends StatelessWidget {
             Container(
                 height: 80,
                 width: 255,
-                child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: (1 / .2),
-                      mainAxisSpacing: 2,
-                    ),
+                child: ListView.builder(
+                    physics: BouncingScrollPhysics(),
                     itemCount: customer.referrals.length,
                     itemBuilder: (BuildContext context, int index) {
                       return FadeAnimation((1.0 + index) / 4,

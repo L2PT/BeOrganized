@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/theme.dart';
 
 class PlatformDatePicker {
@@ -48,7 +49,7 @@ class PlatformDatePicker {
           firstDate: minTime ?? DateTime(1980),
           helpText: "Seleziona una data".toUpperCase(),
           cancelText: "Annulla".toUpperCase(),
-          initialDate: currentTime ?? DateTime.now(),
+          initialDate: currentTime ?? _.DateUtils.now(),
           lastDate: maxTime ?? DateTime(3000),
           builder: dialog_theme
       );
@@ -72,7 +73,7 @@ class PlatformDatePicker {
         context: context,
         helpText: "Seleziona un'orario".toUpperCase(),
         cancelText: "Annulla".toUpperCase(),
-        initialTime: TimeOfDay.fromDateTime(currentTime ?? DateTime.now()),
+        initialTime: TimeOfDay.fromDateTime(currentTime ?? _.DateUtils.now()),
         builder: dialog_theme,
       );
       if(time == null) return;

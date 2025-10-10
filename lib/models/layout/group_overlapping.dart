@@ -1,6 +1,7 @@
 // Classe per gestire gruppi di eventi sovrapposti
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/layout/event_layout.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/date_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -32,8 +33,8 @@ class OverlappingGroup {
       // Trova la prima colonna disponibile
       int availableColumn = -1;
       for (int i = 0; i < columnEndTimes.length; i++) {
-        if (columnEndTimes[i].isBefore(event.start) ||
-            columnEndTimes[i].isAtSameMomentAs(event.start)) {
+        if (_.DateUtils.isBefore(columnEndTimes[i],event.start) ||
+            _.DateUtils.isAtSameMomentAs(columnEndTimes[i],event.start)) {
           availableColumn = i;
           break;
         }

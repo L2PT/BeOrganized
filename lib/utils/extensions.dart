@@ -1,3 +1,4 @@
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
 extension DateTimeExtensions on DateTime {
@@ -7,7 +8,7 @@ extension DateTimeExtensions on DateTime {
 
   //LONGTERMTODO static extension is a working on for flutter team
   DateTime olderBetween(DateTime compare) {
-    if(this.isAfter(compare))
+    if(_.DateUtils.isAfter(this,compare))
       return this;
     else
       return compare;

@@ -2,18 +2,15 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/auth/authuser.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth;
-  final GoogleSignIn _googleSignIn;
   String? _verificationId;
 
-  FirebaseAuthService([FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignin])
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignin ?? GoogleSignIn();
+  FirebaseAuthService([FirebaseAuth? firebaseAuth])
+      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   AuthUser? _userFromFirebase(User? user) {
     return user != null? 
@@ -32,17 +29,6 @@ class FirebaseAuthService {
   Future<AuthUser> signInWithEmailAndPassword(String email, String password) async { //intentionally unsafe to catch and handle the error in UI
     final authResult = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password).catchError((error){
       throw error;}); //TODO handle login error buuut it doesn't pass up the error
-    return _userFromFirebase(authResult.user)!;
-  }
-
-  Future<AuthUser> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    final googleAuth = await googleUser?.authentication;
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth?.idToken,
-      accessToken: googleAuth?.accessToken,
-    );
-    final authResult = await _firebaseAuth.signInWithCredential(credential);
     return _userFromFirebase(authResult.user)!;
   }
 

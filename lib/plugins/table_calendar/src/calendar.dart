@@ -235,8 +235,8 @@ class _TableCalendarState extends State<TableCalendar> with SingleTickerProvider
 
   void _selectToDay() {
     setState(() {
-      widget.calendarController.setSelectedDay(DateTime.now(), isProgrammatic: false);
-      _selectedDayCallback(DateTime.now());
+      widget.calendarController.setSelectedDay(_.DateUtils.now(), isProgrammatic: false);
+      _selectedDayCallback(_.DateUtils.now());
     });
   }
 
@@ -263,8 +263,8 @@ class _TableCalendarState extends State<TableCalendar> with SingleTickerProvider
   }
 
   bool _isDayUnavailable(DateTime day) {
-    return (widget.startDay != null && day.isBefore(widget.startDay!)) ||
-        (widget.endDay != null && day.isAfter(widget.endDay!));
+    return (widget.startDay != null && _.DateUtils.isBefore(day,widget.startDay!)) ||
+        (widget.endDay != null && _.DateUtils.isAfter(day,widget.endDay!));
   }
 
   DateTime? _getEventKey(DateTime date) {
@@ -308,7 +308,7 @@ class _TableCalendarState extends State<TableCalendar> with SingleTickerProvider
     final children = [
       _CustomIconButton(
         icon: widget.headerStyle.leftChevronIcon,
-        onTap: (widget.selectPrevious is Function)? widget.selectPrevious! : widget.headerStyle.leftChevronIcon.icon == Icons.today? _selectToDay:_selectPrevious,
+        onTap: widget.headerStyle.leftChevronIcon.icon == Icons.today? _selectToDay: (widget.selectPrevious is Function)? widget.selectPrevious! :_selectPrevious,
         margin: widget.headerStyle.leftChevronMargin,
         padding: widget.headerStyle.leftChevronPadding,
       ),

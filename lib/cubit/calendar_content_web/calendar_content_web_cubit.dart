@@ -10,6 +10,7 @@ import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/date_utils.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
@@ -79,7 +80,7 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
     return state.user.webops.elementAt(pos);
   }
 
-  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode) async {
+  void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode, bool reapetMode) async {
     event.start = start;
     event.end = end;
 
@@ -95,12 +96,43 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
       }
       event.suboperators.add(operator);
     }
-    if(event.isRepeated)
+    if(event.isRepeated && !reapetMode)
       event.isExcepeted = true;
-    if(event.id.isEmpty)
-      event.id = await _databaseRepository.addEvent(event);
+    if(event.id.isEmpty) {
+      if (!reapetMode)
+        event.id = await _databaseRepository.addEvent(event);
+      else {
+        Event? eventMaster = await _databaseRepository.getEvent(event.recurrenceId);
+        DateTime endMaster = eventMaster!.end;
+        DateTime startMaster = eventMaster.start;
+        eventMaster!.update(event);
+        eventMaster.start = DateTime(
+          startMaster.year,
+          startMaster.month,
+          startMaster.day,
+          event.start.hour,
+          event.start.minute,
+          event.start.second,
+          event.start.millisecond,
+          event.start.microsecond,
+        );
+
+        eventMaster.end = DateTime(
+          endMaster.year,
+          endMaster.month,
+          endMaster.day,
+          event.end.hour,
+          event.end.minute,
+          event.end.second,
+          event.end.millisecond,
+          event.end.microsecond,
+        );
+
+        _databaseRepository.updateEvent(eventMaster.id, eventMaster);
+      }
+    }
     bool sendNotification = true;
-    if (end.isBefore(DateTime.now())) {
+    if (_.DateUtils.isBefore(end,_.DateUtils.now())) {
       sendNotification = false;
       _databaseRepository.updateEventPast(event.id, event);
     } else{
@@ -108,7 +140,13 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
       _databaseRepository.updateEvent(event.id, event);
     }
     if(sendNotification){
-      FirebaseMessagingService.sendNotifications(tokens: event.operator.tokens, title: "Nuovo incarico assegnato", eventId: event.id);
+      FirebaseMessagingService.sendNotifications(
+          _databaseRepository.updateToken,
+          tokens: event.operator.tokens,
+          accountId: event.operator.id,
+          title: "Nuovo incarico assegnato",
+          eventId: event.id,
+      );
     }
   }
 }

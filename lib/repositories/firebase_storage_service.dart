@@ -1,40 +1,27 @@
-import 'dart:io';
-
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 
 class FirebaseStorageService {
   static final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
   
   static Future<void> uploadFile(dynamic file, String storagePath) async {
     try {
-      if(file is File)
-        await _firebaseStorage.ref(storagePath).putFile(file);
-      else
-        await _firebaseStorage.ref(storagePath).putData(file);
-    } on FirebaseException {
-      // e.g, e.code == 'canceled'
+      await PlatformUtils.uploadFileStorage(_firebaseStorage.ref(storagePath), file);
+    } on FirebaseException catch (e) {
+      throw Exception('Errore Firebase Storage: ${e.code} - ${e.message}');
     }
   }
-  
-  static Future<void> deleteFile(String path) async {
-    File file = File(path);
 
+  static Future<void> deleteFile(String storagePath) async {
     try {
-      await _firebaseStorage.ref('uploads/file-to-upload.png') .putFile(file);
-    } on FirebaseException {
-      // e.g, e.code == 'canceled'
+      await _firebaseStorage.ref(storagePath).delete();
+    } on FirebaseException catch (e) {
+      throw Exception('Firebase Storage delete error: ${e.code} - ${e.message}');
     }
   }
 
   static Future<ListResult> listFiles(String path) async {
     ListResult result =  await _firebaseStorage.ref(path).listAll();
-    // result.items.forEach((Reference ref) {
-    //   print('Found file: $ref');
-    // });
-    //
-    // result.prefixes.forEach((Reference ref) {
-    //   print('Found directory: $ref');
-    // });
     return result;
   }
 
