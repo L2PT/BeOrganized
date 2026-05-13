@@ -220,7 +220,7 @@ class _contactsChat extends StatelessWidget {
             return ListTile(
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(backgroundColor: black, child: Icon(Icons.person, color: yellow)),
-              title: Text(contact.name, style: title.copyWith(fontSize: 16)),
+              title: Text(contact.name.isNotEmpty ? contact.name : (contact.pushname ?? ''), style: title.copyWith(fontSize: 16)),
               subtitle: Text(StringUtils.formatPhoneNumber(contact.phoneNumber), style: subtitle),
               onTap: () => context.read<NewChatDialogCubit>().selectContact(contact),
             );
@@ -279,7 +279,7 @@ class _messageChat extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(backgroundColor: black, child: Icon(Icons.person, color: yellow)),
-            title: Text(contact.name, style: title.copyWith(fontSize: 18)),
+            title: Text(contact.name.isNotEmpty ? contact.name : (contact.pushname ?? ''), style: title.copyWith(fontSize: 18)),
             subtitle: Text(StringUtils.formatPhoneNumber(contact.phoneNumber), style: subtitle),
           ),
           SizedBox(height: 15),
