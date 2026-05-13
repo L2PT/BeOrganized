@@ -68,8 +68,13 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
 
   Future<void> sendMessage(String text) async {
     if (state.selectedChat != null && text.trim().isNotEmpty) {
-      final chatId = state.selectedChat!.id;
-      
+      final chat = state.selectedChat!;
+      String phoneToSend = chat.realPhoneNumber.isNotEmpty
+          ? chat.realPhoneNumber
+          : chat.phoneNumber ?? chat.id.replaceAll('@c.us', '');
+
+      phoneToSend = phoneToSend.replaceAll('+', '').replaceAll(' ', '');
+
       // We'll call API first, then log if error, but also save to Firestore for local consistency if needed.
       // The API expects 'phone'. User confirmed chat ID format is 'number@c.us', which is standard for WhatsApp APIs.
       
@@ -82,7 +87,7 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
             'x-api-key': Constants.whatsappApiKey,
           },
           body: jsonEncode({
-            'phone': chatId, // Sends 'number@c.us'
+            'phone': phoneToSend,
             'message': text,
           }),
         );
@@ -124,6 +129,14 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
         filteredChats: filtered,
         searchQuery: query,
     ));
+  }
+
+  Future<void> deleteChat(String chatId) async {
+    await _databaseRepository.deleteChat(chatId);
+    if(state.selectedChat?.id == chatId) {
+      _messagesSubscription?.cancel();
+      emit(state.copyWith(selectedChat: ChatOverview(lastMessageTime: DateTime.now()), currentMessages: []));
+    }
   }
 
   @override

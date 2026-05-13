@@ -144,13 +144,34 @@ class _ChatScreenState extends State<ChatScreen> {
               CircleAvatar(child: Icon(Icons.person, color: yellow, size: 30,), radius: 22, backgroundColor: black,),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  widget.chat.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.chat.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      (widget.chat.phoneNumber != null && widget.chat.phoneNumber!.isNotEmpty)
+                          ? widget.chat.phoneNumber!
+                          : widget.chat.realPhoneNumber,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: grey,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.grey.shade600),
+                onPressed: () {
+                  context.read<WebCubit>().messageManagePageCubit.deleteChat(widget.chat.id);
+                },
+                tooltip: "Elimina chat",
               )
             ],
           ),
@@ -299,4 +320,3 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _shortTime(DateTime t) => '${t.hour.toString().padLeft(2,'0')}:${t.minute.toString().padLeft(2,'0')}';
 }
-

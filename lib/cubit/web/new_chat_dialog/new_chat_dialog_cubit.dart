@@ -124,7 +124,6 @@ class NewChatDialogCubit extends Cubit<NewChatDialogState> {
         if (!phoneStr.startsWith('39') && phoneStr.length <= 10) {
           phoneStr = '39$phoneStr';
         }
-        final chatId = '$phoneStr@c.us';
 
         try {
           final url = Uri.parse('${Constants.whatsappBaseUrl}/send-message');
@@ -135,7 +134,7 @@ class NewChatDialogCubit extends Cubit<NewChatDialogState> {
               'x-api-key': Constants.whatsappApiKey,
             },
             body: jsonEncode({
-              'phone': chatId,
+              'phone': phoneStr,
               'message': text,
             }),
           );

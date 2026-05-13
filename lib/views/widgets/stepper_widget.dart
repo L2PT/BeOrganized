@@ -104,6 +104,7 @@ class StepperIcon extends StatefulWidget {
     this.controlsBuilder,
     this.elevation,
     this.margin,
+    this.isContentScrollable = true,
   }) : assert(0 <= currentStep && currentStep < steps.length),
         super(key: key);
 
@@ -203,6 +204,9 @@ class StepperIcon extends StatefulWidget {
 
   /// custom margin on vertical stepper.
   final EdgeInsetsGeometry? margin;
+
+  /// Whether the stepper content is scrollable. Defaults to true.
+  final bool isContentScrollable;
 
   @override
   State<StepperIcon> createState() => _StepperIconState();
@@ -655,7 +659,7 @@ class _StepperIconState extends State<StepperIcon> with TickerProviderStateMixin
           ),
         ),
         Expanded(
-          child: ListView(
+          child: widget.isContentScrollable ? ListView(
             physics: widget.physics,
             padding: const EdgeInsets.all(24.0),
             children: <Widget>[
@@ -666,6 +670,17 @@ class _StepperIconState extends State<StepperIcon> with TickerProviderStateMixin
               ),
              _buildVerticalControls(widget.currentStep),
             ],
+          ) : Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  child: stepPanels[widget.currentStep],
+                ),
+                _buildVerticalControls(widget.currentStep),
+              ],
+            ),
           ),
         ),
       ],

@@ -139,6 +139,10 @@ class CloudFirestoreService {
     return _collectionUtenti.doc(id).update(Map.of({field:data}));
   }
 
+  Future<void> deleteChat(String chatId) async {
+    await _collectionChats.doc(chatId).delete();
+  }
+
   void updateToken(String id, List tokens){
     _collectionUtenti.doc(id).update(Map.of({"Tokens":tokens}));
   }
@@ -987,19 +991,3 @@ class CloudFirestoreService {
 
 }
 
-//  AuthUser _userFromFirebase(fb.User user) {
-//
-//    if (user == null) {
-//      return null;
-//    }
-//    return AuthUser (
-//      uid: user.uid,
-//      email: user.email,
-//      displayName: user.displayName,
-//      photoUrl: user.photoURL,
-//    );
-//  }
-//
-//  Stream<AuthUser> get onAuthStateChanged {
-//    return _firebaseAuth.onAuthStateChanged.map(_userFromFirebase);
-//  }

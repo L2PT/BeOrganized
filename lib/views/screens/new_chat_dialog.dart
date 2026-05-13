@@ -162,6 +162,7 @@ class _ChatStepper extends StatelessWidget{
         child: StepperIcon(
           elevation: 0.5,
           type: StepperType.horizontal,
+          isContentScrollable: false,
           steps: getChatSteps(),
           currentStep: context.read<NewChatDialogCubit>().getCurrentStep(),
           onStepCancel: () => context.read<NewChatDialogCubit>().backToSearch(),
@@ -204,9 +205,9 @@ class _contactsChat extends StatelessWidget {
     var state = context.watch<NewChatDialogCubit>().state as NewChatDialogData;
     Widget buildContactsChatsList() => state.searchResults.isNotEmpty?
     ListView.separated(
-          shrinkWrap: true,
+          shrinkWrap: false,
           separatorBuilder: (_, __) => Divider(height: 2, thickness: 1, indent: 15, endIndent: 15, color: grey_light),
-          physics: NeverScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: new EdgeInsets.symmetric(vertical: 0.0),
           itemCount: state.searchResults.length + (state.isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {
@@ -253,7 +254,7 @@ class _contactsChat extends StatelessWidget {
               onSearchFieldChanged: (val) => context.read<NewChatDialogCubit>().searchContacts(val["name"]?.fieldValue as String? ?? ""),
               onFiltersChanged: (val) {}),
           SizedBox(height: 5),
-          buildContactsChatsList(),
+          Expanded(child: buildContactsChatsList()),
         ],
       ),
     );

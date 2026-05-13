@@ -1,6 +1,8 @@
 // ChatList aggiornata con hover, focus e separatori — WhatsApp Web clone
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/message/chat_overview.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_widget.dart';
@@ -84,7 +86,18 @@ class _ChatListState extends State<ChatList> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(c.name, style: label.copyWith(fontSize: 18))),
-                        Text(_formatTime(c.lastMessageTime), style: stepper_title_nofocus.copyWith(fontSize: 12)),
+                        if (_hovered == c.id)
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.grey.shade600, size: 20),
+                            onPressed: () {
+                              context.read<WebCubit>().messageManagePageCubit.deleteChat(c.id);
+                            },
+                            tooltip: "Elimina chat",
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
+                          )
+                        else
+                          Text(_formatTime(c.lastMessageTime), style: stepper_title_nofocus.copyWith(fontSize: 12)),
                       ],
                     ),
                     subtitle: Row(
