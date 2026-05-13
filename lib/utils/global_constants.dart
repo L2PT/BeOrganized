@@ -61,7 +61,7 @@ class Constants {
   static const String tabellaEventiTerminati = debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
   static const String tabellaEventiRifiutati = debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
   static const String tabellaMessageConfig = debug?'/whatsapp_sessions_DEBUG':'/whatsapp_sessions';
-  static const String tabellaChats = !debug?'Chats_DEBUG':'Chats';
+  static const String tabellaChats = debug?'Chats_DEBUG':'Chats';
   static const String tabellaMessaggi = 'messages';
   static const String tabellaContattiWhatsapp = debug?'whatsapp_contacts_DEBUG':'whatsapp_contacts';
 
