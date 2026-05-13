@@ -10,6 +10,7 @@ import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
@@ -34,6 +35,8 @@ final Map<String, PageParameter> parameterPage = {
       false, false, true),
   Constants.customerContactsListRoute: PageParameter(Icons.person_add, Constants.createCustomerViewRoute, 'Nuovo cliente', FunctionalWidgetType.FilterCustomer,
       false, true, true),
+  Constants.manageMessageRoute: PageParameter(Icons.message, Constants.newChatDialogRoute, 'Nuova chat', FunctionalWidgetType.FilterCustomer,
+      false, true, false),
 };
 
 class WebPage extends StatefulWidget {
@@ -72,9 +75,10 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
         BlocProvider(create: (_) => HistoryPageCubit(databaseRepository)),
         BlocProvider(create: (_) => EventListPageCubit(databaseRepository)),
         BlocProvider(create: (_) => UsersManagePageCubit(databaseRepository)),
-        BlocProvider(
+        BlocProvider(create: (_) => MessageManagePageCubit(databaseRepository)),
+      BlocProvider(
             create: (tex) => WebCubit(GoRouterState.of(context).uri.toString(),tex.read<CalendarPageCubit>(),tex.read<ContactsPageCubit>(),
-                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), tex.read<UsersManagePageCubit>(), databaseRepository, account)),
+                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), tex.read<UsersManagePageCubit>(),tex.read<MessageManagePageCubit>(), databaseRepository, account)),
     ], child:Scaffold(
           backgroundColor: Color(0x00000000),
           body: Stack(

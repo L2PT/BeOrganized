@@ -36,7 +36,18 @@ class UsersManagePageState extends CommonPageState {
   );
 }
 
-class LoadingUsersManagePageState extends UsersManagePageState {}
+class LoadingUsersManagePageState extends UsersManagePageState {
+  LoadingUsersManagePageState([UsersManagePageState? previous]) : super(
+    previous?.selectedStatusTab,
+    previous?.numPage,
+    previous?.totalEvent,
+    previous?.accountList,
+    previous?.filters,
+    previous?.countEntity,
+    previous?.mapSelected,
+    previous?.refresh
+  );
+}
 
 class ReadyUsersManagePageState extends UsersManagePageState {
 

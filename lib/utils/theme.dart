@@ -4,6 +4,8 @@ final logo = new Image.asset('assets/logo.png', height: 128.0);
 final logo_web = new Image.asset('logo.png', height: 128.0);
 final logo_icon = new Image.asset('assets/favicon.png', height: 150.0);
 final no_events_image = new Image.asset('assets/no-events-image.png', width: 200,);
+final no_chat_image = new Image.asset('assets/no-chat-image.png', width: 200,);
+
 final ThemeData customLightTheme = _buildTheme();
 final TextStyle title = TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: black, );
 final TextStyle title_big = TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: black, );
@@ -59,7 +61,7 @@ ThemeData _buildTheme() {
         return black;
       }),
     ),
-    appBarTheme: AppBarTheme(color: black, surfaceTintColor: black),
+    appBarTheme: AppBarTheme(backgroundColor: black, surfaceTintColor: black),
     textButtonTheme: TextButtonThemeData(style: flatButtonStyle),
     elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
     outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle),

@@ -8,9 +8,10 @@ class FlatFab extends StatelessWidget {
   MapEntry<Tab,int> tabsHeader;
   void Function(int)? onStatusTabSelected;
   int count;
+  bool horizontalMode;
 
 
-  FlatFab( this.tabsHeader, {this.selectedStatus = 0, this.onStatusTabSelected, this.count = 0});
+  FlatFab( this.tabsHeader, {this.selectedStatus = 0, this.onStatusTabSelected, this.count = 0, this.horizontalMode = false});
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +27,13 @@ class FlatFab extends StatelessWidget {
                       borderRadius: BorderRadius.all(Radius.circular(15.0))),)
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Icon((tabsHeader.key.icon as Icon).icon, color:selected?yellow:grey_dark, size: 25,),
                   SizedBox(width: 15),
                   Text(tabsHeader.key.text.toString().toLowerCase().capitalize(), style: selected?button_card:subtitle),
-                  Expanded(child: Container()),
+                  this.horizontalMode?SizedBox(width: 15):Expanded(child: Container()),
                   Container(margin: EdgeInsets.only(right: 10), child: Text(count.toString().formatNumber(short: false), style: selected?button_card:subtitle),)
                 ],
               ),

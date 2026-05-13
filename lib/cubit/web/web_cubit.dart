@@ -7,6 +7,7 @@ import 'package:venturiautospurghi/cubit/web/calendar_page/calendar_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
@@ -27,11 +28,12 @@ class WebCubit extends Cubit<WebCubitState> {
   HistoryPageCubit historyPageCubit;
   EventListPageCubit eventListPageCubit;
   UsersManagePageCubit usersManagePageCubit;
+  MessageManagePageCubit messageManagePageCubit;
   final ScrollController verticalCalendar = ScrollController();
   double scrollPixel = 0;
   Timer? _scrollTimer;
 
-  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, this.usersManagePageCubit, CloudFirestoreService databaseRepository, Account account,) :
+  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, this.usersManagePageCubit, this.messageManagePageCubit, CloudFirestoreService databaseRepository, Account account,) :
         _databaseRepository = databaseRepository, _account = account,
         super(LoadingWebCubitState()){
     verticalCalendar.addListener(() {
@@ -88,6 +90,12 @@ class WebCubit extends Cubit<WebCubitState> {
           emit(state.assign(usersManagePageState: status));
         });
         break;
+      case Constants.manageMessageRoute:
+        this.messageManagePageCubit.initCubit();
+        this.messageManagePageCubit.stream.listen((status) {
+          emit(state.assign(messageManagePageState: status));
+        });
+        break;
     }
   }
 
@@ -97,10 +105,12 @@ class WebCubit extends Cubit<WebCubitState> {
   }
 
   void removeAccount(String id) async {
-    _account.webops.removeWhere((element) => element.id == id);
-    List<Account> webOps = _account.webops;
+    // Crea una NUOVA lista senza l'elemento rimosso (non mutare la lista originale)
+    // Se si muta la stessa lista, Equatable la vede come identica e BlocBuilder non ricostruisce
+    List<Account> webOps = _account.webops.where((element) => element.id != id).toList();
+    _account.webops = webOps;
     await _databaseRepository.updateAccountField(_account.id, "OperatoriWeb", webOps.map((webOp) => webOp.toWebDocument()));
-    emit(state.assign(webops: webOps));
+    emit(state.assign(webops: List<Account>.from(webOps)));
   }
   void showExpandedBox() {
     emit(state.assign(expandedMode:!state.expandedMode));

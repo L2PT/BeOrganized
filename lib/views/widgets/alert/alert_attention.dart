@@ -115,7 +115,7 @@ class AttectionAlert {
                                           inactiveTrackColor: grey_light,
                                           value: duplicateMode,
                                           activeTrackColor: black,
-                                          activeColor: yellow,
+                                          activeThumbColor: yellow,
                                           onChanged: (value) => setState((){ duplicateMode = value; })
                                       ),
                                     ),
@@ -146,7 +146,7 @@ class AttectionAlert {
                                           inactiveTrackColor: grey_light,
                                           value: repeatMode,
                                           activeTrackColor: black,
-                                          activeColor: yellow,
+                                          activeThumbColor: yellow,
                                           onChanged: (value) => setState((){ repeatMode = value; })
                                       ),
                                     ),

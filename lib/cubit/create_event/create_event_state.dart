@@ -6,7 +6,7 @@ class CreateEventState extends Equatable {
   CreateEventState(Event? e, { DateTime? dateSelect }) {
     if(e == null) {
       this.event = Event.empty();
-      event.start = TimeUtils.getNextStartWorkTimeSpan(from: dateSelect);
+      event.start = TimeUtils.getDefaultEventStartTime(dateSelect: dateSelect);
       event.end = event.start.add(Duration(minutes: Constants.WORKTIME_SPAN));
       event.recurrenceDayOfMonth = (dateSelect??_.DateUtils.now()).day;
     } else this.event = e;

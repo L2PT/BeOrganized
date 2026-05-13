@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:venturiautospurghi/animation/fade_animation.dart';
 import 'package:venturiautospurghi/models/address.dart';
 import 'package:venturiautospurghi/models/customer.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/card_address_widget.dart';
+import 'package:venturiautospurghi/views/widgets/card_referral_widget.dart';
 
 class CardCustomer extends StatelessWidget {
   final Customer customer;
@@ -24,6 +26,11 @@ class CardCustomer extends StatelessWidget {
   final void Function(String address)? onLuanchAddressAction;
   final void Function(String phone)? onLuanchPhoneAction;
 
+  //Referrals action
+  final void Function()? onEditActionReferrals;
+  final void Function(Referrals referrals)? onTapActionReferrals;
+  final void Function(Referrals referrals)? onDeleteActionReferrals;
+
   CardCustomer({required this.customer,
     this.onEditAction,
     this.controller,
@@ -40,6 +47,9 @@ class CardCustomer extends StatelessWidget {
     this.onTapActionAddress,
     this.onLuanchAddressAction,
     this.onLuanchPhoneAction,
+    this.onEditActionReferrals,
+    this.onDeleteActionReferrals,
+    this.onTapActionReferrals
   });
 
   @override
@@ -55,6 +65,20 @@ class CardCustomer extends StatelessWidget {
             onTapAction: () => onTapActionAddress!(address),
             onDeleteAction: () => onDeleteActionAddress!(address),
             onEditAction: onEditActionAddress
+          )
+      );
+    }
+
+    Widget referralsListElement(Referrals referrals){
+      return Container(
+          margin: EdgeInsets.only(top: 10, ),
+          child: CardReferrals(referral: referrals,
+              onclickMode: true,
+              selectItem: customer.referral == referrals,
+              actionButton: true,
+              onTapAction: () => onTapActionReferrals!(referrals),
+              onDeleteAction: () => onDeleteActionReferrals!(referrals),
+              onEditAction: onEditActionReferrals
           )
       );
     }
@@ -122,6 +146,7 @@ class CardCustomer extends StatelessWidget {
         ],
       ));
     }
+
     Widget referralsCustomer(){
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
@@ -130,58 +155,11 @@ class CardCustomer extends StatelessWidget {
         ),
         SizedBox(height: 3,),
         customer.referrals.isNotEmpty?
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            this.onLuanchPhoneAction!=null?
-            Container(
-                height: 80,
-                width: 255,
-                child: ListView.builder(
-                    physics: BouncingScrollPhysics(),
-                    itemCount: customer.referrals.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return FadeAnimation((1.0 + index) / 4,
-                          MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                  onTap: () { this.onLuanchPhoneAction!(customer.referrals.elementAt(index).phone); },
-                                  child: Container(
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 16,
-                                            margin: EdgeInsets.only(right: 10.0),
-                                            child: Icon(
-                                              Customer.getIconTypology(Customer.REFERENTE).icon,
-                                              color: grey_dark,
-                                              size: 16,
-                                            ),
-                                          ),
-                                          Text(customer.referrals.elementAt(index).toString(),
-                                            style: subtitle.copyWith(fontSize: 13),overflow: TextOverflow.visible,),
-                                        ],
-                                      )
-                                  ))));
-                    }
-                )):
-            Row(
-              children: [
-                Container(
-                  width: 16,
-                  margin: EdgeInsets.only(right: 10.0),
-                  child: Icon(
-                    Customer.getIconTypology(Customer.REFERENTE).icon,
-                    color: grey_dark,
-                    size: 16,
-                  ),
-                ),
-                Text(customer.referrals.join(' - '), overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
-              ],
-            )
-          ],
-        ):Text('Nessun referente', overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
+        selectedMode && customer.referrals.length > 1?Column(children: <Widget>[...customer.referrals.asMap()
+            .map((i, referrals) =>
+            MapEntry(i,referralsListElement(referrals))).values.toList()]):
+        CardReferrals(referral: customer.referral, onLuanchPhoneAction: this.onLuanchPhoneAction):
+        Text('Nessun referente', overflow: TextOverflow.ellipsis,style: subtitle.copyWith(fontSize: 13)),
       ]);
     }
 

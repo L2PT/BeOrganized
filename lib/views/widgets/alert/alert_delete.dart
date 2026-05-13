@@ -61,7 +61,7 @@ class ConfirmCancelAlert {
                           inactiveTrackColor: grey_light,
                           value: updateEndDate,
                           activeTrackColor: black,
-                          activeColor: yellow,
+                          activeThumbColor: yellow,
                           onChanged:  (value) { setState((){ updateEndDate = value; });},
                         )
                   ))
@@ -81,7 +81,7 @@ class ConfirmCancelAlert {
                               inactiveTrackColor: grey_light,
                               value: deleteReapet,
                               activeTrackColor: black,
-                              activeColor: yellow,
+                              activeThumbColor: yellow,
                               onChanged:  (value) { setState((){ deleteReapet = value; });},
                           )
                   ))

@@ -5,6 +5,7 @@ import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/global_methods.dart';
 
 part 'users_manage_state.dart';
 
@@ -57,5 +58,16 @@ class UsersManageCubit extends Cubit<UsersManageState> {
   void forceRefresh() {
     emit(state.assign(status: _formStatus.loading));
     emit(state.assign(status: _formStatus.normal));
+  }
+
+  Future<bool> deleteAccount(Account operator) async{
+    if(await UserUtils.deleteUser(operator.id)){
+      _databaseRepository.deleteOperator(operator.id);
+      List<Account> filteredOperators = List.of(state.accountList);
+      filteredOperators.removeWhere((element) => element.id == operator.id);
+      emit(state.assign(accountList: filteredOperators));
+      return true;
+    }
+    return false;
   }
 }

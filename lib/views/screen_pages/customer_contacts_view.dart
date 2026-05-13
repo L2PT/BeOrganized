@@ -257,38 +257,44 @@ class _largeScreenState extends State<_largeScreen>  {
                   ],
                 ),
                 // Controllo presenza clienti
-                if (context.read<WebCubit>().state.contactsPageState.customerList.isNotEmpty)
-                  BlocBuilder<WebCubit, WebCubitState>(
-                  buildWhen: (previous, current) => previous.contactsPageState.mapSelected != current.contactsPageState.mapSelected ||
+                BlocBuilder<WebCubit, WebCubitState>(
+                  buildWhen: (previous, current) =>
+                      previous.contactsPageState.customerList != current.contactsPageState.customerList ||
+                      previous.contactsPageState.mapSelected != current.contactsPageState.mapSelected ||
                       previous.contactsPageState.numPage != current.contactsPageState.numPage,
                   builder: (context, state) {
-                    return PaginationTable(new CustomerDataTable(context.read<WebCubit>().state.contactsPageState.customerList,
-                        context.read<WebCubit>().state.contactsPageState.totalEvent,
-                        (customer) => deleteCustomer(customer,context),
-                        (customer) => PlatformUtils.navigator(context, Constants.createCustomerViewRoute,<String, dynamic>{
-                          'objectParameter' : context.read<WebCubit>().contactsPageCubit.getEventCustomer(customer),
-                          'typeStatus' : TypeStatus.modify, 'context' : context,},),
-                        context.read<WebCubit>().contactsPageCubit.onSelectedCustomer,
-                        context.read<WebCubit>().state.contactsPageState.mapSelected
-                    ),
-                        ['','Nome','Email','Indirizzo','Telefoni','Azioni'],
-                      firstRowIndex: state.contactsPageState.numPage,
-                      selectAll: context.read<WebCubit>().contactsPageCubit.onSelectedAllCustomer,
-                      handleNext: context.read<WebCubit>().contactsPageCubit.nextPage,
-                      handlePrevious: context.read<WebCubit>().contactsPageCubit.previousPage,
-                    );
-                  })
-                else
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text("Nessun cliente da mostrare", style: title),
-                        ],
-                      ),
-                    ),
-                  ),
+                    if (state.contactsPageState is! ReadyContactsPageState) return SizedBox.shrink();
+                    final customers = state.contactsPageState.customerList;
+                    return customers.isNotEmpty
+                      ? PaginationTable(
+                          CustomerDataTable(
+                            customers,
+                            state.contactsPageState.totalEvent,
+                            (customer) => deleteCustomer(customer, context),
+                            (customer) => PlatformUtils.navigator(context, Constants.createCustomerViewRoute, <String, dynamic>{
+                              'objectParameter': context.read<WebCubit>().contactsPageCubit.getEventCustomer(customer),
+                              'typeStatus': TypeStatus.modify, 'context': context,
+                            }),
+                            context.read<WebCubit>().contactsPageCubit.onSelectedCustomer,
+                            state.contactsPageState.mapSelected,
+                          ),
+                          ['', 'Nome', 'Email', 'Indirizzo', 'Telefoni', 'Azioni'],
+                          firstRowIndex: state.contactsPageState.numPage,
+                          selectAll: context.read<WebCubit>().contactsPageCubit.onSelectedAllCustomer,
+                          handleNext: context.read<WebCubit>().contactsPageCubit.nextPage,
+                          handlePrevious: context.read<WebCubit>().contactsPageCubit.previousPage,
+                        )
+                      : Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text("Nessun cliente da mostrare", style: title),
+                              ],
+                            ),
+                          ),
+                        );
+                  }),
               ],
             ),
           ),

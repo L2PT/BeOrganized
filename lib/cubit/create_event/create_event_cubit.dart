@@ -413,11 +413,19 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
     final event = _cloneEvent();
     final dayStart = TimeUtils.truncateDate(date, "day");
 
-    event.recurrenceStart = dayStart.add(
-      Duration(hours: event.start.hour, minutes: event.start.minute),
+    event.recurrenceStart = DateTime(
+      dayStart.year,
+      dayStart.month,
+      dayStart.day,
+      event.start.hour,
+      event.start.minute,
     );
-    event.recurrenceEnd = dayStart.add(
-      Duration(hours: event.end.hour, minutes: event.end.minute),
+    event.recurrenceEnd = DateTime(
+      dayStart.year,
+      dayStart.month,
+      dayStart.day,
+      event.end.hour,
+      event.end.minute,
     );
 
     emit(state.assign(event: event));
@@ -425,8 +433,13 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
 
   void setEndRepeatedDate(DateTime date) {
     final event = _cloneEvent();
-    event.recurrenceEnd = TimeUtils.truncateDate(date, "day").add(
-      Duration(hours: event.end.hour, minutes: event.end.minute),
+    final truncated = TimeUtils.truncateDate(date, "day");
+    event.recurrenceEnd = DateTime(
+      truncated.year,
+      truncated.month,
+      truncated.day,
+      event.end.hour,
+      event.end.minute,
     );
 
     emit(state.assign(event: event));
@@ -435,20 +448,41 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   DateTime _convertToDateTime(dynamic time, DateTime baseDate) {
     if (time is TimeOfDay) {
       final converted = DateTimeField.convert(time)!;
-      return TimeUtils.truncateDate(baseDate, "day").add(
-        Duration(hours: converted.hour, minutes: converted.minute),
+      final truncated = TimeUtils.truncateDate(baseDate, "day");
+      final newDate = DateTime(
+        truncated.year,
+        truncated.month,
+        truncated.day,
+        converted.hour,
+        converted.minute,
       );
+      return newDate;
     }
     return time as DateTime;
   }
 
   DateTime _calculateEndTime(Event event) {
-    final calculatedEnd = TimeUtils.getStartWorkTimeSpan(from: event.start)
-        .olderBetween(event.end);
+    final nextStartDate = TimeUtils.getStartWorkTimeSpan(from: event.start);
+    var calculatedEnd;
 
-    return TimeUtils.truncateDate(event.end, "day").add(
-      Duration(hours: calculatedEnd.hour, minutes: calculatedEnd.minute),
-    );
+    if(event.isRepeated && event.recurrenceId.isEmpty){
+      return DateTime(
+        event.end.year,
+        event.end.month,
+        event.end.day,
+        nextStartDate.hour,
+        nextStartDate.minute,
+      );
+    }else{
+      calculatedEnd = nextStartDate.olderBetween(event.end);
+      return DateTime(
+        event.end.year,
+        event.end.month,
+        event.end.day,
+        calculatedEnd.hour,
+        calculatedEnd.minute,
+      );
+    }
   }
 
   // ========================================
@@ -552,8 +586,28 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   }
 
   void setIsRepeated(bool value) {
-    state.event.isRepeated = value;
-    emit(state.assign(isRepeat: value));
+    final event = _cloneEvent();
+    event.isRepeated = value;
+    if(!isModify()) {
+      if (value) {
+        event.end = DateTime(
+          (event.start.year + 3),
+          event.end.month,
+          event.end.day,
+          event.end.hour,
+          event.end.minute,
+        );
+      } else {
+        event.end = DateTime(
+          event.start.year,
+          event.end.month,
+          event.end.day,
+          event.end.hour,
+          event.end.minute,
+        );
+      }
+    }
+    emit(state.assign(isRepeat: value, event: event));
   }
 
   void setRecurrenceType(String? value) {

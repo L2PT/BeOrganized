@@ -1,26 +1,20 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/cubit/users_manage/users_manage_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
-import 'package:venturiautospurghi/models/dataTable/account_data_table.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
-import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
-import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/headers_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_delete.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
-import 'package:venturiautospurghi/views/widgets/chart/BadgePieChart.dart';
 import 'package:venturiautospurghi/views/widgets/filter/filter_account_widget.dart';
 import 'package:venturiautospurghi/views/widgets/flat_tab_widget.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
-import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
 class UsersManage extends StatelessWidget {
 
@@ -68,34 +62,7 @@ class _largeScreen extends StatefulWidget {
 
 class _largeScreenState extends State<_largeScreen>  {
 
-  Future ft = Future(() {});
-  Tween<Offset> _offset = Tween(begin: Offset(1,0), end: Offset(0,0));
-  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-  List<Widget> _listHeaderUsers = [];
-  List<PieChartSectionData> _listPieSection = [];
   final List<MapEntry<Tab,int>> tabsHeaders = Headers.tabsHeadersUsers;
-
-  _addWidgetHeaderContacts(){
-    _listHeaderUsers = [];
-    _listKey.currentState?.removeAllItems((context, animation) => Container());
-    tabsHeaders.forEach((header) {
-      ft = ft.then((_) {
-        return Future.delayed(const Duration(milliseconds: 100), () {
-          _listHeaderUsers.add(_headerWidget(header));
-          _listKey.currentState?.insertItem(_listHeaderUsers.length -1);
-        });
-      });
-    });
-  }
-
-  void _listPieChartSectionData(){
-    _listPieSection.clear();
-    tabsHeaders.forEach((header) {
-      if (header.value != 0) {
-        _listPieSection.add(_PieChartSectionDataWidget(header));
-      }
-    });
-  }
 
   Widget _headerWidget(MapEntry<Tab,int> mapEntry){
     return BlocBuilder<WebCubit, WebCubitState>(
@@ -105,36 +72,9 @@ class _largeScreenState extends State<_largeScreen>  {
         builder: (context, state) {
           return Container(margin: EdgeInsets.symmetric(vertical: 5),child: FlatFab(mapEntry, selectedStatus: state.usersManagePageState.selectedStatusTab,
             onStatusTabSelected: context.read<WebCubit>().usersManagePageCubit.onStatusTabSelected,
-            count: (state.usersManagePageState.countEntity[mapEntry.value]??0),)
+            count: (state.usersManagePageState.countEntity[mapEntry.value]??0), horizontalMode: true,)
           );
         });
-  }
-
-  PieChartSectionData _PieChartSectionDataWidget(MapEntry<Tab,int> mapEntry){
-    bool active = context.read<WebCubit>().state.usersManagePageState.selectedStatusTab == mapEntry.value;
-    int tot = context.read<WebCubit>().state.usersManagePageState.countEntity[0]??1;
-    int value = context.read<WebCubit>().state.usersManagePageState.countEntity[mapEntry.value]??0;
-    int perceptual = DoubleUtils.roundUpIfOverHalf((100 * value) / tot);
-
-    return PieChartSectionData(
-      color: Account.getColorTypology(mapEntry.value),
-      value: perceptual.toDouble(),
-      title: perceptual.toString()+'%',
-      radius: active?70:60.0,
-      titleStyle: TextStyle(
-        fontSize: active?15:13.0,
-        fontWeight: FontWeight.bold,
-        color: const Color(0xffffffff),
-      ),
-      badgeWidget: BadgePieChart(
-        (mapEntry.key.icon as Icon).icon,
-        size: active?35:30.0,
-        borderColor: grey_light,
-        active: active,
-        tooltipText: (mapEntry.key.text??'').toLowerCase().capitalize(),
-      ),
-      badgePositionPercentageOffset: 0.98,
-    );
   }
 
   void deleteAccount(Account account, BuildContext context){
@@ -153,160 +93,81 @@ class _largeScreenState extends State<_largeScreen>  {
     });
   }
 
-  Widget gridUsersManage() => Container(
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget gridUsersManage() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // Sidebar con la lista animata
-        Container(
-          width: 240,
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text("Tipologie", style: title),
-              SizedBox(height: 10),
-              AnimatedList(
-                shrinkWrap: true,
-                key: _listKey,
-                initialItemCount: _listHeaderUsers.length,
-                itemBuilder: (context, i, animation) => SlideTransition(
-                  position: animation.drive(_offset),
-                  child: _listHeaderUsers[i],
-                ),
-              ),
-              SizedBox(height: 10,),
-              Divider(
-                color: grey_light2,
-                thickness: 1,
-                height: 0,
-                indent: 10,
-                endIndent: 10,
-              ),
-              SizedBox(height: 10,),
-              BlocBuilder<WebCubit, WebCubitState>(
-                  buildWhen: (previous, current) =>
-                  previous.usersManagePageState.countEntity != current.usersManagePageState.countEntity
-                      || previous.usersManagePageState.selectedStatusTab != current.usersManagePageState.selectedStatusTab,
-                  builder: (context, state) {
-                    _listPieChartSectionData();
-                    return Expanded(
-                        flex: 2,
-                        child: PieChart(
-                          PieChartData(
-                            startDegreeOffset: -90,
-                            pieTouchData: PieTouchData(
-                                mouseCursorResolver: (event, pieTouchResponse) => event is FlPointerHoverEvent?SystemMouseCursors.click:SystemMouseCursors.basic,
-                                touchCallback: (event, pieTouchResponse) => event is FlTapDownEvent?context.read<WebCubit>().usersManagePageCubit.onTouchPieChart(event,pieTouchResponse):null
-                            ),
-                            borderData: FlBorderData(
-                                show: true,
-                                border: Border.all(color: grey, width: 1)
-                            ),
-                            sectionsSpace: 5,
-                            centerSpaceRadius: 30,
-                            sections: _listPieSection,
-                          ),
-                        ));
-                  }),
-            ],
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Tutti Gli Operatori Registrati", style: title, textAlign: TextAlign.left),
+          ],
         ),
-        // Contenitore principale per la griglia dei clienti
-        Expanded(
-          flex: 8,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Row(
-                  children: [
-                    Text("Tutti gli utenti", style: title, textAlign: TextAlign.left),
-                    Expanded(child: Container()),
-                    BlocBuilder<WebCubit, WebCubitState>(
-                        buildWhen: (previous, current) => previous.usersManagePageState.mapSelected != current.usersManagePageState.mapSelected ||
-                            previous.usersManagePageState.numPage != current.usersManagePageState.numPage,
-                        builder: (context, state) {
-                          return AnimatedContainer(
-                            curve: Curves.easeInOut,
-                            duration: Duration(milliseconds: 500),
-                            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                            child: AnimatedOpacity(
-                                opacity: context.read<WebCubit>().usersManagePageCubit.isSelected() ? 1.0 : 0.0, // Opacità cambia a 0
-                                duration: Duration(milliseconds: 500),
-                                child: ElevatedButton(
-                                    style: raisedButtonStyle.copyWith(
-                                        padding: WidgetStateProperty.all<EdgeInsets>(
-                                            EdgeInsets.symmetric(horizontal: 25, vertical: 15)),
-                                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0),),)),
-                                    onPressed: () => deleteAllAccount(context),
-                                    child: Row(
-                                      children: <Widget>[
-                                        Icon(Icons.delete, color: white,),
-                                        SizedBox(width: 5),
-                                        Text("Cancella tutti", style: subtitle_rev,),
-                                      ],
-                                    )
-                                )),
-                          );
-                        })
-                  ],
-                ),
-                // Controllo presenza clienti
-                if (context.read<WebCubit>().state.usersManagePageState.accountList.isNotEmpty)
-                  BlocBuilder<WebCubit, WebCubitState>(
-                      buildWhen: (previous, current) => previous.usersManagePageState.mapSelected != current.usersManagePageState.mapSelected ||
-                          previous.usersManagePageState.numPage != current.usersManagePageState.numPage,
-                      builder: (context, state) {
-                        return PaginationTable(new AccountDataTable(context.read<WebCubit>().state.usersManagePageState.accountList,
-                            context.read<WebCubit>().state.usersManagePageState.totalEvent,
-                                (account) => deleteAccount(account,context),
-                                (account) => PlatformUtils.navigator(context, Constants.registerRoute,<String, dynamic>{
-                              'objectParameter' : context.read<WebCubit>().usersManagePageCubit.getEventAccount(account),
-                              'typeStatus' : TypeStatus.modify, 'context' : context,},),
-                            context.read<WebCubit>().usersManagePageCubit.onSelectedAccount,
-                            context.read<WebCubit>().state.usersManagePageState.mapSelected
-                        ),
-                          ['','Nome','Email','Telefono','Codicefiscale','Azioni'],
-                          firstRowIndex: state.usersManagePageState.numPage,
-                          selectAll: context.read<WebCubit>().usersManagePageCubit.onSelectedAllAccount,
-                          handleNext: context.read<WebCubit>().usersManagePageCubit.nextPage,
-                          handlePrevious: context.read<WebCubit>().usersManagePageCubit.previousPage,
-                        );
-                      })
-                else
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text("Nessun utente da mostrare", style: title),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
+        SizedBox(height: 10),
+        Container(
+          height: 60,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: tabsHeaders.map((header) => Padding(
+                padding: const EdgeInsets.only(right: 15.0),
+                child: _headerWidget(header),
+              )).toList(),
             ),
           ),
+        ),
+        SizedBox(height: 10),
+        Expanded(
+          child: BlocBuilder<WebCubit, WebCubitState>(
+            buildWhen: (previous, current) =>
+                previous.usersManagePageState.accountList != current.usersManagePageState.accountList ||
+                previous.usersManagePageState.runtimeType != current.usersManagePageState.runtimeType,
+            builder: (context, state) {
+              if (state.usersManagePageState is! ReadyUsersManagePageState) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (state.usersManagePageState.accountList.isNotEmpty) {
+                return GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 8,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    mainAxisExtent: 160,
+                  ),
+                  itemCount: state.usersManagePageState.accountList.length,
+                  itemBuilder: (context, index) {
+                    Account account = state.usersManagePageState.accountList[index];
+                    return AccountCardWidget(
+                      account: account,
+                      onEdit: () => PlatformUtils.navigator(context, Constants.registerRoute,<String, dynamic>{
+                        'objectParameter' : context.read<WebCubit>().usersManagePageCubit.getEventAccount(account),
+                        'typeStatus' : TypeStatus.modify, 'context' : context,},),
+                      onLock: () {},
+                      onDelete: () => deleteAccount(account, context)
+                    );
+                  },
+                );
+              } else {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text("Nessun utente da mostrare", style: title),
+                    ],
+                  ),
+                );
+              }
+            }
+          )
         ),
       ],
     ),
   );
 
-
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _addWidgetHeaderContacts();
-    });
-    return BlocBuilder <WebCubit, WebCubitState>(
-        buildWhen: (previous, current) => previous.usersManagePageState.accountList != current.usersManagePageState.accountList,
-        builder: (context, state) {
-          return !(state.usersManagePageState is ReadyUsersManagePageState) ? Center(child: CircularProgressIndicator()) :
-            gridUsersManage();
-        });
+    return gridUsersManage();
   }
 
 }
@@ -324,6 +185,7 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
 
   @override
   void initState() {
+    super.initState();
     scrollListener(context);
   }
 
@@ -356,14 +218,15 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
                         padding: new EdgeInsets.symmetric(vertical: 8.0),
                         itemCount: state.accountList.length+1,
                         itemBuilder: (context, index) => index != state.accountList.length?
-                        Container(
-                            /*child:CardCustomer(
-                              customer:  state.accountList[index],
-                              onEditAction: () => PlatformUtils.navigator(context, Constants.registerRoute,<String, dynamic>{
-                                'objectParameter' : context.read<UsersManageCubit>().getEventAccount(state.accountList[index]),
-                                'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<UsersManageCubit>().forceRefresh:null}),
-                              onDeleteAction: () => _onDeletePressed(state.accountList[index], context),)*/
-                        ) : context.read<UsersManageCubit>().canLoadMore?
+                        AccountCardWidget(
+                          account: state.accountList[index],
+                          onEdit: () => PlatformUtils.navigator(context, Constants.registerRoute,<String, dynamic>{
+                            'objectParameter' : context.read<UsersManageCubit>().getEventAccount(state.accountList[index]),
+                            'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<UsersManageCubit>().forceRefresh:null}),
+                          onLock: () {},
+                          onDelete: () => _deleteAccount(state.accountList[index], context)
+                        )
+                         : context.read<UsersManageCubit>().canLoadMore?
                         Center(
                             child: Container(
                               margin: new EdgeInsets.symmetric(vertical: 13.0),
@@ -387,10 +250,117 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
       ),);
   }
 
+  void _deleteAccount(Account account, BuildContext context){
+    ConfirmCancelAlert(context, title: "CANCELLA UTENTE", text: "Confermi la cancellazione del utente?").show().then((value) async {
+      if(value.first){
+        if (await context.read<UsersManageCubit>().deleteAccount(account))
+          await SuccessAlert(context, text: "Utente eliminato!").show();
+      }
+    });
+  }
+
   @override
   void dispose() {
     context.read<UsersManageCubit>().scrollController.dispose();
     super.dispose();
   }
 
+}
+
+class AccountCardWidget extends StatelessWidget {
+  final Account account;
+  final VoidCallback onEdit;
+  final VoidCallback onLock;
+  final VoidCallback onDelete;
+
+  AccountCardWidget({
+    required this.account,
+    required this.onEdit,
+    required this.onLock,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.white,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: black,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Account.getIconTypology(account.typology).icon, color: yellow, size: 22),
+            ),
+            SizedBox(height: 8),
+            RichText(
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                style: TextStyle(color: Colors.black, fontSize: 13, fontFamily: 'Roboto'),
+                children: [
+                  TextSpan(text: "${account.surname.toUpperCase()} ", style: TextStyle(fontWeight: FontWeight.bold)),
+                  TextSpan(text: account.name),
+                ],
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              account.email.isNotEmpty ? account.email : 'Nessuna email',
+              style: TextStyle(color: Colors.grey, fontSize: 11),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 2),
+            Text(
+              account.phone.isNotEmpty ? account.phone : 'Nessun telefono',
+              style: TextStyle(color: Colors.grey, fontSize: 11),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildActionButton(Icons.edit, onEdit),
+                SizedBox(width: 8),
+                _buildActionButton(Icons.lock, onLock),
+                SizedBox(width: 8),
+                _buildActionButton(Icons.delete, onDelete),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, VoidCallback onTap) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: black,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+      ),
+    );
+  }
 }

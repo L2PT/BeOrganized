@@ -32,7 +32,7 @@ class UsersManagePageCubit extends Cubit<UsersManagePageState> {
   //FILTER ACCOUNT //
   void onFiltersChangedAccount(Map<String, FilterWrapper> filters, [int? status, bool count = true]) async {
     UsersManagePageState statePrev = state;
-    emit(LoadingUsersManagePageState());
+    emit(LoadingUsersManagePageState(statePrev));
     // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query
     statePrev.filters.forEach((key, value) {
       if (!filters.containsKey(key)) {

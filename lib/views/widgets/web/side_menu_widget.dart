@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/linkmenu.dart';
 import 'package:venturiautospurghi/models/page_parameter.dart';
@@ -48,10 +49,10 @@ class SideMenuLayerWeb extends StatelessWidget {
   Widget buttonAction(bool expandedMode, BuildContext context){
     return !expandedMode?
             Container( alignment: Alignment.center,
-                child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute), icon: Icon(iconData, color: white, size: 40,),)):
+                child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate, 'qrCode' : context.read<WebCubit>().messageManagePageCubit.state.qrcode}), icon: Icon(iconData, color: white, size: 40,),)):
             Column( children: [
               ElevatedButton(
-                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate} ),
+                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate, 'qrCode' : context.read<WebCubit>().messageManagePageCubit.state.qrcode} ),
                   style: ButtonStyle(
                     backgroundColor:  WidgetStateProperty.all<Color>(black),
                     surfaceTintColor: WidgetStateProperty.all<Color>(black),
@@ -88,7 +89,30 @@ class SideMenuLayerWeb extends StatelessWidget {
             ],);
   }
 
-  MapEntry<String, Widget> _buildMenuNavigation(String route, bool expandendMode, LinkMenu view, BuildContext context) {
+  Widget _buildUnreadBadge(int unreadCount) {
+    if (unreadCount <= 0) return SizedBox.shrink();
+    final String label = unreadCount > 99 ? '*' : '$unreadCount';
+    return Container(
+      constraints: BoxConstraints(minWidth: 20, minHeight: 20),
+      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: yellow,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  MapEntry<String, Widget> _buildMenuNavigation(String route, bool expandendMode, LinkMenu view, BuildContext context, {int badgeCount = 0}) {
     final GoRouterState stateRoute = GoRouterState.of(context);
     return new MapEntry(
         route,
@@ -116,21 +140,32 @@ class SideMenuLayerWeb extends StatelessWidget {
                   Text(
                     view.textLink,
                     style: view.styleText,
-
-                  )
+                  ),
+                  if (badgeCount > 0) ...[SizedBox(width: 8), _buildUnreadBadge(badgeCount)],
                 ],
               )
-                  : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(
-                    view.iconLink,
-                    color: stateRoute.uri.toString() == route
-                        ? yellow
-                        : view.colorIcon,
-                    size: view.sizeIcon * 2,
-                    semanticLabel: 'Icon menu',
+                  : Stack(
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        view.iconLink,
+                        color: stateRoute.uri.toString() == route
+                            ? yellow
+                            : view.colorIcon,
+                        size: view.sizeIcon * 2,
+                        semanticLabel: 'Icon menu',
+                      ),
+                    ],
                   ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: _buildUnreadBadge(badgeCount),
+                    ),
                 ],
               ),
             ),
@@ -266,45 +301,63 @@ class SideMenuLayerWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return new BlocBuilder<WebCubit, WebCubitState>(
+    return BlocBuilder<WebCubit, WebCubitState>(
         buildWhen: (previous, current) => previous.expandedMode != current.expandedMode,
-        builder: (context, state) {
-          return AnimatedContainer(
-            padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
-            color: black,
-            width: state.expandedMode?200:70,
-            duration: const Duration(milliseconds: 550),
-            child: Column(
-              children: [
-                Expanded(
-                    child: Column(
-                      children: [
-                        new Text(state.expandedMode?"BeOrganized":"BO", style: title_rev_web,),
-                        SizedBox(height:30),
-                        this.showButton? buttonAction(state.expandedMode, context):Container(),
-                        this.showFunctionWidget && state.expandedMode?getFunctionWidget(context):Container(),
-                        state.expandedMode?Divider(
-                          color: grey_light,
-                          thickness: 1,
-                          height: 20,
-                        ):Container(),
-                        Expanded(
-                          child: new ListView(
-                              physics: new BouncingScrollPhysics(),
-                              children: menuWeb
-                                  .map((route, linkMenu) => _buildMenuNavigation(route, state.expandedMode, linkMenu, context))
-                                  .values
-                                  .toList()),),
-                        Container(
-                          alignment: Alignment.centerRight,
-                          child: IconButton(onPressed: context.read<WebCubit>().showExpandedBox, icon: Icon(state.expandedMode?Icons.navigate_before:Icons.navigate_next, color: white,size: 35)),
-                        )
-                      ],
-                    )
+        builder: (context, webState) {
+          return BlocBuilder<MessageManagePageCubit, MessageManagePageState>(
+            bloc: context.read<WebCubit>().messageManagePageCubit,
+            buildWhen: (previous, current) => previous.chats != current.chats,
+            builder: (context, msgState) {
+              final int totalUnread = msgState.chats
+                  .fold(0, (sum, chat) => sum + chat.unreadCount);
 
-                ),
-              ],
-            ),);
+              return AnimatedContainer(
+                padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+                color: black,
+                width: webState.expandedMode ? 200 : 70,
+                duration: const Duration(milliseconds: 550),
+                child: Column(
+                  children: [
+                    Expanded(
+                        child: Column(
+                          children: [
+                            new Text(webState.expandedMode ? "BeOrganized" : "BO", style: title_rev_web,),
+                            SizedBox(height: 30),
+                            this.showButton ? buttonAction(webState.expandedMode, context) : Container(),
+                            this.showFunctionWidget && webState.expandedMode ? getFunctionWidget(context) : Container(),
+                            webState.expandedMode ? Divider(
+                              color: grey_light,
+                              thickness: 1,
+                              height: 20,
+                            ) : Container(),
+                            Expanded(
+                              child: new ListView(
+                                  physics: new BouncingScrollPhysics(),
+                                  children: menuWeb
+                                      .map((route, linkMenu) => _buildMenuNavigation(
+                                            route,
+                                            webState.expandedMode,
+                                            linkMenu,
+                                            context,
+                                            badgeCount: route == Constants.manageMessageRoute ? totalUnread : 0,
+                                          ))
+                                      .values
+                                      .toList()),),
+                            Container(
+                              alignment: Alignment.centerRight,
+                              child: IconButton(
+                                onPressed: context.read<WebCubit>().showExpandedBox,
+                                icon: Icon(webState.expandedMode ? Icons.navigate_before : Icons.navigate_next, color: white, size: 35),
+                              ),
+                            )
+                          ],
+                        )
+
+                    ),
+                  ],
+                ),);
+            },
+          );
         },
       );
 

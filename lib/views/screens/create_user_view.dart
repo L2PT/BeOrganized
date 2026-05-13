@@ -10,12 +10,12 @@ import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_auth_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
-import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 
 import '../../utils/extensions.dart';
 
@@ -68,8 +68,6 @@ class _formUserWidget extends StatelessWidget {
             })
     );
   }
-
-
 }
 
 class _UserStepper extends StatelessWidget{

@@ -9,7 +9,7 @@ class GenerateAiEventState extends Equatable {
 
   GenerateAiEventState({ DateTime? dateSelect }){
     this.event = Event.empty();
-    event.start = TimeUtils.getNextStartWorkTimeSpan(from: dateSelect);
+    event.start = TimeUtils.getDefaultEventStartTime(dateSelect: dateSelect);
     event.end = event.start.add(Duration(minutes: Constants.WORKTIME_SPAN));
     event.recurrenceDayOfMonth = (dateSelect??_.DateUtils.now()).day;
   }

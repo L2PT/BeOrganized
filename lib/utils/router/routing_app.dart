@@ -11,6 +11,7 @@ import 'package:venturiautospurghi/views/screen_pages/bozze_event_list_view.dart
 import 'package:venturiautospurghi/views/screen_pages/customer_contacts_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/history_event_list_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/log_in_view.dart';
+import 'package:venturiautospurghi/views/screen_pages/message_manage_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/reset_auth_account_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/users_manage_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
@@ -89,6 +90,15 @@ class RouterWebApp{
                   builder: (context, state) {
                     context.read<WebCubit>().initCubit(state.uri.path);
                     return UsersManage();
+                  },
+                ),
+                GoRoute(
+                  parentNavigatorKey: _shellNavigatorKey,
+                  path: Constants.manageMessageRoute,
+                  name: 'messageManage',
+                  builder: (context, state) {
+                    context.read<WebCubit>().initCubit(state.uri.path);
+                    return MessageManage();
                   },
                 ),
               ]),

@@ -558,338 +558,107 @@ class _fileStorageList extends StatelessWidget {
 }
 
 class _timeControls extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-    Event event = context.watch<CreateEventCubit>().state.event;
-    double iconWidth = CreateEvent.iconWidth;
+    final cubit = context.read<CreateEventCubit>();
+    final state = context.watch<CreateEventCubit>().state;
+    final event = state.event;
+    final iconWidth = CreateEvent.iconWidth;
+    final canModify = cubit.canModify;
+    final isRepeated = event.isRepeatedEvent();
+    final hasRecurrenceId = event.recurrenceId.isNotEmpty;
+    final isModifyingRecurrence = isRepeated && hasRecurrenceId && cubit.isModify();
 
-    Widget dateTimeStartPicker() => Row(children: <Widget>[
-      Container(
-        width: iconWidth,
-        margin: EdgeInsets.only(right: 20.0),
-      ),
-      Expanded(
-        child: GestureDetector(
-          child: Text( event.start.toString().split(' ').first,
-            style: context.read<CreateEventCubit>().canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14)),
-          onTap: () => context.read<CreateEventCubit>().canModify ?
-          PlatformDatePicker.selectDate(context,
-            maxTime: DateTime(3000),
-            currentTime: event.start,
-            onConfirm: (date) => context.read<CreateEventCubit>().state.isAllDay?
-              context.read<CreateEventCubit>().setAllDayDate(date):context.read<CreateEventCubit>().setStartDate(date),
-          ) : null,
-        ),
-      ),
-      context.read<CreateEventCubit>().state.isAllDay ? Container()
-          : Expanded(
-        child: GestureDetector(
-          child: Text( event.start.toString().split(' ').last.split('.').first.substring(0,5),
-            style: context.read<CreateEventCubit>().canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14)),
-          onTap: () => context.read<CreateEventCubit>().canModify ?
-          PlatformDatePicker.selectTime(context,
-            minTime: TimeUtils.truncateDate(event.start, "day").add(new Duration(hours: Constants.MIN_WORKTIME)),
-            maxTime: TimeUtils.truncateDate(event.start, "day").add(new Duration(hours: Constants.MAX_WORKTIME)).subtract(new Duration(minutes: Constants.WORKTIME_SPAN)),
-            currentTime: event.start,
-            onConfirm: (time) => {context.read<CreateEventCubit>().setStartTime(time)},
-          ) : null,
-        ),
-      ),
-    ]);
-    
-    Widget dateTimeEndPicker() => context.read<CreateEventCubit>().state.isAllDay ? Container()
-        : Row(
-      children: <Widget>[
-        Container(
-          width: iconWidth,
-          margin: EdgeInsets.only(right: 20.0),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: Text(event.end.toString().split(' ').first,
-              style: context.read<CreateEventCubit>().canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14)),
-            onTap: () => context.read<CreateEventCubit>().canModify ?
-            PlatformDatePicker.selectDate(context,
-              minTime: TimeUtils.truncateDate(event.start, "day"),
-              maxTime: DateTime(3000),
-              currentTime: event.end,
-              onConfirm: (date) => context.read<CreateEventCubit>().setEndDate(date),
-            ) : null,
+    return Form(
+      key: cubit.formTimeControlsKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (canModify) _buildEventScheduled(context, state, iconWidth),
+          _buildToggle(
+            context,
+            icon: Icons.access_time,
+            text: canModify ? "Tutto il giorno" : "Orario",
+            value: state.isAllDay,
+            onChanged: canModify ? cubit.setAlldayLong : null,
+            iconWidth: iconWidth,
           ),
-        ),
-        Expanded(
-          child: GestureDetector(
-            child: Text(event.end.toString().split(' ').last.split('.').first.substring(0,5),
-              style: context.read<CreateEventCubit>().canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14),
-            ),
-            onTap: () => context.read<CreateEventCubit>().canModify ?
-              PlatformDatePicker.selectTime(context,
-                minTime: event.start.add(new Duration(minutes: Constants.WORKTIME_SPAN)),
-                maxTime: TimeUtils.truncateDate(event.end, "day").add(new Duration(hours: Constants.MAX_WORKTIME)),
-                currentTime: event.end,
-                onConfirm: (time) => context.read<CreateEventCubit>().setEndTime(time),
-              ) : null,
+          _buildToggle(
+            context,
+            icon: Icons.repeat,
+            text: canModify ? "Ripeti incarico" : "Ripetizione",
+            value: isRepeated,
+            onChanged: canModify ? cubit.setIsRepeated : null,
+            iconWidth: iconWidth,
           ),
-        )
-      ],
-    );
-
-    Widget allDayFlag() => Container(
-        margin: EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: iconWidth,
-              margin: EdgeInsets.only(right: 20.0),
-              child: Icon(Icons.access_time, color: black, size: iconWidth),
-            ),
-            Expanded(
-              child: Text(context
-                  .read<CreateEventCubit>()
-                  .canModify ? "Tutto il giorno" : "Orario", style: label),
-            ),
-            context.read<CreateEventCubit>().canModify ?
-              Container(
-                height: 30,
-                alignment: Alignment.centerRight,
-                child: FittedBox(
-                    fit: BoxFit.fill,
-                    child:Switch(
-                      inactiveTrackColor: grey_light,
-                      value: context.read<CreateEventCubit>().state.isAllDay,
-                      activeTrackColor: black,
-                      activeColor: yellow,
-                      onChanged: context.read<CreateEventCubit>().setAlldayLong
-                      )
-                )) : Container()
-          ],));
-
-    Widget repeatFlag() => Container(
-        margin: EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: iconWidth,
-              margin: EdgeInsets.only(right: 20.0),
-              child: Icon(Icons.repeat, color: black, size: iconWidth),
-            ),
-            Expanded(
-              child: Text(context
-                  .read<CreateEventCubit>()
-                  .canModify ? "Ripeti incarico" : "Ripetizione", style: label),
-            ),
-            context.read<CreateEventCubit>().canModify ?
-            Container(
-                height: 30,
-                alignment: Alignment.centerRight,
-                child: FittedBox(
-                    fit: BoxFit.fill,
-                    child:Switch(
-                        inactiveTrackColor: grey_light,
-                        value: context.read<CreateEventCubit>().state.event.isRepeatedEvent(),
-                        activeTrackColor: black,
-                        activeColor: yellow,
-                        onChanged: context.read<CreateEventCubit>().setIsRepeated
-                    )
-                )) : Container()
-          ],));
-
-    Widget repeatTypePicker() => Row(
-      children: <Widget>[
-        Container(
-          width: iconWidth,
-          margin: EdgeInsets.only(right: 20.0),
-        ),
-        Expanded(
-          child: Row(
+          _buildDateTimeSection(
+            context,
             children: [
-              Radio<String>(
-                value: Event.RECURRENCE_MENSILE,
-                groupValue: context.read<CreateEventCubit>().state.event.recurrenceType,
-                onChanged: context.read<CreateEventCubit>().setRecurrenceType,
-                fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return black;
-                  }
-                  return grey_light; // colore del cerchio quando NON selezionato
-                }),
-              ),
-              Text(Event.RECURRENCE_MENSILE, style: label,),
+              if (isRepeated) _buildRepeatNumberPicker(context, event, iconWidth),
+              if (isModifyingRecurrence)
+                _buildRepeatDatePicker(context, event)
+              else
+                _buildDatePicker(context, event, state, canModify),
+              if (!isModifyingRecurrence && !state.isAllDay)
+                _buildTimePicker(context, event, canModify),
             ],
           ),
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              Radio<String>(
-                value: Event.RECURRENCE_ANNO,
-                groupValue: context.read<CreateEventCubit>().state.event.recurrenceType,
-                onChanged: context.read<CreateEventCubit>().setRecurrenceType,
-                fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return black;
-                  }
-                  return grey_light; // colore del cerchio quando NON selezionato
-                }),
-              ),
-              Text(Event.RECURRENCE_ANNO, style: label,),
-            ],
-          ),
-        ),
-      ],
+          if (isModifyingRecurrence) ...[
+            Text("Occorrenza Singola", style: title.copyWith(fontSize: 16)),
+            _buildDateTimeSection(
+              context,
+              children: [
+                _buildDatePicker(context, event, state, canModify),
+                _buildTimePicker(context, event, canModify),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
+  }
 
-    Widget repeatNumberPicker() => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0), // Spazio sopra e sotto
+  Widget _buildToggle(
+      BuildContext context, {
+        required IconData icon,
+        required String text,
+        required bool value,
+        required void Function(bool)? onChanged,
+        required double iconWidth,
+      }) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: <Widget>[
           Container(
             width: iconWidth,
             margin: EdgeInsets.only(right: 20.0),
+            child: Icon(icon, color: black, size: iconWidth),
           ),
-          Text("Giorno", style: label),
-          SizedBox(width: 8),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.grey.withValues(alpha:0.5),
-                width: 1.0,
+          Expanded(child: Text(text, style: label)),
+          if (onChanged != null)
+            Container(
+              height: 30,
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: Switch(
+                  inactiveTrackColor: grey_light,
+                  value: value,
+                  activeTrackColor: black,
+                  activeThumbColor: yellow,
+                  onChanged: onChanged,
+                ),
               ),
-              borderRadius: BorderRadius.circular(8.0),
             ),
-            width: 35,
-            child: TextFormField(
-              maxLines: 1,
-              cursorColor: black,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-              ],
-              initialValue: context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth > 0
-                  ? context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth.toString()
-                  : _.DateUtils.now().day.toString(),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: "Es. 15",
-                hintStyle: subtitle,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return null;
-                final day = int.tryParse(value);
-                if (day == null || day < 1 || day > 31) {
-                  return 'Inserisci un giorno valido (1-31)';
-                }
-                return null;
-              },
-              onSaved: (value) {
-                final day = int.tryParse(value ?? '');
-                context.read<CreateEventCubit>().state.event.recurrenceDayOfMonth = day ?? -1;
-              },
-            ),
-          ),
-          SizedBox(width: 12),
-          Text("ogni", style: label),
-          SizedBox(width: 12),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.grey.withValues(alpha: 0.5),
-                width: 1.0,
-              ),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            width: 35,
-            child: TextFormField(
-              maxLines: 1,
-              cursorColor: black,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-              ],
-              initialValue: context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths > 0
-                  ? context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths.toString()
-                  : "",
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: "Es. 3",
-                hintStyle: subtitle,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return null;
-                final interval = int.tryParse(value);
-                if (interval == null || interval < 1) {
-                  return 'Numero non valido';
-                }
-                return null;
-              },
-              onSaved: (value) {
-                final interval = int.tryParse(value ?? '');
-                context.read<CreateEventCubit>().state.event.recurrenceIntervalInMonths = interval ?? 1;
-              },
-            ),
-          ),
-          SizedBox(width: 8),
-          Text(
-            context.read<CreateEventCubit>().state.event.recurrenceType == Event.RECURRENCE_ANNO
-                ? "anno/i"
-                : "mese/i",
-            style: label,
-          ),
         ],
       ),
     );
+  }
 
-
-    Widget repeatDatePicker() => Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          GestureDetector(
-              child: Text(
-                event.recurrenceStart.toString().split(' ').first,
-                style: title.copyWith(fontSize: 16),
-              ),
-              onTap: () => PlatformDatePicker.selectDate(
-                context,
-                maxTime: DateTime(3000),
-                currentTime: event.recurrenceStart,
-                onConfirm: (date) => context.read<CreateEventCubit>().setStartRepeatedDate(date),
-              )
-          ),
-          SizedBox(width: 8), // spazio prima del trattino
-          Text("-", style: label, textAlign: TextAlign.center),
-          SizedBox(width: 8), // spazio dopo il trattino
-          GestureDetector(
-              child: Text(
-                event.recurrenceEnd.toString().split(' ').first,
-                style: title.copyWith(fontSize: 16)
-              ),
-              onTap: () => PlatformDatePicker.selectDate(
-                context,
-                minTime: TimeUtils.truncateDate(event.recurrenceStart, "day"),
-                maxTime: DateTime(3000),
-                currentTime: event.recurrenceEnd,
-                onConfirm: (date) => context.read<CreateEventCubit>().setEndRepeatedDate(date),
-              )
-          ),
-        ],
-      ),
-    );
-
-
-
-    Widget eventScheduled() => Container(
+  Widget _buildEventScheduled(BuildContext context, state, double iconWidth) {
+    final cubit = context.read<CreateEventCubit>();
+    return Container(
       margin: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
@@ -898,55 +667,320 @@ class _timeControls extends StatelessWidget {
             margin: EdgeInsets.only(right: 20.0),
             child: Icon(Icons.date_range_rounded, color: black, size: iconWidth),
           ),
-          Expanded(
-              child: Text("Incarico programmato", style: label,),
-          ),
+          Expanded(child: Text("Incarico programmato", style: label)),
           Container(
             height: 30,
             alignment: Alignment.centerRight,
             child: FittedBox(
               fit: BoxFit.fill,
-              child:Switch(
+              child: Switch(
                 inactiveTrackColor: grey_light,
-                value: context.read<CreateEventCubit>().state.isScheduled,
+                value: state.isScheduled,
                 activeTrackColor: black,
-                activeColor: yellow,
-                onChanged: context.read<CreateEventCubit>().setIsScheduled,
+                activeThumbColor: yellow,
+                onChanged: cubit.setIsScheduled,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
+  }
 
-    return new Form(
-      key: context.read<CreateEventCubit>().formTimeControlsKey,
-      child: Container(child:
-          Column(children: <Widget>[
-            context.read<CreateEventCubit>().canModify? eventScheduled() : Container(),
-            allDayFlag(),
-            repeatFlag(),
-            context.read<CreateEventCubit>().state.event.isRepeatedEvent()?
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.grey.withValues(alpha:0.2),
-                  width: 1.0,
-                ),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              margin: EdgeInsets.symmetric(vertical: 5),
-              child: Column(children: [
-                context.read<CreateEventCubit>().state.event.isRepeatedEvent()?repeatNumberPicker():Container(),
-                context.read<CreateEventCubit>().state.event.isRepeatedEvent() &&
-                    context.read<CreateEventCubit>().state.event.recurrenceId.isNotEmpty &&
-                    context.read<CreateEventCubit>().isModify()?repeatDatePicker():Container(),
-              ],),
-            ):Container(),
-            dateTimeStartPicker(),
-            dateTimeEndPicker(),
-          ])
-      ) 
+  Widget _buildRepeatTypePicker(BuildContext context, Event event, double iconWidth) {
+    final cubit = context.read<CreateEventCubit>();
+    return Row(
+      children: <Widget>[
+        Container(width: iconWidth, margin: EdgeInsets.only(right: 20.0)),
+        Expanded(
+          child: _buildRadioOption(
+            context,
+            value: Event.RECURRENCE_MENSILE,
+            groupValue: event.recurrenceType,
+            onChanged: cubit.setRecurrenceType,
+          ),
+        ),
+        Expanded(
+          child: _buildRadioOption(
+            context,
+            value: Event.RECURRENCE_ANNO,
+            groupValue: event.recurrenceType,
+            onChanged: cubit.setRecurrenceType,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRadioOption(
+      BuildContext context, {
+        required String value,
+        required String? groupValue,
+        required void Function(String?)? onChanged,
+      }) {
+    return Row(
+      children: [
+        Radio<String>(
+          value: value,
+          groupValue: groupValue,
+          onChanged: onChanged,
+          fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+            return states.contains(WidgetState.selected) ? black : grey_light;
+          }),
+        ),
+        Text(value, style: label),
+      ],
+    );
+  }
+
+  Widget _buildRepeatNumberPicker(BuildContext context, Event event, double iconWidth) {
+    final isYearly = event.recurrenceType == Event.RECURRENCE_ANNO;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        children: <Widget>[
+          Container(width: iconWidth, margin: EdgeInsets.only(right: 20.0)),
+          Text("Giorno", style: label),
+          SizedBox(width: 8),
+          _buildNumberInput(
+            context,
+            initialValue: event.recurrenceDayOfMonth > 0
+                ? event.recurrenceDayOfMonth.toString()
+                : _.DateUtils.now().day.toString(),
+            hintText: "Es. 15",
+            validator: (value) {
+              if (value == null || value.isEmpty) return null;
+              final day = int.tryParse(value);
+              if (day == null || day < 1 || day > 31) {
+                return 'Inserisci un giorno valido (1-31)';
+              }
+              return null;
+            },
+            onSaved: (value) {
+              event.recurrenceDayOfMonth = int.tryParse(value ?? '') ?? -1;
+            },
+          ),
+          SizedBox(width: 12),
+          Text("ogni", style: label),
+          SizedBox(width: 12),
+          _buildNumberInput(
+            context,
+            initialValue: event.recurrenceIntervalInMonths > 0
+                ? event.recurrenceIntervalInMonths.toString()
+                : "",
+            hintText: "Es. 3",
+            validator: (value) {
+              if (value == null || value.isEmpty) return null;
+              final interval = int.tryParse(value);
+              if (interval == null || interval < 1) {
+                return 'Numero non valido';
+              }
+              return null;
+            },
+            onSaved: (value) {
+              event.recurrenceIntervalInMonths = int.tryParse(value ?? '') ?? 6;
+            },
+          ),
+          SizedBox(width: 8),
+          Text(isYearly ? "anno/i" : "mese/i", style: label),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumberInput(
+      BuildContext context, {
+        required String initialValue,
+        required String hintText,
+        required String? Function(String?) validator,
+        required void Function(String?) onSaved,
+      }) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.5), width: 1.0),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      width: 35,
+      child: TextFormField(
+        maxLines: 1,
+        cursorColor: black,
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(2),
+        ],
+        initialValue: initialValue,
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: hintText,
+          hintStyle: subtitle,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+        validator: validator,
+        onSaved: onSaved,
+      ),
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context, Event event, state, bool canModify) {
+    final cubit = context.read<CreateEventCubit>();
+    final isAllDay = state.isAllDay;
+    final textStyle = canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(isAllDay ? "Giornata" : "Inizio", style: label),
+          SizedBox(width: 8),
+          GestureDetector(
+            child: Text(_.DateUtils.selectDateFormatDiff(event.start), style: textStyle),
+            onTap: canModify
+                ? () => PlatformDatePicker.selectDate(
+              context,
+              maxTime: DateTime(3000),
+              currentTime: event.start,
+              onConfirm: (date) => isAllDay
+                  ? cubit.setAllDayDate(date)
+                  : cubit.setStartDate(date),
+            )
+                : null,
+          ),
+          if (!isAllDay) ...[
+            SizedBox(width: 12),
+            Text("Fine", style: label),
+            SizedBox(width: 12),
+            GestureDetector(
+              child: Text(_.DateUtils.selectDateFormatDiff(event.end), style: textStyle),
+              onTap: canModify
+                  ? () => PlatformDatePicker.selectDate(
+                context,
+                minTime: TimeUtils.truncateDate(event.start, "day"),
+                maxTime: DateTime(3000),
+                currentTime: event.end,
+                onConfirm: cubit.setEndDate,
+              )
+                  : null,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimePicker(BuildContext context, Event event, bool canModify) {
+    final cubit = context.read<CreateEventCubit>();
+    final textStyle = canModify ? title.copyWith(fontSize: 16) : subtitle.copyWith(fontSize: 14);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text("Ora inizio", style: label),
+          SizedBox(width: 8),
+          GestureDetector(
+            child: Text(
+              event.start.toString().split(' ').last.split('.').first.substring(0, 5),
+              style: textStyle,
+            ),
+            onTap: canModify
+                ? () => PlatformDatePicker.selectTime(
+              context,
+              minTime: TimeUtils.truncateDate(event.start, "day")
+                  .add(Duration(hours: Constants.MIN_WORKTIME)),
+              maxTime: TimeUtils.truncateDate(event.start, "day")
+                  .add(Duration(hours: Constants.MAX_WORKTIME))
+                  .subtract(Duration(minutes: Constants.WORKTIME_SPAN)),
+              currentTime: event.start,
+              onConfirm: cubit.setStartTime,
+            )
+                : null,
+          ),
+          SizedBox(width: 12),
+          Text("Ora fine", style: label),
+          SizedBox(width: 12),
+          GestureDetector(
+            child: Text(
+              event.end.toString().split(' ').last.split('.').first.substring(0, 5),
+              style: textStyle,
+            ),
+            onTap: canModify
+                ? () => PlatformDatePicker.selectTime(
+              context,
+              minTime: event.start.add(Duration(minutes: Constants.WORKTIME_SPAN)),
+              maxTime: TimeUtils.truncateDate(event.end, "day")
+                  .add(Duration(hours: Constants.MAX_WORKTIME)),
+              currentTime: event.end,
+              onConfirm: cubit.setEndTime,
+            )
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRepeatDatePicker(BuildContext context, Event event) {
+    final cubit = context.read<CreateEventCubit>();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text("Inizio", style: label),
+          SizedBox(width: 8),
+          GestureDetector(
+            child: Text(
+              _.DateUtils.selectDateFormatDiff(event.recurrenceStart),
+              style: title.copyWith(fontSize: 16),
+            ),
+            onTap: () => PlatformDatePicker.selectDate(
+              context,
+              maxTime: DateTime(3000),
+              currentTime: event.recurrenceStart,
+              onConfirm: cubit.setStartRepeatedDate,
+            ),
+          ),
+          SizedBox(width: 12),
+          Text("Fine", style: label),
+          SizedBox(width: 12),
+          GestureDetector(
+            child: Text(
+              _.DateUtils.selectDateFormatDiff(event.recurrenceEnd),
+              style: title.copyWith(fontSize: 16),
+            ),
+            onTap: () => PlatformDatePicker.selectDate(
+              context,
+              minTime: TimeUtils.truncateDate(event.recurrenceStart, "day"),
+              maxTime: DateTime(3000),
+              currentTime: event.recurrenceEnd,
+              onConfirm: cubit.setEndRepeatedDate,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateTimeSection(BuildContext context, {required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1.0),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: children,
+      ),
     );
   }
 }

@@ -92,7 +92,10 @@ class _customerSelectableListState extends State<_customerSelectableList> {
               onDeleteActionAddress: context.read<CustomerSelectionCubit>().removeAddressOnCustomer,
               onEditActionAddress: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomer((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
                 'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CustomerSelectionCubit>().forceRefresh:null}),
-
+              onDeleteActionReferrals: context.read<CustomerSelectionCubit>().removeReferralOnCustomer,
+              onEditActionReferrals: () => PlatformUtils.navigator(context, Constants.createReferralsViewRoute, <String, dynamic>{'objectParameter' : context.read<CustomerSelectionCubit>().getEventCustomer((context.read<CustomerSelectionCubit>().state as ReadyCustomers).filteredCustomers[index]),
+                'typeStatus' : TypeStatus.modify, 'context' : context, 'callback': PlatformUtils.isMobile?context.read<CustomerSelectionCubit>().forceRefresh:null}),
+              onTapActionReferrals: context.read<CustomerSelectionCubit>().selectReferralsOnCustomer,
             ):
             context.read<CustomerSelectionCubit>().state.canLoadMore?
             Center(child: Container(margin: new EdgeInsets.symmetric(vertical: 13.0), height: 26, width: 26,

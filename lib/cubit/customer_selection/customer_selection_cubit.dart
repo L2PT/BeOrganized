@@ -6,6 +6,7 @@ import 'package:venturiautospurghi/models/address.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/agolia_service.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -176,11 +177,33 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
 
+  void removeReferralOnCustomer(Referrals referral){
+    Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
+    customer.referrals.removeWhere((element) => element == referral);
+    if(customer.referral == referral && customer.referrals.isNotEmpty){
+      customer.referral = customer.referrals.first;
+    }else{
+      customer.referral = Referrals.empty();
+    }
+    List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
+    filteredCustomers.where((element) => element.id == customer.id).first.referrals.removeWhere((element) => element == referral);
+    _databaseRepository.updateCustomer(customer.id, customer);
+    emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
+  }
+
   void selectAddressOnCustomer(Address address){
     Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
     customer.address = address;
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
     filteredCustomers.where((element) => element.id == customer.id).first.address = address;
+    emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
+  }
+
+  void selectReferralsOnCustomer(Referrals referral ){
+    Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
+    customer.referral = referral;
+    List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
+    filteredCustomers.where((element) => element.id == customer.id).first.referral = referral;
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
 

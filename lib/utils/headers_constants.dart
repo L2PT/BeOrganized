@@ -24,6 +24,6 @@ class Headers{
     MapEntry(new Tab(text: "UTENTI TOTALI",icon: Icon(Icons.people),), Account.getIntTypology(Account.ALL)),
     MapEntry(new Tab(text: "OPERATORI",icon: Icon(FontAwesomeIcons.helmetSafety),), Account.getIntTypology(Account.OPERATORE)),
     MapEntry(new Tab(text: "RESPONSABILI",icon: Icon(FontAwesomeIcons.userTie),),Account.getIntTypology(Account.RESPONSABILE)),
-    MapEntry(new Tab(text: "VEICOLI",icon: Icon(FontAwesomeIcons.truck),),Account.getIntTypology(Account.VEICOLO)),
+    MapEntry(new Tab(text: "VEICOLI",icon: Icon(FontAwesomeIcons.solidTruck),),Account.getIntTypology(Account.VEICOLO)),
   ];
 }

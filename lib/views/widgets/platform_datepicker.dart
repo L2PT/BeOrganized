@@ -65,6 +65,7 @@ class PlatformDatePicker {
         DateTime? maxTime,
         required Function onConfirm,
         DateTime? currentTime,
+        bool reapetMode = false,
       }) async {
     TimeOfDay? time;
     bool valid = false;

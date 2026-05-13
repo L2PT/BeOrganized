@@ -125,6 +125,14 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     return state.customer.addresses.length > 1 && state.customer.address == address;
   }
 
+  bool onClickModeReferral(){
+    return state.customer.referrals.length > 1;
+  }
+
+  bool onSelectItemReferral(Referrals referral){
+    return state.customer.referrals.length > 1 && state.customer.referral == referral;
+  }
+
   void removeAddressOnCustomer(Address address){
     Customer customer = Customer.fromMap("", state.customer.toMap());
     customer.addresses.removeWhere((element) => element == address);
@@ -142,10 +150,24 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     emit(state.assign(customer: customer));
   }
 
+  void selectReferralsOnCustomer(Referrals referrals){
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    customer.referral = referrals;
+    emit(state.assign(customer: customer));
+  }
+
   Event getEventCustomer(Address address) {
     Event event = Event.fromMap("", "", state.event.toMap());
     Customer customer = Customer.fromMap("", state.customer.toMap());
     customer.address = address;
+    event.customer = customer;
+    return event;
+  }
+
+  Event getEventReferrals(Referrals referrals) {
+    Event event = Event.fromMap("", "", state.event.toMap());
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    customer.referral = referrals;
     event.customer = customer;
     return event;
   }

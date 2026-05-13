@@ -17,6 +17,7 @@ import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 import 'package:venturiautospurghi/views/widgets/card_address_widget.dart';
+import 'package:venturiautospurghi/views/widgets/card_referral_widget.dart';
 import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
 
@@ -488,22 +489,19 @@ class _formAddressInfo extends StatelessWidget{
 
     Widget referralListElement(Referrals referral){
       return Container(
-        height: 50,
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: <Widget>[
-            Container(
-              margin: EdgeInsets.only(right: 10.0),
-              child: Icon(Customer.getIconTypology(Customer.REFERENTE).icon, color: black,),
-            ),
-            Text(referral.toString(), style: title.copyWith(fontWeight: FontWeight.normal, color: black, fontSize: 16)),
-            Expanded(child: Container(),),
-            IconButton(
-                icon: Icon(Icons.delete, color: black, size: 25),
-                onPressed: () => context.read<CreateCustomerCubit>().removeReferralOnCustomer(referral)
-            )
-          ],
-        ),
+        margin: EdgeInsets.only(top: 10, left: PlatformUtils.isMobile?5:20, right: PlatformUtils.isMobile?5:20),
+        child: CardReferrals(referral: referral,
+          onclickMode: context.read<CreateCustomerCubit>().onClickModeReferral(),
+          selectItem: context.read<CreateCustomerCubit>().onSelectItemReferral(referral),
+          actionButton: true,
+          onTapAction: () => context.read<CreateCustomerCubit>().selectReferralsOnCustomer(referral),
+          onDeleteAction: () => context.read<CreateCustomerCubit>().removeReferralOnCustomer(referral),
+          onEditAction: () => PlatformUtils.navigator(context, Constants.createReferralsViewRoute, <String, dynamic>{
+            'objectParameter' : context.read<CreateCustomerCubit>().getEventReferrals(referral),
+            'currentStep': context.read<CreateCustomerCubit>().state.currentStep,
+            'typeStatus' : TypeStatus.modify, 'context' : context,
+            'callback' :   PlatformUtils.isMobile?context.read<CreateCustomerCubit>().forceRefresh:null }),
+        )
       );
     }
 

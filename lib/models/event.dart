@@ -38,7 +38,7 @@ class Event {
 
   //Attributi ripetizione
   String recurrenceId = ""; // ID della serie ricorrente
-  int recurrenceIntervalInMonths = 1; // ogni quanti mesi
+  int recurrenceIntervalInMonths = 12; // ogni quanti mesi
   int recurrenceDayOfMonth = -1; // giorno del mese (1-31)
   bool isExcepeted = false;
   bool isRepeated = false;

@@ -8,6 +8,23 @@ import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 
+class StringUtils {
+
+  static String formatPhoneNumber(String phone) {
+    String p = phone.replaceAll(RegExp(r'\s+'), '').replaceAll('+', '');
+    if (p.startsWith('39')) {
+      String rest = p.substring(2);
+      if (rest.length >= 6) {
+        return '+39 ${rest.substring(0, 3)} ${rest.substring(3, 6)} ${rest.substring(6)}';
+      } else {
+        return '+39 $rest';
+      }
+    }
+    return phone;
+  }
+
+}
+
 class TimeUtils {
 
   static DateTime truncateDate(DateTime date, String format) {
@@ -19,6 +36,38 @@ class TimeUtils {
     String truncatedDate = year.toString() + '-' + ((month / 10 < 1) ? "0" + month.toString() : month.toString()) +
         '-' + ((day / 10 < 1) ? "0" + day.toString() : day.toString());
     return DateTime.parse(truncatedDate);
+  }
+
+  /// Restituisce l'orario di default per la creazione di un nuovo evento:
+  /// - Se [dateSelect] è OGGI → orario attuale (senza aggiungere lo span)
+  /// - Se [dateSelect] è un giorno futuro → orario attuale + span (comportamento standard)
+  static DateTime getDefaultEventStartTime({DateTime? dateSelect}) {
+    final DateTime now = _.DateUtils.now().toLocal();
+    final bool isToday = dateSelect == null ||
+        (dateSelect.year == now.year &&
+         dateSelect.month == now.month &&
+         dateSelect.day == now.day);
+
+    if (isToday) {
+      // Orario corrente senza span, ma rispettando i limiti di lavoro
+      final DateTime currentTime = DateTime(
+        now.year, now.month, now.day,
+        now.hour, now.minute, now.second,
+      );
+      // Se l'ora corrente è fuori dall'orario di lavoro, porta all'inizio del turno
+      if (currentTime.hour < Constants.MIN_WORKTIME) {
+        return DateTime(now.year, now.month, now.day, Constants.MIN_WORKTIME);
+      }
+      if (currentTime.hour > Constants.MAX_WORKTIME ||
+          (currentTime.hour == Constants.MAX_WORKTIME && currentTime.minute > 0)) {
+        // Fuori orario: default all'inizio del giorno di lavoro (stesso comportamento standard)
+        return getNextStartWorkTimeSpan(from: dateSelect);
+      }
+      return currentTime;
+    } else {
+      // Giorno futuro: comportamento originale con span
+      return getNextStartWorkTimeSpan(from: dateSelect);
+    }
   }
 
   static DateTime getNextStartWorkTimeSpan({DateTime? from, Duration? ofDuration}) {
@@ -36,7 +85,7 @@ class TimeUtils {
     return getStartWorkTimeSpan(from:date, ofDuration: ofDuration);
   }
 
-  static DateTime getStartWorkTimeSpan({required DateTime from, Duration? ofDuration}) {
+  static DateTime getStartWorkTimeSpan({required DateTime from, Duration? ofDuration, bool repeatMode = false}) {
     Duration duration = ofDuration ?? Duration(minutes: Constants.WORKTIME_SPAN);
 
     DateTime startTimePeriod = from.add(duration);

@@ -33,4 +33,16 @@ class AlgoliaService {
     AlgoliaQuerySnapshot snap = await algoliaQuery.getObjects();
     return snap.hits.map((hit) => hit.objectID).toList();
   }
+
+  static Future<List<String>> searchContactsChat(String query, { int page = 0, int hitsPerPage = 25 }) async {
+
+    AlgoliaQuery algoliaQuery = _algolia.instance
+        .index(Constants.indexSearchContactsChat)
+        .query(query)
+        .setPage(page)
+        .setHitsPerPage(hitsPerPage);
+
+    AlgoliaQuerySnapshot snap = await algoliaQuery.getObjects();
+    return snap.hits.map((hit) => hit.objectID).toList();
+  }
 }

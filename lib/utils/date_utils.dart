@@ -17,6 +17,7 @@ class DateUtils {
   static final DateFormat _pdfDateFormat = DateFormat('EEEE, dd MMMM yyyy', 'it_IT');
   static final DateFormat _hoverTimeFormat = DateFormat('HH:mm');
   static final DateFormat _hoverDateFormatDiff = DateFormat('dd MMMM hh:mm', 'it_IT');
+  static final DateFormat _selectDateFormatDiff = DateFormat('EEE d MMM y', 'it_IT');
   static final zone = tz.getLocation('Europe/Rome');
 
   static String formatMonth(DateTime d) => _monthFormat.format(d);
@@ -38,6 +39,8 @@ class DateUtils {
   static String pdfDateFormat(DateTime d) => _pdfDateFormat.format(d);
 
   static String tableDateFormat(DateTime d) => _tableDateFormat.format(d);
+
+  static String selectDateFormatDiff(DateTime d) => _selectDateFormatDiff.format(d);
 
   static const List<String> weekdays = [
     'Sun',

@@ -28,9 +28,8 @@ class Customer extends Equatable{
   List<Address> addresses = [];
   List<Referrals> referrals = [];
   String typology = "Privato";
-  List<String> addressesSearch = [];
 
-  Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.referral, this.addresses, this.referrals, this.addressesSearch);
+  Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.referral, this.addresses, this.referrals);
   Customer.empty();
 
   Customer.fromMap(String id, Map<String,dynamic> json) :
@@ -46,7 +45,6 @@ class Customer extends Equatable{
         address = json["Indirizzo"] == null? Address.empty(): Address.fromMap(json["Indirizzo"]),
         referral = json["Referente"] == null? Referrals.empty(): Referrals.fromMap(json["Referente"]),
         referrals = json["Referenti"] == null? []: (json["Referenti"] as List).map((referrals) => Referrals.fromMap(referrals)).toList(),
-        addressesSearch = json['IndirizziSearch'] != null?List.from(json['IndirizziSearch']):[],
         typology = json['Tipologia']??"Privato";
 
   Map<String, dynamic> toMap() => {
@@ -62,7 +60,6 @@ class Customer extends Equatable{
     "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
     "Indirizzo": this.address.toMap(),
     "Referente": this.referral.toMap(),
-    "IndirizziSearch": this.addressesSearch,
     "Tipologia":this.typology,
   };
 
@@ -79,7 +76,6 @@ class Customer extends Equatable{
       "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
       "Indirizzo": this.address.toMap(),
       "Referente": this.referral.toMap(),
-      "IndirizziSearch": this.addressesSearch,
       "Tipologia":this.typology,
     });
   }
@@ -98,7 +94,6 @@ class Customer extends Equatable{
       "Referenti": this.referrals,
       "Indirizzo": this.address,
       "Referente": this.referral,
-      "IndirizziSearch": this.addressesSearch,
       "Tipologia":this.typology,
     });
   }
@@ -130,7 +125,6 @@ class Customer extends Equatable{
     this.partitaIva = clientUpdate.partitaIva;
     this.addresses = clientUpdate.addresses;
     this.referrals = clientUpdate.referrals;
-    this.addressesSearch = clientUpdate.addressesSearch;
     this.address = clientUpdate.address;
     this.referral = clientUpdate.referral;
   }

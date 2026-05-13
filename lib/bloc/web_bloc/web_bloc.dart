@@ -19,6 +19,7 @@ import 'package:venturiautospurghi/views/screens/create_user_view.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/details_event_view.dart';
 import 'package:venturiautospurghi/views/screens/generate_ai_event_view.dart';
+import 'package:venturiautospurghi/views/screens/new_chat_dialog.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/table_calendar_view.dart';
 
@@ -88,6 +89,7 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       case Constants.createEventViewRoute: emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now(), type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.generateAiEventViewRoute: emit( OverViewReady(event.route, GenerateAiEvent(dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now()), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createCustomerViewRoute: emit( OverViewReady(event.route, CreateCustomer(event: objectParameter,currentStep: currentStep,type: status), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.newChatDialogRoute: emit( OverViewReady(event.route, NewChatDialog((event.arg is Map)?event.arg["qrCode"]:""), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createAddressViewRoute: emit( OverViewReady(event.route, CreateAddress(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createReferralsViewRoute: emit( OverViewReady(event.route, CreateReferrals(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.monthlyCalendarRoute: emit( OverViewReady(event.route, TableCalendarWithBuilders(), _posLeftOverView, _posTopOverView,)); break;

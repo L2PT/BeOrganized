@@ -14,6 +14,7 @@ class FilterWidget extends StatelessWidget {
   late bool largeScreen;
   final bool textSearchFieldVisible;
   double paddingTop;
+  double paddingHorizontal;
   double paddingTopBox;
   double paddingRightBox;
   double paddingLeftBox;
@@ -33,6 +34,7 @@ class FilterWidget extends StatelessWidget {
     this.textSearchFieldVisible = false,
     this.spaceButton = 15,
     this.paddingTop = 20,
+    this.paddingHorizontal = 8.0,
     this.paddingTopBox = 16,
     this.paddingLeftBox = 14,
     this.paddingBottomBox = 14,
@@ -48,7 +50,7 @@ class FilterWidget extends StatelessWidget {
     Widget MobileFilter() {
       return Column(
         children: [
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          Padding(padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
             child: this.filterAlwaysVisibleBox(context),),
           SizedBox(height: 8.0),
           this.filtersBoxVisibile ? Container(
@@ -119,6 +121,7 @@ class FilterWidget extends StatelessWidget {
                     color: white,
                   ),
                   hintText: hintTextSearchField,
+                  hintStyle: new TextStyle(color: white),
                   contentPadding: EdgeInsets.only(top: 12)
                 ),
               ),

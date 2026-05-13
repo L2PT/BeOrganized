@@ -2,7 +2,7 @@ library app.globals;
 
 class Constants {
   static const String title = "Venturi Autospurghi App";
-  static const bool debug = false;//!bool.fromEnvironment('dart.vm.product');
+  static const bool debug = !bool.fromEnvironment('dart.vm.product');
   static const String web = "web";
   static const String mobile = "mobile";
 
@@ -30,6 +30,7 @@ class Constants {
   static const String createEventViewRoute = '/view/form_event_creator';
   static const String generateAiEventViewRoute = '/view/form_event_generate_ai';
   static const String createCustomerViewRoute = '/view/form_customer_creator';
+  static const String newChatDialogRoute = '/view/new_chat';
   static const String createAddressViewRoute = '/view/form_address_creator';
   static const String createReferralsViewRoute = '/view/form_referrals_creator';
   static const String customerListRoute = '/view/customer_list';
@@ -59,6 +60,10 @@ class Constants {
   static const String tabellaEventiEliminati = debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
   static const String tabellaEventiTerminati = debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
   static const String tabellaEventiRifiutati = debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
+  static const String tabellaMessageConfig = debug?'/whatsapp_sessions_DEBUG':'/whatsapp_sessions';
+  static const String tabellaChats = !debug?'Chats_DEBUG':'Chats';
+  static const String tabellaMessaggi = 'messages';
+  static const String tabellaContattiWhatsapp = debug?'whatsapp_contacts_DEBUG':'whatsapp_contacts';
 
   // TABLE EVENTI
   static const String tabellaEventi_titolo = 'Titolo';
@@ -83,6 +88,20 @@ class Constants {
   static const String tabellaEventi_isExcepeted = 'isExcepeted';
   static const String tabellaEventi_recurrenceId = 'recurrenceId';
   static const String tabellaEventi_recurrenceDayOfMonth = 'recurrenceDayOfMonth';
+
+  // TABLE CHATS
+  static const String tabellaChats_name = 'name';
+  static const String tabellaChats_lastMessage = 'lastMessage';
+  static const String tabellaChats_lastMessageTime = 'lastMessageTime';
+  static const String tabellaChats_unreadCount = 'unreadCount';
+  static const String tabellaChats_isGroup = 'isGroup';
+
+  // TABLE MESSAGGI
+  static const String tabellaMessaggi_text = 'text';
+  static const String tabellaMessaggi_timestamp = 'timestamp';
+  static const String tabellaMessaggi_isMe = 'isMe';
+  static const String tabellaMessaggi_isRead = 'isRead';
+  static const String tabellaMessaggi_eventoId = 'eventoId';
 
   // TABLE COSTANTI
   static const String tabellaCostanti_Categorie = 'Categorie';
@@ -110,6 +129,25 @@ class Constants {
   static const String tabellaClienti_indirizzo = 'Indirizzo';
   static const String tabellaClienti_indirizziSearch = 'IndirizziSearch';
 
+  //  TABLE MESSAGE CONFIG
+  static const String tabellaMessageConfig_qrcode = "qrCode";
+  static const String tabellaMessageConfig_sessionActive = 'sessionActive';
+  static const String tabellaMessageConfig_updateAt = 'updateAt';
+
+  // TABLE CONTATTI WHATSAPP
+  static const String tabellaContattiWhatsapp_isBusiness = 'isBusiness';
+  static const String tabellaContattiWhatsapp_isEnterprise = 'isEnterprise';
+  static const String tabellaContattiWhatsapp_isGroup = 'isGroup';
+  static const String tabellaContattiWhatsapp_isMyContact = 'isMyContact';
+  static const String tabellaContattiWhatsapp_isWAContact = 'isWAContact';
+  static const String tabellaContattiWhatsapp_name = 'name';
+  static const String tabellaContattiWhatsapp_number = 'number';
+  static const String tabellaContattiWhatsapp_phoneNumber = 'phoneNumber';
+  static const String tabellaContattiWhatsapp_pushname = 'pushname';
+  static const String tabellaContattiWhatsapp_realPhoneNumber = 'realPhoneNumber';
+  static const String tabellaContattiWhatsapp_shortName = 'shortName';
+  static const String tabellaContattiWhatsapp_updatedAt = 'updatedAt';
+
   // HANDLES
   static const int MIN_WORKTIME = 7;
   static const int MAX_WORKTIME = 19;
@@ -121,6 +159,8 @@ class Constants {
   static const String webPushNotificationsVapidKey = 'BJstIUpFNSxgd1Ir1xQd_qt48ijnfLG2B3Md_9unMkA7nMBpZZRVX3_6A5f2HJJLCOZJoFH2CgpmtrimGRe-rWo';
   static const String agoliaApiKey = '485e3979c1cc1eb09770c7f45e11b20b';
   static const String agoliaApplicationId = '6JDU1L4FVI';
+  static const String whatsappApiKey = 'e7942401da5055919fc3beac0132c7b0209269aadb0e08c51f36ca844a9f1591';
+  static const String whatsappBaseUrl = 'http://13.140.25.72:3000';
 
   //OVERVIEW SCREEN
   static const double WIDTH_OVERVIEW = 400;
@@ -133,6 +173,7 @@ class Constants {
   //AGOLIA INDEX
   static const String indexSearchCustomer = debug?'Clienti_Debug_Index':'Clienti_Index';
   static const String indexSearchUser = 'Utenti_Index';
+  static const String indexSearchContactsChat = debug?'Contatti_Debug_Index':'Contatti_Index';
 
   // Prototipo testo generato
   static const String protoGenerateEvent = '''

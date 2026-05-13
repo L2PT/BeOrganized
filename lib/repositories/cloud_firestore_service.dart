@@ -5,6 +5,10 @@ import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
+import 'package:venturiautospurghi/models/message/chat_overview.dart';
+import 'package:venturiautospurghi/models/message/contact_whatsapp.dart';
+import 'package:venturiautospurghi/models/message/message.dart';
+import 'package:venturiautospurghi/models/message/message_config.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
@@ -21,6 +25,10 @@ class CloudFirestoreService {
   late CollectionReference _collectionStoricoTerminati;
   late CollectionReference _collectionStoricoRifiutati;
   late CollectionReference _collectionCostanti;
+  late CollectionReference _collectionMessageConfig;
+  late CollectionReference _collectionChats;
+  late CollectionReference _collectionContactsWhatsapp;
+  late Query _collectionMessaggi;
 
   late Map<String,dynamic> categories;
   late Map<String,dynamic> typesEvent;
@@ -37,6 +45,10 @@ class CloudFirestoreService {
     _collectionStoricoTerminati = _cloudFirestore.collection(Constants.tabellaEventiTerminati);
     _collectionStoricoRifiutati = _cloudFirestore.collection(Constants.tabellaEventiRifiutati);
     _collectionCostanti = _cloudFirestore.collection(Constants.tabellaCostanti);
+    _collectionMessageConfig = _cloudFirestore.collection(Constants.tabellaMessageConfig);
+    _collectionChats = _cloudFirestore.collection(Constants.tabellaChats);
+    _collectionMessaggi = _cloudFirestore.collectionGroup(Constants.tabellaMessaggi);
+    _collectionContactsWhatsapp = _cloudFirestore.collection(Constants.tabellaContattiWhatsapp);
   }
 
   static Future<CloudFirestoreService> create() async {
@@ -548,6 +560,47 @@ class CloudFirestoreService {
     return aggregateQuerySnapshot.count??0;
   }
 
+  Future<List<int>> getHistoryYearsRange(int? archives) async {
+    Query table = _collectionStoricoTerminati;
+    if(archives == EventStatus.Refused){
+      table = _collectionStoricoRifiutati;
+    }else if(archives == EventStatus.Deleted){
+      table = _collectionStoricoEliminati;
+    }
+
+    try {
+      final ascSnapshot = await table.orderBy(Constants.tabellaEventi_dataFine, descending: false).limit(1).get();
+      final descSnapshot = await table.orderBy(Constants.tabellaEventi_dataFine, descending: true).limit(1).get();
+
+      if (ascSnapshot.docs.isEmpty || descSnapshot.docs.isEmpty) return [DateTime.now().year];
+
+      final firstDate = (ascSnapshot.docs.first.data() as Map<String, dynamic>)[Constants.tabellaEventi_dataFine];
+      final lastDate = (descSnapshot.docs.first.data() as Map<String, dynamic>)[Constants.tabellaEventi_dataFine];
+      
+      final firstYear = firstDate != null ? (firstDate as Timestamp).toDate().year : DateTime.now().year;
+      final lastYear = lastDate != null ? (lastDate as Timestamp).toDate().year : DateTime.now().year;
+      
+      return [firstYear, lastYear];
+    } catch (e) {
+      return [DateTime.now().year];
+    }
+  }
+
+  Future<int> getHistoryCountByDateRange(int? archives, DateTime start, DateTime end) async {
+    Query table = _collectionStoricoTerminati;
+    if(archives == EventStatus.Refused){
+      table = _collectionStoricoRifiutati;
+    }else if(archives == EventStatus.Deleted){
+      table = _collectionStoricoEliminati;
+    }
+
+    table = table.where(Constants.tabellaEventi_dataFine, isGreaterThanOrEqualTo: start)
+                 .where(Constants.tabellaEventi_dataFine, isLessThan: end);
+
+    final aggregateQuerySnapshot = await table.count().get();
+    return aggregateQuerySnapshot.count ?? 0;
+  }
+
   Future<String> addEventPast(Event e) async {
     e.status = EventStatus.Ended;
     final dynamic createTransaction = (dynamic tx) async {
@@ -764,6 +817,7 @@ class CloudFirestoreService {
     return _getCustomersFiltered(_collectionClienti, filters, limit, documentSnapshot, null);
   }
 
+
   Future<List<Customer>> _getCustomersFiltered(CollectionReference query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining]) async {
     Query startQuery = query;
     filters = Map.from(filters);
@@ -795,6 +849,118 @@ class CloudFirestoreService {
     return a;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// CHAT METHODS
+
+  Stream<List<ChatOverview>> subscribeChats() {
+    return _collectionChats
+        .orderBy(Constants.tabellaChats_lastMessageTime, descending: true)
+        .snapshots()
+        .map((snapshot) {
+          var documents = snapshot.docs;
+          return documents.map((doc) => ChatOverview.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+              .toList();
+        });
+  }
+
+  Stream<List<Message>> subscribeMessages(String chatId) {
+    return _collectionChats
+        .doc(chatId)
+        .collection(Constants.tabellaMessaggi) // Ensure this subcollection name is defined in Constants
+        .orderBy(Constants.tabellaMessaggi_timestamp, descending: true) // Newest first
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+        .map((doc) => Message.fromMap(doc.id, doc.data()))
+        .toList());
+  }
+
+  Future<void> sendMessage(String chatId, String text) async {
+    final timestamp = Timestamp.now();
+    final messageData = {
+      Constants.tabellaMessaggi_text: text,
+      Constants.tabellaMessaggi_timestamp: timestamp,
+      Constants.tabellaMessaggi_isMe: true,
+      Constants.tabellaMessaggi_isRead: true, // Read by sender obviously
+    };
+
+    // Add message to subcollection
+    await _collectionChats
+        .doc(chatId)
+        .collection(Constants.tabellaMessaggi)
+        .add(messageData);
+
+    // Update chat overview
+    await _collectionChats.doc(chatId).update({
+      Constants.tabellaChats_lastMessage: text,
+      Constants.tabellaChats_lastMessageTime: timestamp,
+      // 'unreadCount': FieldValue.increment(1) // Usually recipient increments this
+    });
+  }
+
+  Future<void> markChatAsRead(String chatId) async {
+    await _collectionChats.doc(chatId).update({
+      Constants.tabellaChats_unreadCount: 0,
+    });
+  }
+
+  Future<List<ContactWhatsapp>> getContactWhatsapp(Map<String, FilterWrapper> filters, {limit, startFrom }) async {
+    DocumentSnapshot? documentSnapshot;
+    if(startFrom != null)
+      documentSnapshot = await getDocument(_collectionContactsWhatsapp, startFrom);
+    return _getContactWhatsappFiltered(_collectionContactsWhatsapp, filters, limit, documentSnapshot, null);
+  }
+
+  Future<List<ContactWhatsapp>> _getContactWhatsappFiltered(CollectionReference query, Map<String, FilterWrapper> filters, [limit, startFrom, remaining]) async {
+    Query startQuery = query;
+    filters = Map.from(filters);
+    // due to firebase limitations (we can't build a query with all filters) let the repository do ALL filtering work
+    // despite some fields will be handled in the firebase query and some other in code
+    bool endOfList = false;
+
+    startQuery = startQuery.orderBy(
+        Constants.tabellaContattiWhatsapp_name);
+    startQuery = addPagination(startQuery, limit, startFrom);
+
+    var docs = await startQuery.get().then((snapshot) => snapshot.docs);
+    if (limit != null && docs.length < limit) endOfList = true;
+
+    List<ContactWhatsapp> contactWhatsapp = docs.map((document) =>
+        ContactWhatsapp.fromMap(document.id, document.data() as Map<String, dynamic>)).toList();
+
+    DocumentSnapshot? lastRetrieved = docs.isNotEmpty?await getDocument(query, docs.last.id):null;
+
+    contactWhatsapp = contactWhatsapp.where((contactWhatsapp) => filters.values.every((wrapper) =>
+        contactWhatsapp.filter(wrapper.filterFunction, wrapper.fieldValue))
+    ).toList();
+
+    var a = (contactWhatsapp.length>=(remaining??limit) || endOfList) ? contactWhatsapp :
+    [...contactWhatsapp, ...(await _getContactWhatsappFiltered(query, filters, limit, lastRetrieved, limit-contactWhatsapp.length))];
+    return a;
+  }
+
+  Future<List<ContactWhatsapp>> getContactWhatsappByIds(List<String> idContactWhatsapp) async {
+    final snapshot = await _collectionContactsWhatsapp
+        .where(FieldPath.documentId, whereIn: idContactWhatsapp)
+        .get();
+
+    // Mappa i documenti in una lista di Customer
+    final contactWhatsapps = snapshot.docs
+        .map((document) =>
+        ContactWhatsapp.fromMap(document.id, document.data() as Map<String, dynamic>))
+        .toList();
+
+    // Crea una mappa per accedere ai Customer in base al loro ID
+    final contactWhatsappMap = {for (var contactWhatsapp in contactWhatsapps) contactWhatsapp.id: contactWhatsapp};
+
+    // Riordina i risultati secondo l'ordine originale di idContactWhatsapp
+    return idContactWhatsapp
+        .map((id) => contactWhatsappMap[id])
+        .where((contactWhatsapp) => contactWhatsapp != null) // Filtra gli ID mancanti
+        .cast<ContactWhatsapp>() // Cast a Customer
+        .toList();
+  }
+
+
   Future<int> getCustomerCountsByType( String? typology) async {
 
     // Query filtrata con aggregazione per il conteggio
@@ -811,6 +977,13 @@ class CloudFirestoreService {
   }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// MESSAGE CONFIG
+  Stream<MessageConfig> subscribeMessageConfig()  {
+    return _collectionMessageConfig.doc("whatsapp-client").snapshots().map((messageConfig) {
+      return MessageConfig.fromMap(messageConfig.data()! as Map<String, dynamic>);
+    });
+  }
 
 }
 
