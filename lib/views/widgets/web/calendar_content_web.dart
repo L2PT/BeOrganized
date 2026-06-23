@@ -284,30 +284,32 @@ class _HeaderOperatorCalendarState extends State<HeaderOperatorCalendar> {
       });
     }
 
-    context.read<CalendarContentWebCubit>().calcWidthOpeCalendar();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: SizedBox(
-        height: 120,
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            _AddOperatorButton(),
-            Expanded(
-              child: AnimatedList(
-                controller: context.read<CalendarContentWebCubit>().horizontalHeader,
-                key: _listKey,
-                initialItemCount: _operators.length,
-                itemBuilder: (context, i, animation) =>
-                    _buildOperatorItem(_operators[i], animation),
-                scrollDirection: Axis.horizontal,
-              ),
+    return BlocBuilder<CalendarContentWebCubit, CalendarContentWebState>(
+      builder: (context, contentState) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: SizedBox(
+            height: 120,
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _AddOperatorButton(),
+                Expanded(
+                  child: AnimatedList(
+                    controller: context.read<CalendarContentWebCubit>().horizontalHeader,
+                    key: _listKey,
+                    initialItemCount: _operators.length,
+                    itemBuilder: (context, i, animation) =>
+                        _buildOperatorItem(_operators[i], animation),
+                    scrollDirection: Axis.horizontal,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -336,32 +338,34 @@ class _HeaderOperatorItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<CalendarContentWebCubit>();
-
-    return Container(
-      height: 120,
-      width: cubit.state.widthOpeCalendar,
-      padding: const EdgeInsets.only(top: 5, left: 10, right: 10),
-      decoration: const BoxDecoration(
-        color: white,
-        border: Border(right: BorderSide(color: grey_light, width: 1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _OperatorIcon(typology: operator.typology),
-          const SizedBox(height: 11),
-          _OperatorName(
-            surname: operator.surname,
-            name: operator.name,
+    return BlocBuilder<CalendarContentWebCubit, CalendarContentWebState>(
+      builder: (context, contentState) {
+        return Container(
+          height: 120,
+          width: contentState.widthOpeCalendar,
+          padding: const EdgeInsets.only(top: 5, left: 10, right: 10),
+          decoration: const BoxDecoration(
+            color: white,
+            border: Border(right: BorderSide(color: grey_light, width: 1)),
           ),
-          const SizedBox(height: 10),
-          _OperatorActions(
-            operator: operator,
-            pdfUtils: pdfUtils,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _OperatorIcon(typology: operator.typology),
+              const SizedBox(height: 11),
+              _OperatorName(
+                surname: operator.surname,
+                name: operator.name,
+              ),
+              const SizedBox(height: 10),
+              _OperatorActions(
+                operator: operator,
+                pdfUtils: pdfUtils,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -562,9 +566,7 @@ class _OperatorCalendarState extends State<OperatorCalendar> {
   @override
   void didUpdateWidget(OperatorCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.user.webops != widget.user.webops) {
-      _updateOperatorList();
-    }
+    _updateOperatorList();
   }
 
   void _updateOperatorList() {
@@ -601,43 +603,47 @@ class _OperatorCalendarState extends State<OperatorCalendar> {
     context.read<CalendarContentWebCubit>().calcWidthOpeCalendar();
     final cubit = context.read<CalendarContentWebCubit>();
 
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        SizedBox(
-          height: (widget.backGridLength * cubit.gridHourHeight) + widget.topSpace,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: (widget.backGridLength * cubit.gridHourHeight) +
-                    widget.topSpace - 120,
-                width: 0,
-                decoration: const BoxDecoration(
-                  border: Border(right: BorderSide(color: grey_light, width: 1)),
-                ),
-              ),
-              Expanded(
-                child: RawScrollbar(
-                  thumbColor: black_light,
-                  radius: const Radius.circular(20),
-                  thickness: 10,
-                  controller: cubit.horizontalCalendar,
-                  child: AnimatedList(
-                    controller: cubit.horizontalCalendar,
-                    key: _listKey,
-                    initialItemCount: _operators.length,
-                    itemBuilder: (context, i, animation) =>
-                        _buildOperatorCalendar(_operators[i], i, animation),
-                    scrollDirection: Axis.horizontal,
+    return BlocBuilder<CalendarContentWebCubit, CalendarContentWebState>(
+      builder: (context, contentState) {
+        return Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            SizedBox(
+              height: (widget.backGridLength * cubit.gridHourHeight) + widget.topSpace,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: (widget.backGridLength * cubit.gridHourHeight) +
+                        widget.topSpace - 120,
+                    width: 0,
+                    decoration: const BoxDecoration(
+                      border: Border(right: BorderSide(color: grey_light, width: 1)),
+                    ),
                   ),
-                ),
+                  Expanded(
+                    child: RawScrollbar(
+                      thumbColor: black_light,
+                      radius: const Radius.circular(20),
+                      thickness: 10,
+                      controller: cubit.horizontalCalendar,
+                      child: AnimatedList(
+                        controller: cubit.horizontalCalendar,
+                        key: _listKey,
+                        initialItemCount: _operators.length,
+                        itemBuilder: (context, i, animation) =>
+                            _buildOperatorCalendar(_operators[i], i, animation),
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -707,58 +713,61 @@ class _SingleOperatorCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final webCubit = context.read<WebCubit>();
-    final cubit = context.read<CalendarContentWebCubit>();
     final selectDay = webCubit.state.calendarPageState.calendarDate;
 
-    final eventLayouts = (webCubit.state.calendarPageState as ReadyCalendarPageState)
-        .selectedEventsGroupOperator(operator.id)
-        .expand((overlapGroup) => overlapGroup.calculateGroupLayout(
-      cubit.state.widthOpeCalendar,
-      selectDay,
-    ))
-        .toList();
+    return BlocBuilder<CalendarContentWebCubit, CalendarContentWebState>(
+      builder: (context, contentState) {
+        final eventLayouts = (webCubit.state.calendarPageState as ReadyCalendarPageState)
+            .selectedEventsGroupOperator(operator.id)
+            .expand((overlapGroup) => overlapGroup.calculateGroupLayout(
+          contentState.widthOpeCalendar,
+          selectDay,
+        ))
+            .toList();
 
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Expanded(
-          child: RepaintBoundary(
-            child: Container(
-              padding: const EdgeInsets.only(top: 50),
-              width: cubit.state.widthOpeCalendar,
-              decoration: const BoxDecoration(
-                border: Border(right: BorderSide(color: grey_light, width: 1)),
-              ),
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: double.infinity,
+        return Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: RepaintBoundary(
+                child: Container(
+                  padding: const EdgeInsets.only(top: 50),
+                  width: contentState.widthOpeCalendar,
+                  decoration: const BoxDecoration(
+                    border: Border(right: BorderSide(color: grey_light, width: 1)),
                   ),
-                  // OTTIMIZZAZIONE 11: Usa ListView.builder se ci sono molti eventi
-                  ...eventLayouts.map((layout) => Positioned(
-                    top: layout.top,
-                    left: layout.left,
-                    width: layout.width,
-                    height: layout.height,
-                    child: _EventCard(
-                      layout: layout,
-                      operator: operator,
-                      selectDay: selectDay,
-                      index: index,
-                      onDragEnd: (dragEvent) => _changeEvent(
-                        layout.event,
-                        dragEvent,
-                        context,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                    ),
-                  )),
-                ],
+                      // OTTIMIZZAZIONE 11: Usa ListView.builder se ci sono molti eventi
+                      ...eventLayouts.map((layout) => Positioned(
+                        top: layout.top,
+                        left: layout.left,
+                        width: layout.width,
+                        height: layout.height,
+                        child: _EventCard(
+                          layout: layout,
+                          operator: operator,
+                          selectDay: selectDay,
+                          index: index,
+                          onDragEnd: (dragEvent) => _changeEvent(
+                            layout.event,
+                            dragEvent,
+                            context,
+                          ),
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

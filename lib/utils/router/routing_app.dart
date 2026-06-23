@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
-import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
@@ -51,55 +50,37 @@ class RouterWebApp{
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.historyEventListRoute,
                   name: 'historyEvent',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return HistoryEventList();
-                  },
+                  builder: (context, state) => HistoryEventList(),
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.bozzeEventListRoute,
                   name: 'bozzeEvent',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return BozzeEventList();
-                  }
+                  builder: (context, state) => BozzeEventList(),
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.filterEventListRoute,
                   name: 'filterEvent',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return FilterEventList();
-                  },
+                  builder: (context, state) => FilterEventList(),
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.customerContactsListRoute,
                   name: 'customerContacts',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return CustomerContacts();
-                  },
+                  builder: (context, state) => CustomerContacts(),
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.manageUtenzeRoute,
                   name: 'usersManage',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return UsersManage();
-                  },
+                  builder: (context, state) => UsersManage(),
                 ),
                 GoRoute(
                   parentNavigatorKey: _shellNavigatorKey,
                   path: Constants.manageMessageRoute,
                   name: 'messageManage',
-                  builder: (context, state) {
-                    context.read<WebCubit>().initCubit(state.uri.path);
-                    return MessageManage();
-                  },
+                  builder: (context, state) => MessageManage(),
                 ),
               ]),
           GoRoute(

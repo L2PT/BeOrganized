@@ -5,17 +5,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/message/chat_overview.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
-import 'package:venturiautospurghi/views/widgets/filter/filter_widget.dart';
 
 class ChatList extends StatefulWidget {
   final List<ChatOverview> chats;
   final String? activeChatId;
   final void Function(String) onChatTap;
+  final bool onlyUnread;
 
   ChatList({
     required this.chats,
     this.activeChatId,
     required this.onChatTap,
+    this.onlyUnread = false,
   });
 
   @override
@@ -23,35 +24,53 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-  String filter = '';
   String? _hovered;
   String? _focused;
 
   @override
   Widget build(BuildContext context) {
-    final filtered = widget.chats
-        .where((c) => c.name.toLowerCase().contains(filter.toLowerCase()))
-        .toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text("Tutte le chat", style: title),
+            IconButton(
+              icon: Icon(
+                widget.onlyUnread ? Icons.mark_chat_unread : Icons.mark_chat_unread_outlined,
+                color: widget.onlyUnread ? yellow : grey,
+              ),
+              onPressed: () => context.read<WebCubit>().messageManagePageCubit.toggleOnlyUnread(),
+              tooltip: "Filtra non letti",
+            ),
           ],
         ),
         SizedBox(height: 10,),
-        FilterWidget(
-            filtersBoxVisibile: false,
-            isExpandable: false,
-            hintTextSearchField: "Cerca una nuova chat"),
+        Container(
+          decoration: BoxDecoration(
+            color: black,
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          child: TextField(
+            onChanged: (s) => context.read<WebCubit>().messageManagePageCubit.updateSearchQuery(s),
+            style: const TextStyle(color: white),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              prefixIcon: const Icon(Icons.search, color: white),
+              hintText: "Cerca una chat",
+              hintStyle: const TextStyle(color: white),
+              contentPadding: const EdgeInsets.only(top: 12),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10,),
         Expanded(
           child: ListView.separated(
-            itemCount: filtered.length,
+            itemCount: widget.chats.length,
             separatorBuilder: (_, __) => Divider(height: 2, thickness: 1, indent: 15, endIndent: 15, color: grey_light),
             itemBuilder: (context, index) {
-              final c = filtered[index];
+              final c = widget.chats[index];
               final isActive = c.id == widget.activeChatId;
 
               return FocusableActionDetector(

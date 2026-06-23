@@ -9,6 +9,7 @@ abstract class MessageManagePageState extends Equatable {
   final List<Message> currentMessages;
   final ChatOverview? selectedChat;
   final String searchQuery;
+  final bool onlyUnread;
 
   MessageManagePageState({
     this.qrcode = "",
@@ -18,6 +19,7 @@ abstract class MessageManagePageState extends Equatable {
     this.currentMessages = const [],
     this.selectedChat,
     this.searchQuery = '',
+    this.onlyUnread = false,
   });
 
   @override
@@ -28,7 +30,8 @@ abstract class MessageManagePageState extends Equatable {
     filteredChats,
     currentMessages,
     selectedChat,
-    searchQuery
+    searchQuery,
+    onlyUnread
   ];
 
   MessageManagePageState copyWith({
@@ -39,6 +42,7 @@ abstract class MessageManagePageState extends Equatable {
     List<Message>? currentMessages,
     ChatOverview? selectedChat,
     String? searchQuery,
+    bool? onlyUnread,
   });
 }
 
@@ -58,6 +62,7 @@ class LoadingMessagesManage extends MessageManagePageState {
     List<Message>? currentMessages,
     ChatOverview? selectedChat,
     String? searchQuery,
+    bool? onlyUnread,
   }) {
     // Return self or new instance if needed, but usually loading is just loading
     return LoadingMessagesManage();
@@ -74,6 +79,7 @@ class LoadedMessageManage extends MessageManagePageState {
     super.currentMessages,
     super.selectedChat,
     super.searchQuery,
+    super.onlyUnread = false,
   });
 
   @override
@@ -85,6 +91,7 @@ class LoadedMessageManage extends MessageManagePageState {
     List<Message>? currentMessages,
     ChatOverview? selectedChat,
     String? searchQuery,
+    bool? onlyUnread,
   }) {
     return LoadedMessageManage(
       qrcode: qrcode ?? this.qrcode,
@@ -94,6 +101,7 @@ class LoadedMessageManage extends MessageManagePageState {
       currentMessages: currentMessages ?? this.currentMessages,
       selectedChat: selectedChat ?? this.selectedChat,
       searchQuery: searchQuery ?? this.searchQuery,
+      onlyUnread: onlyUnread ?? this.onlyUnread,
     );
   }
 }

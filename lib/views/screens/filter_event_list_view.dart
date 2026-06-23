@@ -18,18 +18,32 @@ import 'package:venturiautospurghi/views/widgets/filter/filter_events_widget.dar
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
 import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
-class FilterEventList extends StatelessWidget {
+class FilterEventList extends StatefulWidget {
 
-  bool isBozze;
+  final bool isBozze;
 
   FilterEventList({this.isBozze = false});
+
+  @override
+  _FilterEventListState createState() => _FilterEventListState();
+}
+
+class _FilterEventListState extends State<FilterEventList> {
+
+  @override
+  void initState() {
+    super.initState();
+    if(!PlatformUtils.isMobile) {
+      context.read<WebCubit>().initCubit(widget.isBozze ? Constants.bozzeEventListRoute : Constants.filterEventListRoute);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
     Account account = context.read<AuthenticationBloc>().account!;
     return new BlocProvider(
-        create: (_) => FilterEventListCubit(repository, account, isBozze: this.isBozze),
+        create: (_) => FilterEventListCubit(repository, account, isBozze: this.widget.isBozze),
         child: ResponsiveWidget(
           smallScreen: _smallScreen(),
           largeScreen: _largeScreen(),

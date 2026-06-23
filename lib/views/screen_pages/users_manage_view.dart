@@ -16,19 +16,33 @@ import 'package:venturiautospurghi/views/widgets/filter/filter_account_widget.da
 import 'package:venturiautospurghi/views/widgets/flat_tab_widget.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
 
-class UsersManage extends StatelessWidget {
+class UsersManage extends StatefulWidget {
 
-  Map<String, dynamic> filters;
+  final Map<String, dynamic> filters;
 
   UsersManage({Map<String, dynamic>? filters}) :
         this.filters = filters?? {};
+
+  @override
+  _UsersManageState createState() => _UsersManageState();
+}
+
+class _UsersManageState extends State<UsersManage> {
+
+  @override
+  void initState() {
+    super.initState();
+    if(!PlatformUtils.isMobile) {
+      context.read<WebCubit>().initCubit(Constants.manageUtenzeRoute);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
 
     return new BlocProvider(
-        create: (_) => UsersManageCubit(repository, filters),
+        create: (_) => UsersManageCubit(repository, widget.filters),
         child: ResponsiveWidget(
           smallScreen: _smallScreen(),
           largeScreen: _largeScreen(),

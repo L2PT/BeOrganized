@@ -12,6 +12,7 @@ class PaginationTable extends StatelessWidget {
   bool showFirstLastButtons;
   Color arrowHeadColor;
   bool showCheckboxColumn;
+  double? headingRowHeight;
   void Function()? handleFirst;
   void Function()? handleLast;
   void Function()? handlePrevious;
@@ -21,7 +22,7 @@ class PaginationTable extends StatelessWidget {
 
   PaginationTable(this.source, this.columnLabels, {this.rowsPerPage = 10, this.firstRowIndex = 0,
     this.showFirstLastButtons = false, this.arrowHeadColor = white, this.handleFirst, this.handleLast,
-    this.handleNext, this.handlePrevious, this.selectAll, this.showCheckboxColumn = true});
+    this.handleNext, this.handlePrevious, this.selectAll, this.showCheckboxColumn = true, this.headingRowHeight});
 
   List<DataRow> _getRows(int firstRowIndex, int rowsPerPage) {
     final List<DataRow> result = <DataRow>[];
@@ -120,7 +121,7 @@ class PaginationTable extends StatelessWidget {
                     DataTable(
                       showCheckboxColumn: showCheckboxColumn,
                       onSelectAll: selectAll,
-
+                      headingRowHeight: headingRowHeight,
                       headingRowColor: WidgetStateProperty.resolveWith<Color>((states) {
                         return black; // Change to your preferred color
                       }),

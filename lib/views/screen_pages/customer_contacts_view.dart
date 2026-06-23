@@ -23,19 +23,33 @@ import 'package:venturiautospurghi/views/widgets/flat_tab_widget.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
 import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
-class CustomerContacts extends StatelessWidget {
+class CustomerContacts extends StatefulWidget {
 
-  Map<String, dynamic> filters;
+  final Map<String, dynamic> filters;
 
   CustomerContacts({Map<String, dynamic>? filters}) :
         this.filters = filters?? {};
+
+  @override
+  _CustomerContactsState createState() => _CustomerContactsState();
+}
+
+class _CustomerContactsState extends State<CustomerContacts> {
+
+  @override
+  void initState() {
+    super.initState();
+    if(!PlatformUtils.isMobile) {
+      context.read<WebCubit>().initCubit(Constants.customerContactsListRoute);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
 
     return new BlocProvider(
-        create: (_) => CustomerContactsCubit(repository, filters),
+        create: (_) => CustomerContactsCubit(repository, widget.filters),
         child: ResponsiveWidget(
           smallScreen: _smallScreen(),
           largeScreen: _largeScreen(),

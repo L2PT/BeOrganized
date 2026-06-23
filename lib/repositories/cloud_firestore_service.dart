@@ -140,6 +140,10 @@ class CloudFirestoreService {
   }
 
   Future<void> deleteChat(String chatId) async {
+    final messages = await _collectionChats.doc(chatId).collection(Constants.tabellaMessaggi).get();
+    for (var doc in messages.docs) {
+      await doc.reference.delete();
+    }
     await _collectionChats.doc(chatId).delete();
   }
 
@@ -459,8 +463,21 @@ class CloudFirestoreService {
       filterStatus = true;
       startQuery = startQuery.where(Constants.tabellaEventi_stato, isEqualTo: filters["status"]!.fieldValue);
     }
+
+    bool useDataFine = history == true && (filters.containsKey("startDate") || filters.containsKey("endDate"));
+
+    if (filters.containsKey("startDate") && filters["startDate"]!.fieldValue is DateTime) {
+      if (!useDataFine) {
+        startQuery = startQuery.where(Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: filters["startDate"]!.fieldValue);
+      } else {
+        startQuery = startQuery.where(Constants.tabellaEventi_dataFine, isGreaterThanOrEqualTo: filters["startDate"]!.fieldValue);
+      }
+    }
+    if (filters.containsKey("endDate") && filters["endDate"]!.fieldValue is DateTime) {
+      startQuery = startQuery.where(useDataFine ? Constants.tabellaEventi_dataFine : Constants.tabellaEventi_dataInizio, isLessThan: filters["endDate"]!.fieldValue);
+    }
     startQuery = startQuery.orderBy(
-        Constants.tabellaEventi_dataInizio, descending: true);
+        useDataFine ? Constants.tabellaEventi_dataFine : Constants.tabellaEventi_dataInizio, descending: true);
     startQuery = addPagination(startQuery, limit, startFrom);
 
     // if(filters.containsKey("title") && filters["title"]!.fieldValue!=null){
@@ -501,7 +518,7 @@ class CloudFirestoreService {
     DocumentSnapshot? lastRetrieved = docs.isNotEmpty?await getDocument(query, docs.last.id):null;
 
     var a = (events.length>=(remaining??limit) || endOfList) ? events :
-    [...events, ...(await _getEventsFiltered(query, filters, limit, lastRetrieved, limit-events.length, history))];
+    [...events, ...(await _getEventsFiltered(query, filters, limit, lastRetrieved, (remaining??limit)-events.length, history))];
     return a;
   }
 
@@ -515,7 +532,10 @@ class CloudFirestoreService {
     DocumentSnapshot? documentSnapshot;
     if(startFrom != null)
       documentSnapshot = await getDocument(table, startFrom);
-    return _getEventsFiltered(table, filters, limit, documentSnapshot, null, true);
+    var events = await _getEventsFiltered(table, filters, limit, documentSnapshot, null, true);
+    // Remove items that have isExcepeted false and isRepeated true
+    events.removeWhere((e) => !e.isExcepeted && e.isRepeated);
+    return events;
   }
 
   Future<List<Event>> getEventsActiveFiltered(Map<String, FilterWrapper> filters, {limit, startFrom}) async{
@@ -560,8 +580,13 @@ class CloudFirestoreService {
 
     final aggregateQuerySnapshot = await table.count().get();
 
+    final excludeQuery = table
+        .where(Constants.tabellaEventi_isExcepeted, isEqualTo: false)
+        .where(Constants.tabellaEventi_isRepeated, isEqualTo: true);
+    final excludeAggregateQuerySnapshot = await excludeQuery.count().get();
+
     // Restituisce il conteggio
-    return aggregateQuerySnapshot.count??0;
+    return (aggregateQuerySnapshot.count??0) - (excludeAggregateQuerySnapshot.count??0);
   }
 
   Future<List<int>> getHistoryYearsRange(int? archives) async {
@@ -590,19 +615,65 @@ class CloudFirestoreService {
     }
   }
 
-  Future<int> getHistoryCountByDateRange(int? archives, DateTime start, DateTime end) async {
-    Query table = _collectionStoricoTerminati;
-    if(archives == EventStatus.Refused){
+  Future<int> getHistoryCountByDateRange(int? archives, DateTime start, DateTime end, {Map<String, FilterWrapper>? filters}) async {
+    Map<String, FilterWrapper> mergedFilters = Map.from(filters ?? {});
+    mergedFilters["startDate"] = FilterWrapper("startDate", start, null);
+    mergedFilters["endDate"] = FilterWrapper("endDate", end, null);
+    return getEventsHistoryFilteredCount(archives ?? EventStatus.Ended, mergedFilters);
+  }
+
+  Future<int> getEventsHistoryFilteredCount(int category, Map<String, FilterWrapper> filters) async {
+    CollectionReference table = _collectionStoricoTerminati;
+    if(category == EventStatus.Refused){
       table = _collectionStoricoRifiutati;
-    }else if(archives == EventStatus.Deleted){
+    }else if(category == EventStatus.Deleted){
       table = _collectionStoricoEliminati;
     }
 
-    table = table.where(Constants.tabellaEventi_dataFine, isGreaterThanOrEqualTo: start)
-                 .where(Constants.tabellaEventi_dataFine, isLessThan: end);
+    Query startQuery = table;
 
-    final aggregateQuerySnapshot = await table.count().get();
-    return aggregateQuerySnapshot.count ?? 0;
+    if (filters.containsKey("status") && filters["status"]!.fieldValue != null){
+      startQuery = startQuery.where(Constants.tabellaEventi_stato, isEqualTo: filters["status"]!.fieldValue);
+    }
+
+    bool useDataFine = filters.containsKey("startDate") || filters.containsKey("endDate");
+
+    if (filters.containsKey("startDate") && filters["startDate"]!.fieldValue is DateTime) {
+      startQuery = startQuery.where(useDataFine ? Constants.tabellaEventi_dataFine : Constants.tabellaEventi_dataInizio, isGreaterThanOrEqualTo: filters["startDate"]!.fieldValue);
+    }
+    if (filters.containsKey("endDate") && filters["endDate"]!.fieldValue is DateTime) {
+      startQuery = startQuery.where(useDataFine ? Constants.tabellaEventi_dataFine : Constants.tabellaEventi_dataInizio, isLessThan: filters["endDate"]!.fieldValue);
+    }
+
+    if (filters.containsKey("suboperators") && filters["suboperators"]!.fieldValue != null) {
+      List<Account> suboperators = List.from(filters["suboperators"]!.fieldValue);
+      if (suboperators.isNotEmpty) {
+        startQuery = startQuery.where(Constants.tabellaEventi_idOperatori, arrayContains: suboperators[0].id);
+      }
+    }
+
+    if (filters.containsKey("categories") && filters["categories"]!.fieldValue != null) {
+      Map<String, bool> categories = Map.from(filters["categories"]!.fieldValue);
+      categories.removeWhere((key, value) => !value);
+      if (categories.isNotEmpty) {
+        startQuery = startQuery.where(Constants.tabellaEventi_categoria, whereIn: categories.keys.toList());
+      }
+    }
+
+    try {
+      final aggregateQuerySnapshot = await startQuery.count().get();
+
+      final excludeQuery = startQuery
+          .where(Constants.tabellaEventi_isExcepeted, isEqualTo: false)
+          .where(Constants.tabellaEventi_isRepeated, isEqualTo: true);
+      final excludeAggregateQuerySnapshot = await excludeQuery.count().get();
+
+      return (aggregateQuerySnapshot.count ?? 0) - (excludeAggregateQuerySnapshot.count ?? 0);
+    } catch (e) {
+      // Fallback in case of missing index for the complex count
+      final aggregateQuerySnapshot = await startQuery.count().get();
+      return aggregateQuerySnapshot.count ?? 0;
+    }
   }
 
   Future<String> addEventPast(Event e) async {

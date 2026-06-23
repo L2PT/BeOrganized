@@ -306,7 +306,7 @@ class SideMenuLayerWeb extends StatelessWidget {
         builder: (context, webState) {
           return BlocBuilder<MessageManagePageCubit, MessageManagePageState>(
             bloc: context.read<WebCubit>().messageManagePageCubit,
-            buildWhen: (previous, current) => previous.chats != current.chats,
+            buildWhen: (previous, current) => previous.chats != current.chats || previous.runtimeType != current.runtimeType,
             builder: (context, msgState) {
               final int totalUnread = msgState.chats
                   .fold(0, (sum, chat) => sum + chat.unreadCount);

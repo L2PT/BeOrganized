@@ -14,6 +14,7 @@ import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/dataTable/event_data_table.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/headers_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
@@ -23,17 +24,31 @@ import 'package:venturiautospurghi/views/widgets/flat_tab_widget.dart';
 import 'package:venturiautospurghi/views/widgets/responsive_widget.dart';
 import 'package:venturiautospurghi/views/widgets/table/pagination_table.dart';
 
-class HistoryEventList extends StatelessWidget{
+class HistoryEventList extends StatefulWidget {
 
   final int? selectedStatus;
   HistoryEventList([this.selectedStatus]);
+
+  @override
+  _HistoryEventListState createState() => _HistoryEventListState();
+}
+
+class _HistoryEventListState extends State<HistoryEventList> {
+
+  @override
+  void initState() {
+    super.initState();
+    if(!PlatformUtils.isMobile) {
+      context.read<WebCubit>().initCubit(Constants.historyEventListRoute);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     CloudFirestoreService repository = context.read<CloudFirestoreService>();
 
     return new BlocProvider(
-        create: (_) => HistoryEventListCubit(repository, selectedStatus),
+        create: (_) => HistoryEventListCubit(repository, widget.selectedStatus),
       child: ResponsiveWidget(
         smallScreen: _smallScreen(),
         largeScreen: _largeScreen(),
@@ -128,7 +143,9 @@ class _largeScreenState extends State<_largeScreen>  {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder <WebCubit, WebCubitState>(
-          buildWhen: (previous, current) => previous.historyPageState != current.historyPageState,
+          buildWhen: (previous, current) => 
+              previous.historyPageState != current.historyPageState ||
+              previous.historyPageState.runtimeType != current.historyPageState.runtimeType,
           builder: (context, state) {
           final historyState = state.historyPageState;
 
@@ -140,59 +157,87 @@ class _largeScreenState extends State<_largeScreen>  {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Text("Tutti gli storici", style: title, textAlign: TextAlign.left),
-                  SizedBox(height: 10,),
-                  Container(
-                    height: 60,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: tabsHeaders.map((header) => Padding(
-                          padding: const EdgeInsets.only(right: 15.0),
-                          child: _headerWidget(header),
-                        )).toList(),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      MouseRegion(cursor: SystemMouseCursors.click, child: GestureDetector(onTap: () => context.read<WebCubit>().historyPageCubit.selectYear(null), child: Text("Storico", style: title.copyWith(color: historyState.selectedYear == null ? grey_dark : grey_dark, fontWeight: historyState.selectedYear == null ? FontWeight.bold : FontWeight.normal)))),
-                      if(historyState.selectedYear != null)
-                         ...[ Text(" > ", style: title.copyWith(color: grey_dark)), MouseRegion(cursor: SystemMouseCursors.click, child: GestureDetector(onTap: () => context.read<WebCubit>().historyPageCubit.selectMonth(null), child: Text("Anno ${historyState.selectedYear}", style: title.copyWith(color: historyState.selectedMonth == null ? grey_dark : grey_dark, fontWeight: historyState.selectedMonth == null ? FontWeight.bold : FontWeight.normal)))) ],
-                      if(historyState.selectedMonth != null)
-                         ...[ Text(" > ", style: title.copyWith(color: grey_dark)), Text(monthNames[historyState.selectedMonth!-1], style: title.copyWith(color: grey_dark, fontWeight: FontWeight.bold)) ]
-                    ]
+                      Container(
+                        height: 70,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: tabsHeaders.map((header) => Padding(
+                              padding: const EdgeInsets.only(right: 15.0),
+                              child: _headerWidget(header),
+                            )).toList(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      Row(
+                          children: [
+                            MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                    onTap: () => context.read<WebCubit>().historyPageCubit.selectYear(null),
+                                    child: Text(
+                                        tabsHeaders.firstWhere((e) => e.value == historyState.selectedStatusTab).key.text!.toLowerCase().capitalize(),
+                                        style: title.copyWith(color: grey_dark, fontWeight: historyState.selectedYear == null ? FontWeight.bold : FontWeight.normal)
+                                    )
+                                )
+                            ),
+                            if(historyState.selectedYear != null) ...[
+                              Icon(Icons.chevron_right, color: grey_dark, size: 25),
+                              MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                      onTap: () => context.read<WebCubit>().historyPageCubit.selectMonth(null),
+                                      child: Text("Anno ${historyState.selectedYear}", style: title.copyWith(color: historyState.selectedMonth == null ? grey_dark : grey_dark, fontWeight: historyState.selectedMonth == null ? FontWeight.bold : FontWeight.normal))
+                                  )
+                              )
+                            ],
+                            if(historyState.selectedMonth != null) ...[
+                              Icon(Icons.chevron_right, color: grey_dark, size: 25),
+                              Text(monthNames[historyState.selectedMonth!-1], style: title.copyWith(color: grey_dark, fontWeight: FontWeight.bold))
+                            ]
+                          ]
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 15,),
                   Expanded(
                     child: historyState is! ReadyHistoryPageState ? Center(child: CircularProgressIndicator()) : historyState.selectedYear == null ?
-                    GridView.builder(
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 250,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        mainAxisExtent: 160,
-                      ),
-                      itemCount: historyState.availableYears.length,
-                      itemBuilder: (context, index) {
-                        int year = historyState.availableYears[index];
-                        return _buildCard("Anno\n$year", () => context.read<WebCubit>().historyPageCubit.selectYear(year), historyState.yearCounts[year] ?? 0);
-                      },
-                    ) : historyState.selectedMonth == null ?
-                    GridView.builder(
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 250,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        mainAxisExtent: 180,
-                      ),
-                      itemCount: 12,
-                      itemBuilder: (context, index) {
-                        return _buildCard(monthNames[index], () => context.read<WebCubit>().historyPageCubit.selectMonth(index + 1), historyState.monthCounts[index + 1] ?? 0);
-                      },
-                    ) :
+                    Builder(builder: (context) {
+                      final filteredYears = historyState.availableYears.where((year) => (historyState.yearCounts[year] ?? 0) > 0).toList();
+                      return filteredYears.isNotEmpty ? GridView.builder(
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 250,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          mainAxisExtent: 160,
+                        ),
+                        itemCount: filteredYears.length,
+                        itemBuilder: (context, index) {
+                          int year = filteredYears[index];
+                          return _buildCard("Anno\n$year", () => context.read<WebCubit>().historyPageCubit.selectYear(year), historyState.yearCounts[year] ?? 0);
+                        },
+                      ) : Center(child: Text("Nessun incarico da mostrare", style: title));
+                    }) : historyState.selectedMonth == null ?
+                    Builder(builder: (context) {
+                      final filteredMonths = List.generate(12, (index) => index + 1).where((m) => (historyState.monthCounts[m] ?? 0) > 0).toList();
+                      return filteredMonths.isNotEmpty ? GridView.builder(
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 250,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          mainAxisExtent: 180,
+                        ),
+                        itemCount: filteredMonths.length,
+                        itemBuilder: (context, index) {
+                          int month = filteredMonths[index];
+                          return _buildCard(monthNames[month - 1], () => context.read<WebCubit>().historyPageCubit.selectMonth(month), historyState.monthCounts[month] ?? 0);
+                        },
+                      ) : Center(child: Text("Nessun incarico da mostrare", style: title));
+                    }) :
                     Builder(builder: (context) {
                       final readyState = historyState as ReadyHistoryPageState;
                       final events = readyState.selectedEvents();
@@ -206,6 +251,7 @@ class _largeScreenState extends State<_largeScreen>  {
                             ['','Tipo','Titolo','Data','Operatori','Cliente','Indirizzo','Telefoni'],
                             firstRowIndex: readyState.numPage,
                             showCheckboxColumn: false,
+                            headingRowHeight: 40,
                             handleNext: context.read<WebCubit>().historyPageCubit.nextPage,
                             handlePrevious: context.read<WebCubit>().historyPageCubit.previousPage,
                           )

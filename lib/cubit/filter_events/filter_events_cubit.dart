@@ -107,9 +107,7 @@ class EventsFilterCubit extends Cubit<EventsFilterState> {
   }
 
   void clearFilters(){
-    Map<String, FilterWrapper> filters = Map.of(state.filters);
     initFilters();
-    if(filters.toString() == state.filters.toString()) showFiltersBox();
     notifyFiltersChanged(false);
   }
 

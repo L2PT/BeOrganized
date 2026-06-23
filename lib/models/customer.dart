@@ -142,14 +142,22 @@ class Customer extends Equatable{
   }
 
   String allPhones(){
-    List<String> allPhone = List.from(phones); // Crea una copia della lista esistente
-    allPhone.add(address.phone); // Aggiunge il telefono dall'indirizzo
-    allPhone = allPhone.toSet().toList(); // Rimuove i duplicati convertendo in Set e poi di nuovo in List
-    return allPhone.join(" - "); // Concatena
+    List<String> allPhone = [];
+    if (isAdministrator()) {
+      allPhone.add(address.phone);
+      allPhone.add(referral.phone);
+    } else {
+      allPhone.add(phone);
+      allPhone.addAll(phones.map((e) => e.toString()));
+      allPhone.add(address.phone);
+    }
+    List<String> filteredPhones = allPhone.where((p) => !string.isNullOrEmpty(p)).toSet().toList();
+    return filteredPhones.join(" - ");
   }
 
   String phoneAddress(){
-    return this.address.phone.isEmpty?this.phone.isEmpty?'Nessun telefono indicato':this.phone:this.address.phone;
+    String phones = allPhones();
+    return string.isNullOrEmpty(phones) ? 'Nessun telefono indicato' : phones;
   }
 
   static int getIntTypology(String typology){

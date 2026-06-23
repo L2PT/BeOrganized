@@ -14,14 +14,30 @@ import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_p
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/message/chat_overview.dart';
 import 'package:venturiautospurghi/models/message/message.dart';
+import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
+import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/screens/message_login_view.dart';
 import 'package:venturiautospurghi/views/widgets/chat/chat_list_widget.dart';
 import 'package:venturiautospurghi/views/widgets/chat/nochat_widget.dart';
 import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 
-class MessageManage extends StatelessWidget {
+class MessageManage extends StatefulWidget {
+
+  @override
+  _MessageManageState createState() => _MessageManageState();
+}
+
+class _MessageManageState extends State<MessageManage> {
+
+  @override
+  void initState() {
+    super.initState();
+    if(!PlatformUtils.isMobile) {
+      context.read<WebCubit>().initCubit(Constants.manageMessageRoute);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +56,7 @@ class MessageManage extends StatelessWidget {
                     child: Padding(padding: EdgeInsets.all(10), child: ChatList(
                       chats: state.messageManagePageState.filteredChats,
                       activeChatId: state.messageManagePageState.selectedChat?.id,
+                      onlyUnread: state.messageManagePageState.onlyUnread,
                       onChatTap: (id) {
                         final chat = state.messageManagePageState.chats.firstWhere((c) => c.id == id);
                         context.read<WebCubit>().messageManagePageCubit.selectChat(chat);

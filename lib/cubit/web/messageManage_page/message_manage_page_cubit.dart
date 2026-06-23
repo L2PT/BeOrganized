@@ -19,13 +19,15 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
   final CloudFirestoreService _databaseRepository;
   final ScrollController scrollController = new ScrollController();
 
+  StreamSubscription? _configSubscription;
   StreamSubscription? _chatsSubscription;
   StreamSubscription? _messagesSubscription;
 
   MessageManagePageCubit(this._databaseRepository): super(LoadingMessagesManage());
 
   void initCubit() {
-    _databaseRepository.subscribeMessageConfig().listen((config) {
+    if (_configSubscription != null) return;
+    _configSubscription = _databaseRepository.subscribeMessageConfig().listen((config) {
       if(!config.sessionActive) {
         emit(LoadingMessagesManage(
           qrcode: config.qrCode,
@@ -48,7 +50,7 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
   void _subscribeChats() {
     _chatsSubscription?.cancel();
     _chatsSubscription = _databaseRepository.subscribeChats().listen((chats) {
-      _filterChats(chats, state.searchQuery);
+      _filterChats(chats, state.searchQuery, state.onlyUnread);
     });
   }
 
@@ -104,7 +106,11 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
   }
 
   void updateSearchQuery(String query) {
-    _filterChats(state.chats, query);
+    _filterChats(state.chats, query, state.onlyUnread);
+  }
+
+  void toggleOnlyUnread() {
+    _filterChats(state.chats, state.searchQuery, !state.onlyUnread);
   }
 
   void goToEventDetails(BuildContext context, String eventId) async {
@@ -114,7 +120,7 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
     }
   }
 
-  void _filterChats(List<ChatOverview> allChats, String query) {
+  void _filterChats(List<ChatOverview> allChats, String query, bool onlyUnread) {
     var filtered = allChats;
 
     if (query.isNotEmpty) {
@@ -124,10 +130,15 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
       ).toList();
     }
 
+    if (onlyUnread) {
+      filtered = filtered.where((chat) => chat.unreadCount > 0).toList();
+    }
+
     emit(state.copyWith(
         chats: allChats,
         filteredChats: filtered,
         searchQuery: query,
+        onlyUnread: onlyUnread,
     ));
   }
 
@@ -141,6 +152,7 @@ class MessageManagePageCubit extends Cubit<MessageManagePageState> {
 
   @override
   Future<void> close() {
+    _configSubscription?.cancel();
     _chatsSubscription?.cancel();
     _messagesSubscription?.cancel();
     scrollController.dispose();
