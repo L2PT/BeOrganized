@@ -2,7 +2,7 @@ library app.globals;
 
 class Constants {
   static const String title = "Venturi Autospurghi App";
-  static const bool debug = !bool.fromEnvironment('dart.vm.product');
+  static const bool debug = true;//!bool.fromEnvironment('dart.vm.product');
   static const String web = "web";
   static const String mobile = "mobile";
 
@@ -54,16 +54,16 @@ class Constants {
   static const String tabellaUtenti = 'Utenti';
   static const String tabellaCostanti = debug?'Costanti_DEBUG':'Costanti';
   static const String tabellaEventi = debug?'Eventi_DEBUG':'Eventi';
-  static const String tabellaStorico = debug?'Storico_DEBUG':'Storico';
+  static const String tabellaStorico = !debug?'Storico_DEBUG':'Storico';
   static const String tabellaClienti = debug?'Clienti_DEBUG':'Clienti';
-  static const String subtabellaStorico = debug?'StoricoEventi_DEBUG':'StoricoEventi';
-  static const String tabellaEventiEliminati = debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
-  static const String tabellaEventiTerminati = debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
-  static const String tabellaEventiRifiutati = debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
+  static const String subtabellaStorico = !debug?'StoricoEventi_DEBUG':'StoricoEventi';
+  static const String tabellaEventiEliminati = !debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
+  static const String tabellaEventiTerminati = !debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
+  static const String tabellaEventiRifiutati = !debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
   static const String tabellaMessageConfig = debug?'/whatsapp_sessions_DEBUG':'/whatsapp_sessions';
-  static const String tabellaChats = !debug?'Chats_DEBUG':'Chats';
+  static const String tabellaChats = debug?'Chats_DEBUG':'Chats';
   static const String tabellaMessaggi = 'messages';
-  static const String tabellaContattiWhatsapp = !debug?'whatsapp_contacts_DEBUG':'whatsapp_contacts';
+  static const String tabellaContattiWhatsapp = debug?'whatsapp_contacts_DEBUG':'whatsapp_contacts';
 
   // TABLE EVENTI
   static const String tabellaEventi_titolo = 'Titolo';
@@ -163,8 +163,8 @@ class Constants {
   static const String whatsappBaseUrl = 'http://13.140.25.72:3000';
 
   //OVERVIEW SCREEN
-  static const double WIDTH_OVERVIEW = 400;
-  static const double HEIGHT_OVERVIEW = 655;
+  static const double WIDTH_OVERVIEW = 1024;
+  static const double HEIGHT_OVERVIEW = 700;
 
   //REGEXP
   static const String pattternPhoneValid = r'(^(?:[+3]9)?[0-9]{8,12}$)';

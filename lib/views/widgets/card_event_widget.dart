@@ -10,6 +10,7 @@ import 'package:venturiautospurghi/utils/theme.dart';
 class CardEvent extends StatelessWidget {
   final Event event;
   final void Function(Event)? onTapAction;
+  final void Function(Event)? onDoubleTapAction;
   final Map<String, Function(Event)>? buttonArea;
   final double height;
   final bool externalBorder;
@@ -18,6 +19,7 @@ class CardEvent extends StatelessWidget {
 
   CardEvent({required this.event,
     this.onTapAction,
+    this.onDoubleTapAction,
     this.buttonArea,
     this.key,
     this.height = 160,
@@ -242,6 +244,7 @@ class CardEvent extends StatelessWidget {
 
     return GestureDetector(
       onTap: () { onTapAction?.call(event); },
+      onDoubleTap: () { onDoubleTapAction?.call(event); },
       child: _buildCardEvent(),
     );
   }

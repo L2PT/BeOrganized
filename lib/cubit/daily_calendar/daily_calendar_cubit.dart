@@ -55,8 +55,11 @@ class DailyCalendarCubit extends Cubit<DailyCalendarState> {
     first = TimeUtils.truncateDate(first,"day");
     last = TimeUtils.truncateDate(last,"day").add(Duration(hours: 23));
 
-    // Raggruppa gli eventi per data
+    // Raggruppa gli eventi per data, escludendo le ricorrenze non ancora elaborate
     for (Event singleEvent in _events) {
+      // Nascondi le istanze ricorrenti non ancora elaborate dal calendario operatore
+      if (singleEvent.isRepeatedEvent()) continue;
+
       if (singleEvent.isBetweenDate(first, last)) {
         int diff = singleEvent.end.difference(singleEvent.start).inDays;
         for(var i=0;i<=diff;i++){

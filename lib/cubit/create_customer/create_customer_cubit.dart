@@ -25,6 +25,9 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     state.currentStep = currentStep;
     setType(type);
     types = _databaseRepository.typesCustomer;
+    if (type == TypeStatus.create) {
+      state.customer = Customer.empty();
+    }
   }
 
   void setFirstClick(DateTime date){
@@ -35,7 +38,10 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
     if(state.isLoading()) return Future<bool>(()=>false);
     else if(this.formKeyBasiclyInfo.currentState!.validate()) {
       //get all data before refresh
-      formKeyAddressInfo.currentState!.save();
+      formKeyBasiclyInfo.currentState!.save();
+      if (formKeyAddressInfo.currentState != null) {
+        formKeyAddressInfo.currentState!.save();
+      }
       emit(state.assign(status: _formStatus.loading));
       try {
         if(this.isNew() || this.isCopy()) {
@@ -90,6 +96,37 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
         <String, dynamic>{'objectParameter' : state.event, 'currentStep': state.currentStep, 'typeStatus' : TypeStatus.create, 'context' : context, 'callback': PlatformUtils.isMobile?forceRefresh:null});
   }
 
+  void addAddress(Address address, {Address? toReplace}) {
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    if (toReplace != null) {
+      customer.addresses.removeWhere((element) => element == toReplace);
+    }
+    customer.addresses.add(address);
+    if (customer.address == toReplace || customer.address == Address.empty()) {
+      customer.address = address;
+    }
+    if (customer.id.isNotEmpty) {
+      _databaseRepository.updateCustomer(customer.id, customer);
+    }
+    emit(state.assign(customer: customer));
+  }
+
+  void addReferral(Referrals referral, {Referrals? toReplace}) {
+    Customer customer = Customer.fromMap("", state.customer.toMap());
+    if (toReplace != null) {
+      customer.referrals.removeWhere((element) => element == toReplace);
+    }
+    customer.referrals.add(referral);
+    if (customer.referral == toReplace || customer.referral == Referrals.empty()) {
+      customer.referral = referral;
+    }
+    if (customer.id.isNotEmpty) {
+      _databaseRepository.updateCustomer(customer.id, customer);
+    }
+    emit(state.assign(customer: customer));
+  }
+
+
   /* STEPPER CONTROLLER */
   void onStepContinue(int numberStep){
     if(state.currentStep != numberStep-1){
@@ -130,7 +167,7 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
   }
 
   bool onSelectItemReferral(Referrals referral){
-    return state.customer.referrals.length > 1 && state.customer.referral == referral;
+    return state.customer.referrals.length > 1 && state.customer.selectedReferrals.contains(referral);
   }
 
   void removeAddressOnCustomer(Address address){
@@ -152,7 +189,16 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
 
   void selectReferralsOnCustomer(Referrals referrals){
     Customer customer = Customer.fromMap("", state.customer.toMap());
-    customer.referral = referrals;
+    if (customer.selectedReferrals.contains(referrals)) {
+      customer.selectedReferrals.remove(referrals);
+    } else {
+      customer.selectedReferrals.add(referrals);
+    }
+    if (customer.selectedReferrals.isNotEmpty) {
+      customer.referral = customer.selectedReferrals.first;
+    } else {
+      customer.referral = Referrals.empty();
+    }
     emit(state.assign(customer: customer));
   }
 
@@ -174,7 +220,10 @@ class CreateCustomerCubit extends Cubit<CreateCustomerState> with CreateEntityUt
   Event getEvent() => this.state.event;
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+    }
   }
 }
+
+

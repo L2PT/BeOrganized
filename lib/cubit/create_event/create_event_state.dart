@@ -14,6 +14,9 @@ class CreateEventState extends Equatable {
     isAllDay = event.isAllDayLong();
     isRepeat = event.isRepeated;
     isScheduled = event.isScheduled;
+    if (Constants.debug) {
+      print("CreateEventState: start=${event.start}, end=${event.end}, isAllDayLong=${event.isAllDayLong()}, isRepeated=${event.isRepeated}");
+    }
   }
 
   late final Event event;

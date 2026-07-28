@@ -297,9 +297,20 @@ class Event {
   }
 
   bool isAllDayLong() {
-    final differenceInHour = this.end.difference(this.start).inHours;
-    final dayDuration = Constants.MAX_WORKTIME - Constants.MIN_WORKTIME;
-    return differenceInHour >= dayDuration && !isRepeated;
+    int startMinutes = this.start.hour * 60 + this.start.minute;
+    int endMinutes = this.end.hour * 60 + this.end.minute;
+    int durationMinutes;
+    if (isRepeated) {
+      durationMinutes = endMinutes - startMinutes;
+    } else {
+      durationMinutes = this.end.difference(this.start).inMinutes;
+    }
+    final dayDurationInMinutes = (Constants.MAX_WORKTIME - Constants.MIN_WORKTIME) * 60;
+    final result = durationMinutes >= (dayDurationInMinutes - 10);
+    if (Constants.debug) {
+      print("isAllDayLong check: start=$start, end=$end, diffInMinutes=$durationMinutes, dayDuration=$dayDurationInMinutes, result=$result");
+    }
+    return result;
   }
   bool isDeleted() => this.status == EventStatus.Deleted;
   bool isNew() => this.status == EventStatus.New;

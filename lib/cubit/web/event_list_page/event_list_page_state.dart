@@ -35,7 +35,10 @@ class EventListPageState extends CommonPageState {
 
 }
 
-class LoadingEventListPageState extends EventListPageState {}
+class LoadingEventListPageState extends EventListPageState {
+  LoadingEventListPageState({bool isBozze = false, Map<String, FilterWrapper>? filters})
+      : super(0, 0, filters, null, isBozze, null, null);
+}
 
 class ReadyEventListPageState extends EventListPageState {
 

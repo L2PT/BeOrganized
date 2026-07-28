@@ -9,6 +9,7 @@ class SuccessAlert {
   final bool showAction;
   final IconData icon;
   final Duration durationDialog;
+  final Color? iconColor;
   late final List<Widget> _actions;
   late final Widget _content;
 
@@ -17,6 +18,7 @@ class SuccessAlert {
         this.text = "",
         this.showAction = false,
         this.icon =  Icons.check_circle_outline_rounded,
+        this.iconColor,
         this.durationDialog = const Duration(seconds: 2),
       }) {
 
@@ -35,7 +37,7 @@ class SuccessAlert {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
-               this.icon, color: green_success,
+                this.icon, color: iconColor ?? green_success,
                 size: 120,
               ),
               SizedBox(height: 15,),

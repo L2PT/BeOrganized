@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
-import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/extensions.dart';
-import 'package:venturiautospurghi/utils/global_constants.dart';
+import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 
 part 'operator_selection_state.dart';
 
@@ -20,6 +19,7 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
   final int startingElements = 10;
   final int loadingElements = 5;
   bool canLoadMore = true;
+  String selectedTypology = Account.ALL;
 
   OperatorSelectionCubit(this._databaseRepository, Event? _event, this.isTriState) :
         this._event = _event ?? new Event.empty(),
@@ -37,12 +37,13 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
       operators = await _databaseRepository.getOperators();
       canLoadMore = false;
     }
-    emit(new ReadyOperators(operators, event: _event));
+    operators.removeWhere((op) => op.supervisor || op.typology == Account.RESPONSABILE);
+    emit(new ReadyOperators(_filterData(operators), event: _event, allOperators: operators));
   }
 
   void loadMoreData() async {
     if(state is ReadyOperators){
-      List<Account> preLoaded = [...string.isNullOrEmpty(state.searchNameField) ? operators : (state as ReadyOperators).filteredOperators];
+      List<Account> preLoaded = [...(state as ReadyOperators).filteredOperators];
       List<Account> loaded;
       if (isTriState) {
         loaded = await _databaseRepository.getOperatorsFree(_event.id, _event.start, _event.end,
@@ -52,6 +53,7 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
         loaded = await _databaseRepository.getOperators(limit: loadingElements, startFrom: (state as ReadyOperators).filteredOperators.last.surname);
       }
 
+      loaded.removeWhere((op) => op.supervisor || op.typology == Account.RESPONSABILE);
       operators.addAll(loaded);
       // update the selection map with new operators
       Map<String,int> preLoadedSelectionList = Map.from((state as ReadyOperators).selectionList);
@@ -64,31 +66,85 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
   }
 
   void onTap(Account operator) {
-    if(Constants.debug) print("${operator.name} ${operator.surname} selected");
-    ReadyOperators state = (this.state as ReadyOperators);
-    Map<String,int> selectionListUpdated = new Map.from(state.selectionList);
-    if(selectionListUpdated.containsKey(operator.id)) {
-      bool newFlag = state.primaryOperatorSelected;
-      int newValue = (selectionListUpdated[operator.id]!+1) % ((isTriState && (!newFlag || selectionListUpdated[operator.id] == 2))? 3 : 2);
-      if(newValue == 2) newFlag = true;
-      else if(newValue == 0 && selectionListUpdated[operator.id] == 2) newFlag = false;
+    // Deprecated in favor of onTapPrimary and onTapSecondary, but kept for simple-select compatibility
+    if (state is! ReadyOperators) return;
+    ReadyOperators readyState = (state as ReadyOperators);
+    Map<String, int> selectionListUpdated = Map.from(readyState.selectionList);
+    if (selectionListUpdated.containsKey(operator.id)) {
+      int currentValue = selectionListUpdated[operator.id]!;
+      int newValue = currentValue == 1 ? 0 : 1;
       selectionListUpdated[operator.id] = newValue;
-      emit(state.assign(preSelectedList: selectionListUpdated, primaryOperatorSelected: newFlag));
+      emit(readyState.assign(preSelectedList: selectionListUpdated));
     }
   }
 
+  void onTapPrimary(Account operator) {
+    if (state is! ReadyOperators) return;
+    ReadyOperators readyState = (state as ReadyOperators);
+    Map<String, int> selectionListUpdated = Map.from(readyState.selectionList);
+    
+    bool newFlag = readyState.primaryOperatorSelected;
+    
+    if (selectionListUpdated[operator.id] == 2) {
+      selectionListUpdated[operator.id] = 0;
+      newFlag = false;
+    } else {
+      selectionListUpdated.forEach((key, value) {
+        if (value == 2) {
+          selectionListUpdated[key] = 0;
+        }
+      });
+      selectionListUpdated[operator.id] = 2;
+      newFlag = true;
+    }
+    
+    emit(readyState.assign(
+      preSelectedList: selectionListUpdated,
+      primaryOperatorSelected: newFlag,
+    ));
+  }
+
+  void onTapSecondary(Account operator) {
+    if (state is! ReadyOperators) return;
+    ReadyOperators readyState = (state as ReadyOperators);
+    Map<String, int> selectionListUpdated = Map.from(readyState.selectionList);
+    
+    bool newFlag = readyState.primaryOperatorSelected;
+    
+    if (selectionListUpdated[operator.id] == 1) {
+      selectionListUpdated[operator.id] = 0;
+    } else {
+      if (selectionListUpdated[operator.id] == 2) {
+        newFlag = false;
+      }
+      selectionListUpdated[operator.id] = 1;
+    }
+    
+    emit(readyState.assign(
+      preSelectedList: selectionListUpdated,
+      primaryOperatorSelected: newFlag,
+    ));
+  }
+
+  void onTypologyChanged(String typology) {
+    selectedTypology = typology;
+    if (state is ReadyOperators) {
+      emit((state as ReadyOperators).assign(
+        filteredOperators: _filterData(operators),
+      ));
+    }
+  }
 
   void onSearchFieldChanged(Map<String, FilterWrapper> filters) {
     String text = filters["name"]!.fieldValue;
     state.searchNameField = text;
     scrollToTheTop();
-    if(string.isNullOrEmpty(text))
-      emit((state as ReadyOperators).assign(searchNameField: text, filteredOperators: operators));
-    else if(text.toLowerCase().contains(state.searchNameField.toLowerCase()))
-      emit((state as ReadyOperators).assign(searchNameField: text,
-          filteredOperators: _filterData((state as ReadyOperators).filteredOperators)));
-    else
-      emit((state as ReadyOperators).assign(searchNameField: text, filteredOperators: _filterData(operators)));
+    if (state is ReadyOperators) {
+      emit((state as ReadyOperators).assign(
+        searchNameField: text,
+        filteredOperators: _filterData(operators),
+      ));
+    }
 
     if(canLoadMore && state is ReadyOperators && (state as ReadyOperators).filteredOperators.length<startingElements)
       loadMoreData();
@@ -98,19 +154,21 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
     // not implemented
   }
 
-  List<Account> _filterData(operators){
-    List<Account> filteredOperators = [];
-    if(string.isNullOrEmpty(state.searchNameField))
-      filteredOperators = List.of(operators);
-    else {
-      operators.forEach((operator) {
-        String searchedFields = operator.name + " " + operator.surname;
-        if(searchedFields.toLowerCase().contains(state.searchNameField.toLowerCase())){
-          filteredOperators.add(operator);
+  List<Account> _filterData(List<Account> operatorsList) {
+    List<Account> filtered = [];
+    for (var operator in operatorsList) {
+      if (selectedTypology != Account.ALL && operator.typology != selectedTypology) {
+        continue;
+      }
+      if (!string.isNullOrEmpty(state.searchNameField)) {
+        String searchedFields = "${operator.name} ${operator.surname}";
+        if (!searchedFields.toLowerCase().contains(state.searchNameField.toLowerCase())) {
+          continue;
         }
-      });
+      }
+      filtered.add(operator);
     }
-    return filteredOperators;
+    return filtered;
   }
 
   void saveSelectionToEvent(){
@@ -126,12 +184,19 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
     _event.suboperators.addAll(subOperators);
   }
 
-  bool validateAndSave() {
+  bool validateAndSave(BuildContext context) {
     if(!isTriState || (state as ReadyOperators).primaryOperatorSelected) {
       saveSelectionToEvent();
       return true;
     } else {
-      PlatformUtils.notifyErrorMessage("Seleziona l'operatore principale, tappando due volte");
+      SuccessAlert(
+        context,
+        title: "ERRORE",
+        text: "Seleziona l'operatore principale",
+        showAction: true,
+        icon: Icons.error_outline_rounded,
+        iconColor: Colors.red,
+      ).show();
       return false;
     }
   }
@@ -140,10 +205,16 @@ class OperatorSelectionCubit extends Cubit<OperatorSelectionState> {
 
   void scrollToTheTop(){
     scrollController.animateTo(
-    0.0,
-    curve: Curves.easeOut,
-    duration: const Duration(milliseconds: 100),
-  );
+      0.0,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 100),
+    );
+  }
+
+  @override
+  Future<void> close() {
+    scrollController.dispose();
+    return super.close();
   }
 
 }

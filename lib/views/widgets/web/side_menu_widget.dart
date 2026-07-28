@@ -302,7 +302,7 @@ class SideMenuLayerWeb extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return BlocBuilder<WebCubit, WebCubitState>(
-        buildWhen: (previous, current) => previous.expandedMode != current.expandedMode,
+        buildWhen: (previous, current) => previous.expandedMode != current.expandedMode || previous.draftsCount != current.draftsCount,
         builder: (context, webState) {
           return BlocBuilder<MessageManagePageCubit, MessageManagePageState>(
             bloc: context.read<WebCubit>().messageManagePageCubit,
@@ -339,7 +339,11 @@ class SideMenuLayerWeb extends StatelessWidget {
                                             webState.expandedMode,
                                             linkMenu,
                                             context,
-                                            badgeCount: route == Constants.manageMessageRoute ? totalUnread : 0,
+                                            badgeCount: route == Constants.manageMessageRoute
+                                                ? totalUnread
+                                                : route == Constants.bozzeEventListRoute
+                                                    ? webState.draftsCount
+                                                    : 0,
                                           ))
                                       .values
                                       .toList()),),

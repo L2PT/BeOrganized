@@ -12,11 +12,13 @@ class WebCubitState extends Equatable {
   MessageManagePageState messageManagePageState = new LoadingMessagesManage();
   bool filterEvent = false;
   Map<String, FilterWrapper> filters = {};
+  int draftsCount = 0;
 
   WebCubitState({ bool expandedMode = true, List<Account>? webops, Map<String,List<Event>>? eventsOpe,
     Map<String, FilterWrapper>? filters, List<Customer>? customerList, Map<int, int>? countCustomerTypology,
     bool filterEvent = false, CalendarPageState? calendarPageState, ContactsPageState? contactsPageState,
-  HistoryPageState? historyPageState, EventListPageState? eventListPageState, UsersManagePageState? usersManagePageState, MessageManagePageState? messageManagePageState
+  HistoryPageState? historyPageState, EventListPageState? eventListPageState, UsersManagePageState? usersManagePageState, MessageManagePageState? messageManagePageState,
+    int draftsCount = 0,
   }):
               this.expandedMode = expandedMode,
               this.calendarPageState = calendarPageState??new CalendarPageState(),
@@ -27,11 +29,12 @@ class WebCubitState extends Equatable {
               this.messageManagePageState = messageManagePageState?? new LoadingMessagesManage(),
               this.filterEvent = filterEvent,
               this.webops = webops??[],
+              this.draftsCount = draftsCount,
               this.filters = filters??{};
 
   @override
   List<Object?> get props => [ expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState, usersManagePageState, messageManagePageState, webops,
-    filters.keys.join(), filters.values.join()];
+    filters.keys.join(), filters.values.join(), draftsCount];
 
   ReadyWebCubitState assign({
     bool? expandedMode,
@@ -44,10 +47,12 @@ class WebCubitState extends Equatable {
     EventListPageState? eventListPageState,
     UsersManagePageState? usersManagePageState,
     MessageManagePageState? messageManagePageState,
+    int? draftsCount,
   }) => ReadyWebCubitState.update(
       expandedMode??this.expandedMode, filterEvent??this.filterEvent, webops??this.webops,
       filters??this.filters, calendarPageState??this.calendarPageState, contactsPageState??this.contactsPageState,
-      historyPageState??this.historyPageState, eventListPageState??this.eventListPageState, usersManagePageState??this.usersManagePageState, messageManagePageState??this.messageManagePageState);
+      historyPageState??this.historyPageState, eventListPageState??this.eventListPageState, usersManagePageState??this.usersManagePageState, messageManagePageState??this.messageManagePageState,
+      draftsCount??this.draftsCount);
 
 }
 
@@ -62,11 +67,11 @@ class ReadyWebCubitState extends WebCubitState{
   ReadyWebCubitState([List<Account>? webops]): super(webops: webops);
 
   @override
-  List<Object?> get props => [expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState, usersManagePageState, messageManagePageState, webops];
+  List<Object?> get props => [expandedMode, calendarPageState, contactsPageState, historyPageState, eventListPageState, usersManagePageState, messageManagePageState, webops, draftsCount];
 
   ReadyWebCubitState.update(bool expandedMode, bool filterEvent,List<Account> webops,
                           Map<String, FilterWrapper> filters, CalendarPageState calendarPageState, ContactsPageState contactsPageState,
-      HistoryPageState historyPageState, EventListPageState eventListPageState, UsersManagePageState usersManagePageState, MessageManagePageState messageManagePageState):
-        super(expandedMode: expandedMode, webops: webops,filters: filters, calendarPageState:  calendarPageState, contactsPageState: contactsPageState, historyPageState: historyPageState, eventListPageState: eventListPageState, usersManagePageState: usersManagePageState, messageManagePageState: messageManagePageState);
+      HistoryPageState historyPageState, EventListPageState eventListPageState, UsersManagePageState usersManagePageState, MessageManagePageState messageManagePageState, int draftsCount):
+        super(expandedMode: expandedMode, webops: webops,filters: filters, calendarPageState:  calendarPageState, contactsPageState: contactsPageState, historyPageState: historyPageState, eventListPageState: eventListPageState, usersManagePageState: usersManagePageState, messageManagePageState: messageManagePageState, draftsCount: draftsCount);
 
 }

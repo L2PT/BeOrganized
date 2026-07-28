@@ -92,7 +92,7 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
       case Constants.monthlyCalendarRoute: emit( InBackdropState(event.route, MonthlyCalendar(event.arg != null?event.arg['month']:null,event.arg != null?event.arg['operator']:null) )); break;
       case Constants.dailyCalendarRoute: emit( InBackdropState(event.route, DailyCalendar(event.arg['day'],event.arg['operator']) )); break;
       case Constants.profileRoute: emit( InBackdropState(event.route, Profile())); break;
-      case Constants.operatorListRoute: Navigator.push(event.arg["context"], MaterialPageRoute(maintainState: true, builder: (context) => OperatorSelection(objectParameter, event.arg["requirePrimaryOperator"],event.arg["context"])))
+      case Constants.operatorListRoute: Navigator.push(event.arg["context"], MaterialPageRoute(maintainState: true, builder: (context) => OperatorSelection(objectParameter, event.arg["requirePrimaryOperator"],event.arg["context"], event.arg["title"]??'OPERATORI')))
           .then((value) { (event.arg["callback"]).call(); });break;
       case Constants.customerListRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true, settings: RouteSettings(name: Constants.customerListRoute), builder: (context) => CustomerSelection(objectParameter, repository))).then((value) { (event.arg["callback"]).call(); }); break;
       case Constants.createCustomerViewRoute: Navigator.push(event.arg["context"],MaterialPageRoute(maintainState: true,settings:   RouteSettings(name: Constants.createCustomerViewRoute),builder: (context) => CreateCustomer(event: objectParameter, type: status,currentStep: currentStep, repository: repository,))).then((value) { (event.arg["callback"]).call(); }); break;

@@ -51,6 +51,9 @@ class WebCubit extends Cubit<WebCubitState> {
     _subscriptions.add(this.eventListPageCubit.stream.listen((status) => emit(state.assign(eventListPageState: status))));
     _subscriptions.add(this.usersManagePageCubit.stream.listen((status) => emit(state.assign(usersManagePageState: status))));
     _subscriptions.add(this.messageManagePageCubit.stream.listen((status) => emit(state.assign(messageManagePageState: status))));
+    _subscriptions.add(_databaseRepository.subscribeDraftEvents().listen((drafts) {
+      emit(state.assign(draftsCount: drafts.length));
+    }));
 
     this.messageManagePageCubit.initCubit();
     if(route == Constants.homeRoute) {

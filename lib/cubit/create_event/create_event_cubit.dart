@@ -1,3 +1,4 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,13 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
     categories = _databaseRepository.categories;
     types = _databaseRepository.typesEvent;
 
+    if (state.event.category.isEmpty && categories.isNotEmpty) {
+      state.event.category = categories.keys.first;
+      state.category = categories.keys.first;
+    } else {
+      state.category = state.event.category;
+    }
+
     addressController = TextEditingController(
       text: event?.address ?? '',
     );
@@ -122,12 +130,27 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   bool _validateForms() {
     final isTimeValid = formTimeControlsKey.currentState!.validate() || !canModify;
     final isInfoValid = formKeyAssignedInfo.currentState!.validate();
-    return isTimeValid && isInfoValid;
+    final isBasicValid = PlatformUtils.isMobile || formKeyBasiclyInfo.currentState!.validate();
+
+    // Cliente sempre obbligatorio
+    if (state.event.customer.id.isEmpty) {
+      return false;
+    }
+
+    // Team obbligatorio solo se l'incarico NON è programmato.
+    if (state.event.operator.id.isEmpty) {
+      return false;
+    }
+
+    return isTimeValid && isInfoValid && isBasicValid;
   }
 
   void _saveFormData() {
     formTimeControlsKey.currentState!.save();
     formKeyAssignedInfo.currentState!.save();
+    if (!PlatformUtils.isMobile) {
+      formKeyBasiclyInfo.currentState!.save();
+    }
   }
 
   Future<void> _handleEventSave(bool allSeries) async {
@@ -163,10 +186,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   void _updateEventStatus() {
     final event = state.event;
 
-    if (event.operator.id.isEmpty) {
-      event.status = EventStatus.Bozza;
-    } else if (state.isScheduled || state.isRepeat) {
+    // Programmato o ricorrente → sempre Accepted, anche senza team
+    if (state.isScheduled || state.isRepeat) {
       event.status = EventStatus.Accepted;
+    } else if (event.operator.id.isEmpty) {
+      event.status = EventStatus.Bozza;
     } else if (_isEventInFuture()) {
       event.status = EventStatus.New;
     }
@@ -307,6 +331,18 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
 
   Future<void> openFileExplorer() async {
     final newDocs = await FileUtils.openFileExplorer(state.documents);
+    state.event.documentsMap = newDocs;
+    state.event.documents = newDocs.keys.toList();
+    emit(state.assign(documents: newDocs));
+  }
+
+  Future<void> addDroppedFiles(List<XFile> xFiles) async {
+    if (xFiles.isEmpty) return;
+    final newDocs = Map<String, dynamic>.from(state.documents);
+    for (final xFile in xFiles) {
+      final bytes = await xFile.readAsBytes();
+      newDocs[xFile.name] = bytes;
+    }
     state.event.documentsMap = newDocs;
     state.event.documents = newDocs.keys.toList();
     emit(state.assign(documents: newDocs));
@@ -726,8 +762,64 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   }
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+      emit(state.assign(status: _formStatus.normal));
+    }
+  }
+
+  /// Applica i dati generati dall'AI al CreateEventCubit
+  void applyGeneratedEvent(Event generatedEvent) {
+    final event = _cloneEvent();
+
+    // Dati base incarico
+    if (generatedEvent.title.isNotEmpty) event.title = generatedEvent.title;
+    if (generatedEvent.description.isNotEmpty) event.description = generatedEvent.description;
+    if (generatedEvent.category.isNotEmpty) event.category = generatedEvent.category;
+    if (generatedEvent.typology.isNotEmpty) event.typology = generatedEvent.typology;
+    if (generatedEvent.color.isNotEmpty) event.color = generatedEvent.color;
+    event.withCartel = generatedEvent.withCartel;
+    event.isScheduled = generatedEvent.isScheduled;
+    event.isRepeated = generatedEvent.isRepeated;
+
+    // Date e orari
+    final defaultStart = state.event.start;
+    final genStart = generatedEvent.start;
+    if (genStart.year != defaultStart.year ||
+        genStart.month != defaultStart.month ||
+        genStart.day != defaultStart.day ||
+        genStart.hour != defaultStart.hour) {
+      event.start = generatedEvent.start;
+      event.end = generatedEvent.end;
+    }
+
+    // Ripetizione
+    if (generatedEvent.isRepeated) {
+      event.recurrenceDayOfMonth = generatedEvent.recurrenceDayOfMonth;
+      event.recurrenceIntervalInMonths = generatedEvent.recurrenceIntervalInMonths;
+      event.recurrenceStart = generatedEvent.recurrenceStart;
+      event.recurrenceEnd = generatedEvent.recurrenceEnd;
+    }
+
+    // Cliente
+    if (generatedEvent.customer.id.isNotEmpty ||
+        generatedEvent.customer.name.isNotEmpty ||
+        generatedEvent.customer.surname.isNotEmpty) {
+      event.customer = generatedEvent.customer;
+    }
+
+    // Operatore
+    if (generatedEvent.operator.id.isNotEmpty) {
+      event.operator = generatedEvent.operator;
+    }
+
+    state.category = event.category;
+    emit(state.assign(
+      event: event,
+      category: event.category,
+      isScheduled: event.isScheduled,
+      isRepeat: event.isRepeated,
+    ));
   }
 
   void fillMapForms() {

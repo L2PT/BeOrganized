@@ -23,8 +23,10 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
     addressController = new TextEditingController();
     setType(type);
     addressController.text = "";
-      if(isModify()){
+    if(isModify()){
       addressToModify = Address.fromMap(state.customer.address.toMap());
+    } else {
+      state.customer.address = Address.empty();
     }
   }
 
@@ -35,7 +37,7 @@ class CreateAddressCubit extends Cubit<CreateAddressState> with CreateEntityUtil
           state.customer.addresses.removeWhere((element) => element == addressToModify);
         }
         state.customer.addresses.add(state.customer.address);
-        if(isModify() && state.customer.id.isNotEmpty){
+        if(state.customer.id.isNotEmpty){
           _databaseRepository.updateCustomer(state.customer.id, state.customer);
         }
         state.event.customer = state.customer;

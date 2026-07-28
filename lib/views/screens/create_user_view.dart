@@ -18,6 +18,7 @@ import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
 
 import '../../utils/extensions.dart';
+import 'create_user_web.dart';
 
 class CreateUser extends StatelessWidget {
   final Event? event;
@@ -59,12 +60,40 @@ class _formUserWidget extends StatelessWidget {
             this.type == TypeStatus.create ? 'NUOVO UTENTE' : this.type == TypeStatus.copy?'COPIA UTENTE' : 'MODIFICA UTENTE',
             style: title_rev,
           ),
+          actions: !PlatformUtils.isMobile ? [
+            BlocBuilder<CreateUserCubit, CreateUserState>(
+              builder: (context, state) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    final cubit = context.read<CreateUserCubit>();
+                    if (await cubit.saveUser()) {
+                      if( !(await SuccessAlert(context, text: "Utente salvato!").show())){
+                        cubit.state.event.operator = cubit.state.user;
+                        PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : cubit.getEvent(), 'res': true});
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: black,
+                    backgroundColor: yellow, elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text('Salva Utente', style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w600, color: white)),
+                );
+              }
+            ),
+            const SizedBox(width: 16),
+          ] : null,
         ),
         body: BlocBuilder<CreateUserCubit, CreateUserState>(
             buildWhen: (previous, current) => previous != current,
             builder: (context, state) {
               return context.select((CreateUserCubit cubit) => cubit.state.isLoading())?
-              LoadingScreen() : _UserStepper(context);
+              LoadingScreen() : 
+              PlatformUtils.isMobile 
+                  ? _UserStepper(context)
+                  : const CreateUserWeb();
             })
     );
   }

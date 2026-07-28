@@ -74,8 +74,7 @@ class CardReferrals extends StatelessWidget {
           borderRadius: BorderRadius.circular(20.0)),
       child: Row(
         children: [
-          Flexible(
-              flex: 5,
+          Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -89,31 +88,32 @@ class CardReferrals extends StatelessWidget {
                   ):rowReferrals(),
                 ],
               )),
-          actionButton?Flexible(
-              flex: 1,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+          if (actionButton)
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: onEditAction,
-                              child: Icon(Icons.edit, color: selectItem ? Colors.white : Colors.grey, size: 20),
-                            )),
-                        SizedBox(width: 8,),
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: onDeleteAction,
-                            child: Icon(Icons.delete, color: selectItem ? Colors.white : Colors.grey, size: 20),
-                          ),)
-                      ])
+                  if (onEditAction != null)
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: onEditAction,
+                        child: Icon(Icons.edit, color: selectItem ? Colors.white : Colors.grey, size: 20),
+                      ),
+                    ),
+                  if (onEditAction != null && onDeleteAction != null) const SizedBox(width: 8),
+                  if (onDeleteAction != null)
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: onDeleteAction,
+                        child: Icon(Icons.delete, color: selectItem ? Colors.white : Colors.grey, size: 20),
+                      ),
+                    ),
                 ],
-              )):Container(),
+              ),
+            ),
         ],),
     );
   }

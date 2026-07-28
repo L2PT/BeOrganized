@@ -29,8 +29,8 @@ class FileUtils {
 
   static Future<Map<String, dynamic>> openFileExplorer(Map<String, dynamic> documents) async {
     try {
-      var a = (await FilePicker.platform.pickFiles(allowMultiple: true, withData: false))?.files??[];
-      Map<String, dynamic> files = Map.fromIterable(a, key: (file)=>(file as PlatformFile).name, value: (file)=>PlatformUtils.file((file as PlatformFile).path!));
+      var a = (await FilePicker.platform.pickFiles(allowMultiple: true, withData: !PlatformUtils.isMobile))?.files??[];
+      Map<String, dynamic> files = Map.fromIterable(a, key: (file)=>(file as PlatformFile).name, value: (file)=>PlatformUtils.isMobile?PlatformUtils.file((file as PlatformFile).path!):(file as PlatformFile).bytes);
       Map<String, dynamic> newDocs = Map.from(documents);
       files.forEach((key, value) {
         newDocs[key] = value;

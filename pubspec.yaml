@@ -50,6 +50,8 @@ dependencies:
   simple_gesture_detector: ^0.2.0
   package_info_plus: ^8.1.3
 
+  desktop_drop: ^0.7.1
+
   #web only
   js: ^0.6.3
   datetime_picker_formfield: ^2.0.0

@@ -55,7 +55,9 @@ class CustomerContactsCubit extends Cubit<CustomerContactsState> {
   }
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+      emit(state.assign(status: _formStatus.normal));
+    }
   }
 }

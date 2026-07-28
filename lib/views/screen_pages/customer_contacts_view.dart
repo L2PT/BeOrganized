@@ -373,7 +373,7 @@ class _smallScreenState extends State<_smallScreen> with TickerProviderStateMixi
                     padding: EdgeInsets.all(15.0),
                     child: ListView.separated(
                         controller: context.read<CustomerContactsCubit>().scrollController,
-                        separatorBuilder: (context, index) => SizedBox(height: 10,),
+                        separatorBuilder: (context, index) => SizedBox(height: 5,),
                         physics: BouncingScrollPhysics(),
                         padding: new EdgeInsets.symmetric(vertical: 8.0),
                         itemCount: state.customerList.length+1,

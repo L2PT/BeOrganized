@@ -11,6 +11,7 @@ import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/models/layout/event_layout.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/web.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/utils/create_entity_utils.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
@@ -790,6 +791,8 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isPendingRecurrence = layout.event.isRepeatedEvent();
+
     return RepaintBoundary(
       child: MouseRegion(
         opaque: false,
@@ -797,29 +800,49 @@ class _EventCard extends StatelessWidget {
             .hoverCardEnter(selectDay, index, layout.event),
         onExit: (e) => context.read<CalendarContentWebCubit>().hoverCardExit(),
         cursor: WidgetStateMouseCursor.clickable,
-        child: Draggable<Event>(
-          data: layout.event,
-          maxSimultaneousDrags: 1,
-          feedback: Opacity(
-            opacity: 0.3,
-            child: SizedBox(
-              width: layout.width,
-              child: CardEvent(
-                event: layout.event,
-                height: layout.height,
-                externalBorder: true,
+        child: Opacity(
+          opacity: isPendingRecurrence ? 0.35 : 1.0,
+          child: Draggable<Event>(
+            data: layout.event,
+            maxSimultaneousDrags: 1,
+            feedback: Opacity(
+              opacity: 0.3,
+              child: SizedBox(
+                width: layout.width,
+                child: CardEvent(
+                  event: layout.event,
+                  height: layout.height,
+                  externalBorder: true,
+                ),
               ),
             ),
-          ),
-          onDragEnd: onDragEnd,
-          child: CardEvent(
-            event: layout.event,
-            height: layout.height,
-            externalBorder: true,
-            onTapAction: (event) => PlatformUtils.navigator(
-              context,
-              Constants.detailsEventViewRoute,
-              {"objectParameter": event},
+            onDragEnd: onDragEnd,
+            child: CardEvent(
+              event: layout.event,
+              height: layout.height,
+              externalBorder: true,
+              onTapAction: (event) => PlatformUtils.navigator(
+                context,
+                Constants.detailsEventViewRoute,
+                {"objectParameter": event},
+              ),
+              onDoubleTapAction: (event) {
+                if (event.isRepeatedEvent()) {
+                  // È un'occorrenza virtuale di una ripetizione: la rendiamo eccezione
+                  // (la salviamo su Firestore con isExcepeted = true), visibile agli operatori
+                  context.read<CalendarContentWebCubit>().convertToException(event);
+                } else {
+                  // Evento normale o già eccezione: apri la schermata di modifica
+                  PlatformUtils.navigator(
+                    context,
+                    Constants.createEventViewRoute,
+                    <String, dynamic>{
+                      "objectParameter": event,
+                      "typeStatus": TypeStatus.modify,
+                    },
+                  );
+                }
+              },
             ),
           ),
         ),

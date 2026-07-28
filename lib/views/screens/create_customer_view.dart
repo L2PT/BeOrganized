@@ -22,6 +22,9 @@ import 'package:venturiautospurghi/views/widgets/loading_screen.dart';
 import 'package:venturiautospurghi/views/widgets/stepper_widget.dart';
 
 import '../../utils/extensions.dart';
+import 'create_address_view.dart';
+import 'create_customer_web.dart';
+import 'create_referrals_view.dart';
 
 class CreateCustomer extends StatelessWidget {
   final Event? event;
@@ -50,7 +53,8 @@ class _formCustomerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   return new Scaffold(
+    final cubit = context.read<CreateCustomerCubit>();
+    return new Scaffold(
         extendBody: true,
         resizeToAvoidBottomInset: false,
         appBar: new AppBar(
@@ -62,12 +66,41 @@ class _formCustomerWidget extends StatelessWidget {
             this.type == TypeStatus.create ? 'NUOVO CLIENTE' : this.type == TypeStatus.copy?'COPIA CLIENTE' : 'MODIFICA CLIENTE',
             style: title_rev,
           ),
+          actions: !PlatformUtils.isMobile ? [
+            BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
+              builder: (context, state) {
+                final hasAddresses = state.customer.addresses.isNotEmpty;
+                return ElevatedButton(
+                  onPressed: hasAddresses ? () async {
+                    final cubit = context.read<CreateCustomerCubit>();
+                    if (await cubit.saveCustomer()) {
+                      if( !(await SuccessAlert(context, text: "Cliente salvato!").show())){
+                        cubit.state.event.customer = cubit.state.customer;
+                        PlatformUtils.backNavigator(context, <String,dynamic>{'objectParameter' : cubit.getEvent(), 'res': true});
+                      }
+                    }
+                  } : null,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: black,
+                    backgroundColor: yellow, elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text('Salva Cliente', style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w600, color: white)),
+                );
+              }
+            ),
+            const SizedBox(width: 16),
+          ] : null,
         ),
         body: BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
             buildWhen: (previous, current) => previous != current,
             builder: (context, state) {
               return context.select((CreateCustomerCubit cubit) => cubit.state.isLoading())?
-              LoadingScreen() : _CustomerStepper(context);
+              LoadingScreen() : 
+              PlatformUtils.isMobile 
+                  ? _CustomerStepper(context)
+                  : const CreateCustomerWeb();
             })
     );
   }
@@ -440,8 +473,67 @@ class _formBasiclyInfo extends StatelessWidget{
 class _formAddressInfo extends StatelessWidget{
   double iconWidth = CreateCustomer.iconWidth;
 
+  void _showAddressDialog(BuildContext context, CreateCustomerCubit cubit, {Address? address}) {
+    final isModify = address != null;
+    final event = isModify ? cubit.getEventCustomer(address) : cubit.getEvent();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: whitebackground,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450, maxHeight: 600),
+            child: CreateAddress.slidePanel(
+              event: event,
+              type: isModify ? TypeStatus.modify : TypeStatus.create,
+              repository: context.read<CloudFirestoreService>(),
+              onConfirm: (newAddress) {
+                cubit.addAddress(newAddress, toReplace: address);
+                Navigator.pop(dialogContext);
+                cubit.forceRefresh();
+              },
+              onClose: () => Navigator.pop(dialogContext),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReferralDialog(BuildContext context, CreateCustomerCubit cubit, {Referrals? referral}) {
+    final isModify = referral != null;
+    final event = isModify ? cubit.getEventReferrals(referral) : cubit.getEvent();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: whitebackground,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450, maxHeight: 600),
+            child: CreateReferrals.slidePanel(
+              event: event,
+              type: isModify ? TypeStatus.modify : TypeStatus.create,
+              repository: context.read<CloudFirestoreService>(),
+              onConfirm: (newReferral) {
+                cubit.addReferral(newReferral, toReplace: referral);
+                Navigator.pop(dialogContext);
+                cubit.forceRefresh();
+              },
+              onClose: () => Navigator.pop(dialogContext),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<CreateCustomerCubit>();
 
     Widget phoneListElement(String phone){
       return Container(
@@ -470,37 +562,51 @@ class _formAddressInfo extends StatelessWidget{
     }
 
     Widget addressListElement(Address address){
+      final cubit = context.read<CreateCustomerCubit>();
       return Container(
         margin: EdgeInsets.only(top: 10, left: PlatformUtils.isMobile?5:20, right: PlatformUtils.isMobile?5:20),
         child: CardAddress(address: address,
-          onclickMode: context.read<CreateCustomerCubit>().onClickModeAddress(),
-          selectItem: context.read<CreateCustomerCubit>().onSelectItemAddress(address),
+          onclickMode: cubit.onClickModeAddress(),
+          selectItem: cubit.onSelectItemAddress(address),
           actionButton: true,
-          onTapAction: () => context.read<CreateCustomerCubit>().selectAddressOnCustomer(address),
-          onDeleteAction: () => context.read<CreateCustomerCubit>().removeAddressOnCustomer(address),
-          onEditAction: () => PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{
-            'objectParameter' : context.read<CreateCustomerCubit>().getEventCustomer(address),
-            'currentStep': context.read<CreateCustomerCubit>().state.currentStep,
-            'typeStatus' : TypeStatus.modify, 'context' : context,
-            'callback' :   PlatformUtils.isMobile?context.read<CreateCustomerCubit>().forceRefresh:null }),
+          onTapAction: () => cubit.selectAddressOnCustomer(address),
+          onDeleteAction: () => cubit.removeAddressOnCustomer(address),
+          onEditAction: () {
+            if (PlatformUtils.isMobile) {
+              PlatformUtils.navigator(context, Constants.createAddressViewRoute, <String, dynamic>{
+                'objectParameter' : cubit.getEventCustomer(address),
+                'currentStep': cubit.state.currentStep,
+                'typeStatus' : TypeStatus.modify, 'context' : context,
+                'callback' : cubit.forceRefresh });
+            } else {
+              _showAddressDialog(context, cubit, address: address);
+            }
+          },
         )
       );
     }
 
     Widget referralListElement(Referrals referral){
+      final cubit = context.read<CreateCustomerCubit>();
       return Container(
         margin: EdgeInsets.only(top: 10, left: PlatformUtils.isMobile?5:20, right: PlatformUtils.isMobile?5:20),
         child: CardReferrals(referral: referral,
-          onclickMode: context.read<CreateCustomerCubit>().onClickModeReferral(),
-          selectItem: context.read<CreateCustomerCubit>().onSelectItemReferral(referral),
+          onclickMode: cubit.onClickModeReferral(),
+          selectItem: cubit.onSelectItemReferral(referral),
           actionButton: true,
-          onTapAction: () => context.read<CreateCustomerCubit>().selectReferralsOnCustomer(referral),
-          onDeleteAction: () => context.read<CreateCustomerCubit>().removeReferralOnCustomer(referral),
-          onEditAction: () => PlatformUtils.navigator(context, Constants.createReferralsViewRoute, <String, dynamic>{
-            'objectParameter' : context.read<CreateCustomerCubit>().getEventReferrals(referral),
-            'currentStep': context.read<CreateCustomerCubit>().state.currentStep,
-            'typeStatus' : TypeStatus.modify, 'context' : context,
-            'callback' :   PlatformUtils.isMobile?context.read<CreateCustomerCubit>().forceRefresh:null }),
+          onTapAction: () => cubit.selectReferralsOnCustomer(referral),
+          onDeleteAction: () => cubit.removeReferralOnCustomer(referral),
+          onEditAction: () {
+            if (PlatformUtils.isMobile) {
+              PlatformUtils.navigator(context, Constants.createReferralsViewRoute, <String, dynamic>{
+                'objectParameter' : cubit.getEventReferrals(referral),
+                'currentStep': cubit.state.currentStep,
+                'typeStatus' : TypeStatus.modify, 'context' : context,
+                'callback' : cubit.forceRefresh });
+            } else {
+              _showReferralDialog(context, cubit, referral: referral);
+            }
+          },
         )
       );
     }
@@ -567,10 +673,16 @@ class _formAddressInfo extends StatelessWidget{
           ),
           IconButton(
               icon: Icon(Icons.add, color: black),
-              onPressed: () => context.read<CreateCustomerCubit>().addReferralsOnCustomer(context))
+              onPressed: () {
+                if (PlatformUtils.isMobile) {
+                  cubit.addReferralsOnCustomer(context);
+                } else {
+                  _showReferralDialog(context, cubit);
+                }
+              })
         ]),
         BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
-            buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
+            buildWhen: (previous, current) => previous.status != current.status || previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
             builder: (context, state) {
               return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.referrals).asMap()
                   .map((i, referral) =>
@@ -609,10 +721,16 @@ class _formAddressInfo extends StatelessWidget{
                       ),
                       IconButton(
                           icon: Icon(Icons.add, color: black),
-                          onPressed: () => context.read<CreateCustomerCubit>().addAddressOnCustomer(context))
+                          onPressed: () {
+                            if (PlatformUtils.isMobile) {
+                              cubit.addAddressOnCustomer(context);
+                            } else {
+                              _showAddressDialog(context, cubit);
+                            }
+                          })
                     ]),
                     BlocBuilder<CreateCustomerCubit, CreateCustomerState>(
-                        buildWhen: (previous, current) => previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
+                        buildWhen: (previous, current) => previous.status != current.status || previous.customer.toString() != current.customer.toString() || previous.event.customer.toString() != current.event.customer.toString() ,
                         builder: (context, state) {
                           return Column(children: <Widget>[...(context.read<CreateCustomerCubit>().state.customer.addresses).asMap()
                               .map((i, address) =>

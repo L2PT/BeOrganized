@@ -45,8 +45,10 @@ class AccountFilterCubit extends Cubit<AccountsFilterState> {
   }
 
   void forceRefresh() {
-    emit(state.assign(status: _filterStatus.loading));
-    emit(state.assign(status: _filterStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _filterStatus.loading));
+      emit(state.assign(status: _filterStatus.normal));
+    }
   }
 
   void clearFilters(Map<String, FilterWrapper> filtersInput){

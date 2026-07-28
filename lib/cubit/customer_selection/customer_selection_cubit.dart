@@ -1,4 +1,3 @@
-
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +6,9 @@ import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/models/referrals.dart';
-import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/agolia_service.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
+import 'package:venturiautospurghi/views/widgets/alert/alert_success.dart';
 
 part 'customer_selection_state.dart';
 
@@ -20,29 +19,67 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   final int startingElements = 30;
   final int loadingElements = 15;
   Map<String, ExpansibleController> mapController = {};
+  String selectedTypology = Customer.ALL;
 
   CustomerSelectionCubit(this._databaseRepository, Event? _event) :
         super(LoadingCustomers()){
     getCustomers(_event ?? new Event.empty());
   }
 
-  void getCustomers(Event event) async {
-    customers = await _databaseRepository.getCustomers(state.filters, limit: startingElements);
-    emit(state.assign(filteredCustomers: customers,event:  event));
+  List<Customer> _applyTypologyFilter(List<Customer> listToFilter) {
+    if (selectedTypology == Customer.ALL) return listToFilter;
+    return listToFilter.where((c) => c.typology == selectedTypology).toList();
   }
 
+  void onTypologyChanged(String typology) {
+    selectedTypology = typology;
+    if (state is ReadyCustomers) {
+      var filtered = _applyTypologyFilter(customers);
+      emit((state as ReadyCustomers).assign(
+        filteredCustomers: filtered,
+      ));
+      if (filtered.length < startingElements && state.canLoadMore) {
+        loadMoreData();
+      }
+    }
+  }
+
+  void getCustomers(Event event) async {
+    customers = await _databaseRepository.getCustomers(state.filters, limit: startingElements);
+    bool canLoadMore = customers.length >= startingElements;
+    emit(state.assign(filteredCustomers: _applyTypologyFilter(customers), event: event, canLoadMore: canLoadMore));
+  }
+
+  bool _isLoadingMore = false;
+
   void loadMoreData() async {
-    if(state is ReadyCustomers){
+    if (state is! ReadyCustomers || _isLoadingMore) return;
+    _isLoadingMore = true;
+    try {
       List<Customer> loaded;
       if(state.searchNameField.isNotEmpty){
         List<String> idCustomers = await AlgoliaService.searchCustomer(state.searchNameField, hitsPerPage: loadingElements, page: state.numPage);
         loaded = await _databaseRepository.getCustomersByIds(idCustomers);
       }else{
-        loaded = await _databaseRepository.getCustomers(state.filters,limit: loadingElements, startFrom: (state as ReadyCustomers).filteredCustomers.last.id);
+        // Always paginate from the last element of the FULL (unfiltered) list
+        var lastId = customers.isNotEmpty ? customers.last.id : null;
+        loaded = await _databaseRepository.getCustomers(state.filters, limit: loadingElements, startFrom: lastId);
       }
-      customers.addAll(loaded);
+      // Deduplicate: only add customers not already in the list
+      final existingIds = customers.map((c) => c.id).toSet();
+      final newItems = loaded.where((c) => !existingIds.contains(c.id)).toList();
+      customers.addAll(newItems);
       bool canLoadMore = loaded.length >= loadingElements;
-      emit((state as ReadyCustomers).assign( filteredCustomers: customers, canLoadMore: canLoadMore));
+      var filtered = _applyTypologyFilter(customers);
+      if (state is ReadyCustomers) {
+        emit((state as ReadyCustomers).assign(filteredCustomers: filtered, canLoadMore: canLoadMore));
+        _isLoadingMore = false;
+        if (filtered.length < startingElements && canLoadMore) {
+          loadMoreData();
+        }
+      }
+    } catch (e) {
+      _isLoadingMore = false;
     }
   }
 
@@ -60,7 +97,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
 
   void _filterData(Map<String, FilterWrapper> filters, Event e, Customer customer) async{
     String searchquery = filters['searchQuery']!.fieldValue;
-    List<Customer> loaded = List.empty();
+    List<Customer> loaded = [];
     if(searchquery.isNotEmpty){
       List<String> idCustomers = await AlgoliaService.searchCustomer(filters['searchQuery']!.fieldValue, hitsPerPage: startingElements, );
       if(idCustomers.isNotEmpty)
@@ -69,7 +106,8 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
       loaded = await _databaseRepository.getCustomers(state.filters, limit: startingElements);
     }
     bool canLoadMore = loaded.length >= startingElements;
-    emit(state.assign( filteredCustomers: loaded, searchNameField: filters["searchQuery"]!.fieldValue, filters: filters,
+    customers = loaded;
+    emit(state.assign( filteredCustomers: _applyTypologyFilter(loaded), searchNameField: filters["searchQuery"]!.fieldValue, filters: filters,
         event: e, canLoadMore: canLoadMore, customer: customer));
   }
 
@@ -79,9 +117,14 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
       ExpansibleController? controller = mapController[(state as ReadyCustomers).customer.id];
       if(controller != null && controller.isExpanded)
         controller.collapse();
-      emit((state as ReadyCustomers).assign(customer: customerCopy));
+      List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
+      int idx = filteredCustomers.indexWhere((element) => element.id == customer.id);
+      if (idx != -1) {
+        filteredCustomers[idx] = customerCopy;
+      }
+      emit((state as ReadyCustomers).assign(customer: customerCopy, filteredCustomers: filteredCustomers));
     }else{
-      if(customer == (state as ReadyCustomers).customer){
+      if(customer.id == (state as ReadyCustomers).customer.id){
         state.event.customer = Customer.empty();
         emit((state as ReadyCustomers).assign(customer: Customer.empty()));
       }
@@ -107,12 +150,19 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     state.event.customer = state.customer;
   }
 
-  bool validateAndSave() {
+  bool validateAndSave(BuildContext context) {
     if(state.customer.id.isNotEmpty) {
       saveSelectionToEvent();
       return true;
     } else {
-      PlatformUtils.notifyErrorMessage("Seleziona un cliente, cliccando su di esso");
+      SuccessAlert(
+        context,
+        title: "ERRORE",
+        text: "Seleziona un cliente, cliccando su di esso",
+        showAction: true,
+        icon: Icons.error_outline_rounded,
+        iconColor: Colors.red,
+      ).show();
       return false;
     }
   }
@@ -146,7 +196,6 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   }
 
   Event getEventCustomerEmpty() {
-    (state as ReadyCustomers).event.customer = Customer.empty();
     return (state as ReadyCustomers).event;
   }
 
@@ -172,7 +221,10 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
       customer.address = Address.empty();
     }
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
-    filteredCustomers.where((element) => element.id == customer.id).first.addresses.removeWhere((element) => element == address);
+    int idx = filteredCustomers.indexWhere((element) => element.id == customer.id);
+    if (idx != -1) {
+      filteredCustomers[idx] = customer;
+    }
     _databaseRepository.updateCustomer(customer.id, customer);
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
@@ -186,7 +238,10 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
       customer.referral = Referrals.empty();
     }
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
-    filteredCustomers.where((element) => element.id == customer.id).first.referrals.removeWhere((element) => element == referral);
+    int idx = filteredCustomers.indexWhere((element) => element.id == customer.id);
+    if (idx != -1) {
+      filteredCustomers[idx] = customer;
+    }
     _databaseRepository.updateCustomer(customer.id, customer);
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
@@ -195,21 +250,36 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
     Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
     customer.address = address;
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
-    filteredCustomers.where((element) => element.id == customer.id).first.address = address;
+    int idx = filteredCustomers.indexWhere((element) => element.id == customer.id);
+    if (idx != -1) {
+      filteredCustomers[idx] = customer;
+    }
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
 
   void selectReferralsOnCustomer(Referrals referral ){
     Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
-    customer.referral = referral;
+    if(customer.selectedReferrals.contains(referral)){
+      if(customer.selectedReferrals.length > 1){
+        customer.selectedReferrals.remove(referral);
+      }
+    } else {
+      customer.selectedReferrals.add(referral);
+    }
+    customer.referral = customer.selectedReferrals.isNotEmpty ? customer.selectedReferrals.first : Referrals.empty();
     List<Customer> filteredCustomers = List.of((state as ReadyCustomers).filteredCustomers);
-    filteredCustomers.where((element) => element.id == customer.id).first.referral = referral;
+    int idx = filteredCustomers.indexWhere((element) => element.id == customer.id);
+    if (idx != -1) {
+      filteredCustomers[idx] = customer;
+    }
     emit((state as ReadyCustomers).assign(customer: customer, filteredCustomers: filteredCustomers));
   }
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+      emit(state.assign(status: _formStatus.normal));
+    }
   }
 
 }

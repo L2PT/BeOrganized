@@ -80,6 +80,13 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
     return state.user.webops.elementAt(pos);
   }
 
+  /// Converts a virtual recurring event occurrence into a real exception document
+  /// in Firestore so it becomes visible and manageable by operators.
+  Future<void> convertToException(Event event) async {
+    event.isExcepeted = true;
+    event.id = await _databaseRepository.addEvent(event);
+  }
+
   void changeOperatorEvent(Event event,Account operatorOld, Account operator, DateTime start, DateTime end, bool duplicateMode, bool reapetMode) async {
     event.start = start;
     event.end = end;
@@ -105,7 +112,7 @@ class CalendarContentWebCubit extends Cubit<CalendarContentWebState> {
         Event? eventMaster = await _databaseRepository.getEvent(event.recurrenceId);
         DateTime endMaster = eventMaster!.end;
         DateTime startMaster = eventMaster.start;
-        eventMaster!.update(event);
+        eventMaster.update(event);
         eventMaster.start = DateTime(
           startMaster.year,
           startMaster.month,

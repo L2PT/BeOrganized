@@ -27,6 +27,7 @@ class Customer extends Equatable{
   String codFiscale = "";
   List<Address> addresses = [];
   List<Referrals> referrals = [];
+  List<Referrals> selectedReferrals = [];
   String typology = "Privato";
 
   Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.referral, this.addresses, this.referrals);
@@ -45,7 +46,25 @@ class Customer extends Equatable{
         address = json["Indirizzo"] == null? Address.empty(): Address.fromMap(json["Indirizzo"]),
         referral = json["Referente"] == null? Referrals.empty(): Referrals.fromMap(json["Referente"]),
         referrals = json["Referenti"] == null? []: (json["Referenti"] as List).map((referrals) => Referrals.fromMap(referrals)).toList(),
+        selectedReferrals = _initSelectedReferrals(json),
         typology = json['Tipologia']??"Privato";
+
+  static List<Referrals> _initSelectedReferrals(Map<String, dynamic> json) {
+    if (json["ReferentiSelezionati"] != null) {
+      var list = (json["ReferentiSelezionati"] as List).map((r) => Referrals.fromMap(r)).toList();
+      if (list.isNotEmpty) return list;
+    }
+    if (json["Referente"] != null) {
+      var ref = Referrals.fromMap(json["Referente"]);
+      if (ref != Referrals.empty()) {
+        return [ref];
+      }
+    }
+    if (json["Referenti"] != null && (json["Referenti"] as List).isNotEmpty) {
+      return [Referrals.fromMap((json["Referenti"] as List).first)];
+    }
+    return [];
+  }
 
   Map<String, dynamic> toMap() => {
     "id":this.id,
@@ -58,6 +77,7 @@ class Customer extends Equatable{
     "CodiceFiscale":this.codFiscale,
     "Indirizzi": this.addresses.map((address)=>address.toMap()).toList(),
     "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
+    "ReferentiSelezionati": this.selectedReferrals.map((referrals)=>referrals.toMap()).toList(),
     "Indirizzo": this.address.toMap(),
     "Referente": this.referral.toMap(),
     "Tipologia":this.typology,
@@ -74,6 +94,7 @@ class Customer extends Equatable{
       "CodiceFiscale":this.codFiscale,
       "Indirizzi": this.addresses.map((address)=>address.toMap()).toList(),
       "Referenti": this.referrals.map((referrals)=>referrals.toMap()).toList(),
+      "ReferentiSelezionati": this.selectedReferrals.map((referrals)=>referrals.toMap()).toList(),
       "Indirizzo": this.address.toMap(),
       "Referente": this.referral.toMap(),
       "Tipologia":this.typology,
@@ -92,6 +113,7 @@ class Customer extends Equatable{
       "CodiceFiscale":this.codFiscale,
       "Indirizzi": this.addresses,
       "Referenti": this.referrals,
+      "ReferentiSelezionati": this.selectedReferrals,
       "Indirizzo": this.address,
       "Referente": this.referral,
       "Tipologia":this.typology,
@@ -125,6 +147,7 @@ class Customer extends Equatable{
     this.partitaIva = clientUpdate.partitaIva;
     this.addresses = clientUpdate.addresses;
     this.referrals = clientUpdate.referrals;
+    this.selectedReferrals = clientUpdate.selectedReferrals;
     this.address = clientUpdate.address;
     this.referral = clientUpdate.referral;
   }

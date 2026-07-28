@@ -59,13 +59,26 @@ class ContactsPageCubit extends Cubit<ContactsPageState> {
     List<Customer> filteredCustomers = List.of(state.customerList);
     Map<String, bool> mapSelected = Map.from(state.mapSelected);
     List<String> idDeleteCustomer = [];
+    Map<int, int> countCustomerTypology = Map.from(state.countEntity);
+    
     mapSelected.entries.where((entry) => entry.value).forEach((entry) {
+      final customer = state.customerList.firstWhere((c) => c.id == entry.key, orElse: () => Customer.empty());
+      if (customer != Customer.empty()) {
+        final key = Customer.getIntTypology(customer.typology);
+        countCustomerTypology[key] = (countCustomerTypology[key] ?? 0) - 1;
+        countCustomerTypology[Customer.getIntTypology(Customer.ALL)] = (countCustomerTypology[Customer.getIntTypology(Customer.ALL)] ?? 0) - 1;
+      }
       _databaseRepository.deleteCustomer(entry.key);
       filteredCustomers.removeWhere((element) => element.id == entry.key);
       idDeleteCustomer.add(entry.key);
     });
     idDeleteCustomer.forEach((id) => mapSelected.remove(id));
-    emit(state.assign(mapSelected: mapSelected));
+    emit(state.assign(
+      customerList: filteredCustomers,
+      countCustomerTypology: countCustomerTypology,
+      totalEvent: countCustomerTypology[state.selectedStatusTab],
+      mapSelected: mapSelected,
+    ));
   }
 
   Event getEventCustomer(Customer customer) {
@@ -128,7 +141,7 @@ class ContactsPageCubit extends Cubit<ContactsPageState> {
     final key = Customer.getIntTypology(customer.typology);
     countCustomerTypology[key] = (countCustomerTypology[key] ?? 0) - 1;
     countCustomerTypology[Customer.getIntTypology(Customer.ALL)] = (countCustomerTypology[Customer.getIntTypology(Customer.ALL)] ?? 0) -1;
-    emit(state.assign(customerList: filteredCustomers, countCustomerTypology: countCustomerTypology, totalEvent: countCustomerTypology[Customer.getIntTypology(Customer.ALL)]));
+    emit(state.assign(customerList: filteredCustomers, countCustomerTypology: countCustomerTypology, totalEvent: countCustomerTypology[state.selectedStatusTab]));
     return true;
   }
 

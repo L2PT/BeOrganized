@@ -52,6 +52,16 @@ class ReadyCustomers extends CustomerSelectionState {
   ReadyCustomers.update(List<Customer>? filteredCustomers, Event? event,Customer? customer,Map<String, FilterWrapper>? filters,  String? searchNameField, bool? canLoadMore, int? numPage, _formStatus status,): super(filteredCustomers, event, customer, filters,searchNameField, canLoadMore, numPage, status);
 
   @override
-  List<Object> get props => [filteredCustomers.map((op) => op.id).join(),status, event.toString(), customer.toString(), canLoadMore];
+  List<Object> get props => [
+    filteredCustomers.map((op) => "${op.id}-${op.address.address.join(",")}-${op.address.phone}-${op.selectedReferrals.map((r)=>r.name).join()}-${op.referrals.length}").join(),
+    status,
+    event.toString(),
+    customer.id,
+    customer.address.address.join(","),
+    customer.address.phone,
+    customer.referral.name,
+    customer.selectedReferrals.map((r) => r.name).join(),
+    canLoadMore
+  ];
 }
 

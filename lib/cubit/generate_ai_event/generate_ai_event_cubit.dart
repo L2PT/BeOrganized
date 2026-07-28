@@ -27,16 +27,36 @@ class GenerateAiEventCubit extends Cubit<GenerateAiEventState> {
 
   Future<bool> generateEvent() async {
     if(state.isLoading()) return Future<bool>(()=>false);
-    if(formKeyBasiclyInfo.currentState!.validate()){
-      formKeyBasiclyInfo.currentState!.save();
+    final formValid = formKeyBasiclyInfo.currentState == null || formKeyBasiclyInfo.currentState!.validate();
+    if(formValid){
+      formKeyBasiclyInfo.currentState?.save();
       emit(state.assign(status: _formStatus.loading));
       state.event.supervisor = _account;
       text = _removePlaceholdersClean(text);
       EventResponseAi eventResponseAi = await AiUtils.estraiIncarico(text);
       eventResponseAi.color = _databaseRepository.getColorByCategory(eventResponseAi.categoria);
+      print(eventResponseAi.indirizzo);
       eventResponseAi.indirizzo = await getLocations(eventResponseAi.indirizzo);
+      print(eventResponseAi);
       state.event.fromGenerateData(eventResponseAi);
-      List<String> idCustomers = await AlgoliaService.searchCustomer(eventResponseAi.indirizzo, hitsPerPage: 1);
+      // Priorità: indirizzo (più preciso). Se non c'è, usa nome+cognome.
+      // Se ci sono entrambi li combina per una ricerca più accurata.
+      final nomeCliente = '${eventResponseAi.nome} ${eventResponseAi.cognome}'.trim();
+      final hasIndirizzo = eventResponseAi.indirizzo.isNotEmpty;
+      final hasNome = nomeCliente.isNotEmpty;
+      final String queryCliente;
+      if (hasIndirizzo && hasNome) {
+        queryCliente = '${eventResponseAi.indirizzo} $nomeCliente';
+      } else if (hasIndirizzo) {
+        queryCliente = eventResponseAi.indirizzo;
+      } else if (hasNome) {
+        queryCliente = nomeCliente;
+      } else {
+        queryCliente = '';
+      }
+      List<String> idCustomers = queryCliente.isNotEmpty
+          ? await AlgoliaService.searchCustomer(queryCliente, hitsPerPage: 1)
+          : [];
       List<String> idUsers = await AlgoliaService.searchUser(eventResponseAi.operatore, hitsPerPage: 1);
       if(idCustomers.isNotEmpty) {
         Customer cliente = await _databaseRepository.getCustomer(idCustomers.first)??Customer.empty();
@@ -48,6 +68,8 @@ class GenerateAiEventCubit extends Cubit<GenerateAiEventState> {
         Account user = await _databaseRepository.getAccount(id: idUsers.first);
         state.event.operator = user;
       }
+      emit(state.assign(status: _formStatus.normal));
+      print(state.event);
       return true;
     }
     return false;

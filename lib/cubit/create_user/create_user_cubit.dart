@@ -99,7 +99,9 @@ class CreateUserCubit extends Cubit<CreateUserState> with CreateEntityUtils{
   Event getEvent() => this.state.event;
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+      emit(state.assign(status: _formStatus.normal));
+    }
   }
 }

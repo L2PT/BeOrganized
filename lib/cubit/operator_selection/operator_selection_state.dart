@@ -20,9 +20,10 @@ class ReadyOperators extends OperatorSelectionState {
   bool primaryOperatorSelected = false;
   List<Account> filteredOperators = [];
 
-  ReadyOperators(this.filteredOperators, {String? searchNameField, Event? event}): super(searchNameField){
+  ReadyOperators(this.filteredOperators, {String? searchNameField, Event? event, List<Account>? allOperators}): super(searchNameField){
     if(event != null) {
-      filteredOperators.forEach((operator) { selectionList[operator.id] = 0; });
+      final listToMap = allOperators ?? filteredOperators;
+      listToMap.forEach((operator) { selectionList[operator.id] = 0; });
       event.suboperators.forEach((suboperator) {
         if(selectionList.containsKey(suboperator.id))
           selectionList[suboperator.id] = 1;

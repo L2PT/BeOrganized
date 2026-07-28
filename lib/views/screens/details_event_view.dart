@@ -343,13 +343,13 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                 Container(
                   height: 300,
                   child: CardCustomer(
-                    paddingTopHeader: 10,
-                    cardMode: true,
-                    customer:  event.customer,
-                    buttonMode: false,
-                    onLuanchAddressAction: context.read<DetailsEventCubit>().launchMap,
-                    onLuanchPhoneAction: context.read<DetailsEventCubit>().callClient,
-                  ),
+                  paddingTopHeader: 10,
+                  cardMode: true,
+                  customer:  event.customer,
+                  buttonMode: false,
+                  onLuanchAddressAction: context.read<DetailsEventCubit>().launchMap,
+                  onLuanchPhoneAction: context.read<DetailsEventCubit>().callClient,
+                ),
                 )
        ])
     ));

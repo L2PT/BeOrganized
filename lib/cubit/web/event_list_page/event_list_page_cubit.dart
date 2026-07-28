@@ -14,13 +14,15 @@ class EventListPageCubit extends Cubit<EventListPageState> {
   final int startingElements = 250;
   final int loadingElements = 10;
   bool canLoadMore = true;
+  bool _isBozze = false;
 
   EventListPageCubit(this._databaseRepository) : super(LoadingEventListPageState());
 
   void initCubit([bool isBozze = false,]) {
+    _isBozze = isBozze;
     emit(state.assign(isBozze: isBozze,));
     Map<String, FilterWrapper> filters = Map.from(state.filters);
-    if (state.isBozze) {
+    if (_isBozze) {
       filters["status"] = filters["status"]!.update(EventStatus.Bozza);
     } else {
       filters["status"] = filters["status"]!.update(null);
@@ -30,19 +32,17 @@ class EventListPageCubit extends Cubit<EventListPageState> {
   }
 
   void onFiltersChanged(Map<String, FilterWrapper> filters) async {
+    if (_isBozze) {
+      filters["status"] = filters["status"]!.update(EventStatus.Bozza);
+    } else {
+      filters["status"] = filters["status"]!.update(null);
+    }
     await loadCountEvent();
-    EventListPageState statePrev = state;
-    emit(LoadingEventListPageState());
-    // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query
-    statePrev.filters.forEach((key, value) {
-      if ("status" == key) {
-        filters[key] = filters[key]!.update(value.fieldValue);
-      }
-    });
+    emit(LoadingEventListPageState(isBozze: _isBozze, filters: filters));
     // Instead of do a basic repo get and evaluateEventsMap() the whole filtering process is handled directly in the query
     listEvent = await _databaseRepository.getEventsActiveFiltered(filters, limit: startingElements);
     canLoadMore = listEvent.length >= startingElements;
-    emit(state.assign(isBozze: statePrev.isBozze,filters: filters, eventsList: listEvent, numPage: 0, totalEvent: canLoadMore?statePrev.totalEvent:listEvent.length));
+    emit(state.assign(isBozze: _isBozze, filters: filters, eventsList: listEvent, numPage: 0, totalEvent: canLoadMore ? state.totalEvent : listEvent.length));
   }
 
   void loadMoreData() async {
@@ -53,7 +53,7 @@ class EventListPageCubit extends Cubit<EventListPageState> {
   }
 
   Future<int> loadCountEvent() async {
-    int totalCount = await _databaseRepository.getEventCountsByStatus(state.filters['status']?.fieldValue);
+    int totalCount = await _databaseRepository.getEventCountsByStatus(_isBozze ? EventStatus.Bozza : null);
     emit(state.assign(totalEvent: totalCount));
     return totalCount;
   }

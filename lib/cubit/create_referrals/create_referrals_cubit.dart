@@ -19,6 +19,8 @@ class CreateReferralsCubit extends Cubit<CreateReferralsState> with CreateEntity
     setType(type);
     if(isModify()){
       referralToModify = Referrals.fromMap(state.customer.referral.toMap());
+    } else {
+      state.customer.referral = Referrals.empty();
     }
   }
 
@@ -29,7 +31,7 @@ class CreateReferralsCubit extends Cubit<CreateReferralsState> with CreateEntity
         state.customer.referrals.removeWhere((element) => element == referralToModify);
       }
       state.customer.referrals.add(state.customer.referral);
-      if(isModify() && state.customer.id.isNotEmpty){
+      if(state.customer.id.isNotEmpty){
         _databaseRepository.updateCustomer(state.customer.id, state.customer);
       }
       state.event.customer = state.customer;

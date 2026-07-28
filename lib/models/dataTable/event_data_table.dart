@@ -28,7 +28,8 @@ class EventDataTable extends DataTableSource {
   @override
   int get selectedRowCount => 0;
   @override
-  DataRow getRow(int index) {
+  DataRow? getRow(int index) {
+    if (index >= _data.length) return null;
     return eventDataRow(_data.elementAt(index));
   }
 

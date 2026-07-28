@@ -12,7 +12,7 @@ const apiKey = defineSecret("GEMINI_API_KEY");
 
 const ai = genkit({
   plugins: [googleAI()],
-  model: googleAI.model("gemini-2.0-flash-lite"),
+  model: googleAI.model("gemini-2.5-flash-lite"),
 });
 
 const estraiIncarico = ai.defineFlow({

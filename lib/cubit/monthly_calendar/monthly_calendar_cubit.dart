@@ -39,7 +39,10 @@ class MonthlyCalendarCubit extends Cubit<MonthlyCalendarState> {
 
   void evaluateEventsMap(){
     Map<DateTime, List<Event>> eventsMap = {};
-    _events.forEach((singleEvent) {
+    _events
+        // Nascondi le istanze ricorrenti non ancora elaborate dal calendario operatore
+        .where((singleEvent) => !singleEvent.isRepeatedEvent())
+        .forEach((singleEvent) {
       for(int i in List<int>.generate(max(1,singleEvent.end.difference(singleEvent.start).inDays), (i) => i + 1)){
         DateTime month = TimeUtils.truncateDate(singleEvent.start, "month");
         DateTime dateIndex = month.toUtc().add(Duration(days:singleEvent.start.day+i-2)).add(month.timeZoneOffset);

@@ -56,8 +56,10 @@ class UsersManageCubit extends Cubit<UsersManageState> {
   }
 
   void forceRefresh() {
-    emit(state.assign(status: _formStatus.loading));
-    emit(state.assign(status: _formStatus.normal));
+    if (!isClosed) {
+      emit(state.assign(status: _formStatus.loading));
+      emit(state.assign(status: _formStatus.normal));
+    }
   }
 
   Future<bool> deleteAccount(Account operator) async{

@@ -4,34 +4,34 @@ import {z} from "zod";
  * Schema Zod per la validazione di un incarico AI.
  */
 export const TaskSchema = z.object({
-  nome: z.string(),
-  cognome: z.string(),
-  indirizzo: z.string(),
-  telefono: z.array(z.string()), // Array di numeri di telefono
-  email: z.string().email().or(z.literal("")),
-  codicefiscale: z.string(),
-  partitaIva: z.string(),
-  tipoCliente: z.enum(["Amministratore", "Azienda", "Privato", "Referente"]),
+  nome: z.string().catch(""),
+  cognome: z.string().catch(""),
+  indirizzo: z.string().catch(""),
+  telefono: z.array(z.string()).catch([]),
+  email: z.string().catch(""),
+  codicefiscale: z.string().catch(""),
+  partitaIva: z.string().catch(""),
+  tipoCliente: z.enum(["Amministratore", "Azienda", "Privato", "Referente"]).catch("Privato"),
   referenti: z.array(z.object({
-    nome: z.string(),
-    telefono: z.string(),
-  })), // Array di referenti solo se tipoCliente è "Amministratore"
-  tipo: z.enum(["Intervento", "Contratto"]),
-  cartello: z.boolean(),
-  categoria: z.enum(["Disinfestazione", "Spurgo", "Video"]),
-  problematica: z.string(),
-  programmato: z.boolean(),
-  operatore: z.string(),
-  data: z.string(), // In formato YYYY-MM-DD
-  oraInizio: z.string(), // In formato HH:MM
-  oraFine: z.string(), // In formato HH:MM
-  allDay: z.boolean(),
-  isRepeated: z.boolean(),
-  dataInizioRipetizione: z.string(), // YYYY-MM-DD
-  dataFineRipetizione: z.string(), // YYYY-MM-DD
-  giornoMeseRipetizione: z.number(),
-  ogniQuantiMesiRipetizione: z.number(),
-  note: z.string(), // Campo note aggiunto
+    nome: z.string().catch(""),
+    telefono: z.string().catch(""),
+  })).catch([]),
+  tipo: z.enum(["Intervento", "Contratto"]).catch("Intervento"),
+  cartello: z.boolean().catch(false),
+  categoria: z.enum(["Disinfestazione", "Spurgo", "Video"]).catch("Spurgo"),
+  problematica: z.string().catch(""),
+  programmato: z.boolean().catch(false),
+  operatore: z.string().catch(""),
+  data: z.string().catch(""),
+  oraInizio: z.string().catch(""),
+  oraFine: z.string().catch(""),
+  allDay: z.boolean().catch(false),
+  isRepeated: z.boolean().catch(false),
+  dataInizioRipetizione: z.string().catch(""),
+  dataFineRipetizione: z.string().catch(""),
+  giornoMeseRipetizione: z.number().catch(0),
+  ogniQuantiMesiRipetizione: z.number().catch(0),
+  note: z.string().catch(""),
 });
 
 /**

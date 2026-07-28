@@ -7,7 +7,7 @@ class CreateReferralsState extends Equatable {
 
   CreateReferralsState(Event? event){
     event == null? this.event = Event.empty(): this.event = event;
-    this.event.customer.name.isEmpty? this.customer = Customer.empty(): this.customer = this.event.customer;
+    this.customer = this.event.customer;
   }
 
   late Customer customer;
