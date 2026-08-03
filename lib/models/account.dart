@@ -145,6 +145,10 @@ class Account extends Equatable{
     return this.typology == Account.VEICOLO;
   }
 
+  String nameOperator(){
+    return surname + " " + name;
+  }
+
   @override
   String toString() => id+name+surname+email+phone+codFiscale+supervisor.toString();
 

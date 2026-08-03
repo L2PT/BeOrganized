@@ -54,12 +54,12 @@ class Constants {
   static const String tabellaUtenti = 'Utenti';
   static const String tabellaCostanti = debug?'Costanti_DEBUG':'Costanti';
   static const String tabellaEventi = debug?'Eventi_DEBUG':'Eventi';
-  static const String tabellaStorico = !debug?'Storico_DEBUG':'Storico';
+  static const String tabellaStorico = debug?'Storico_DEBUG':'Storico';
   static const String tabellaClienti = debug?'Clienti_DEBUG':'Clienti';
-  static const String subtabellaStorico = !debug?'StoricoEventi_DEBUG':'StoricoEventi';
-  static const String tabellaEventiEliminati = !debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
-  static const String tabellaEventiTerminati = !debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
-  static const String tabellaEventiRifiutati = !debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
+  static const String subtabellaStorico = debug?'StoricoEventi_DEBUG':'StoricoEventi';
+  static const String tabellaEventiEliminati = debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
+  static const String tabellaEventiTerminati = debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
+  static const String tabellaEventiRifiutati = debug?'/Storico_DEBUG/StoricoRifiutati/StoricoEventi_DEBUG':'/Storico/StoricoRifiutati/StoricoEventi';
   static const String tabellaMessageConfig = debug?'/whatsapp_sessions_DEBUG':'/whatsapp_sessions';
   static const String tabellaChats = debug?'Chats_DEBUG':'Chats';
   static const String tabellaMessaggi = 'messages';

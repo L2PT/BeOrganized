@@ -6,7 +6,7 @@ class CreateUserState extends Equatable {
 
   CreateUserState(Event? event){
     event == null? this.event = Event.empty(): this.event = event;
-    this.event.operator.name.isEmpty? this.user = Account.empty(): this.user = this.event.operator;
+    this.event.operator.nameOperator().trim().isEmpty? this.user = Account.empty(): this.user = this.event.operator;
   }
   late Account user;
   late final Event event;
