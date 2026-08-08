@@ -148,6 +148,7 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   }
   void saveSelectionToEvent(){
     state.event.customer = state.customer;
+    state.event.title = state.customer.nameCustomer();
   }
 
   bool validateAndSave(BuildContext context) {

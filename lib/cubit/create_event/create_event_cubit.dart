@@ -66,9 +66,13 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
     categories = _databaseRepository.categories;
     types = _databaseRepository.typesEvent;
 
-    if (state.event.category.isEmpty && categories.isNotEmpty) {
-      state.event.category = categories.keys.first;
-      state.category = categories.keys.first;
+    if (state.event.category.isEmpty) {
+      String defaultCategory = categories.keys.firstWhere(
+        (k) => k.toLowerCase() == Constants.categoryDefault.toLowerCase(),
+        orElse: () => categories.isNotEmpty ? categories.keys.first : Constants.categoryDefault,
+      );
+      state.event.category = defaultCategory;
+      state.category = defaultCategory;
     } else {
       state.category = state.event.category;
     }
@@ -177,6 +181,10 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
 
     event.supervisor = _account;
     event.color = categories[event.category];
+
+    if (event.customer.nameCustomer().trim().isNotEmpty) {
+      event.title = event.customer.nameCustomer();
+    }
 
     if (event.typology == 'Contratto' && !event.title.contains('Contratto')) {
       event.title = "${event.typology} - ${event.title}";
@@ -433,6 +441,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
       Duration(hours: event.end.hour, minutes: event.end.minute),
     );
 
+    final minEnd = event.start.add(const Duration(minutes: Constants.WORKTIME_SPAN));
+    if (event.end.isBefore(minEnd)) {
+      event.start = event.end.subtract(const Duration(minutes: Constants.WORKTIME_SPAN));
+    }
+
     _removeAllOperators(event);
     emit(state.assign(event: event));
   }
@@ -440,6 +453,11 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
   void setEndTime(dynamic time) {
     final event = _cloneEvent();
     event.end = _convertToDateTime(time, event.end);
+
+    final minEnd = event.start.add(const Duration(minutes: Constants.WORKTIME_SPAN));
+    if (event.end.isBefore(minEnd)) {
+      event.start = event.end.subtract(const Duration(minutes: Constants.WORKTIME_SPAN));
+    }
 
     _removeAllOperators(event);
     emit(state.assign(event: event));
@@ -806,6 +824,7 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
         generatedEvent.customer.name.isNotEmpty ||
         generatedEvent.customer.surname.isNotEmpty) {
       event.customer = generatedEvent.customer;
+      event.title = event.customer.nameCustomer();
     }
 
     // Operatore

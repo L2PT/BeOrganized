@@ -223,6 +223,9 @@ class Customer extends Equatable{
     }
   }
 
+  String nameCustomer(){
+    return surname + " " + name;
+  }
 
   @override
   String toString() => id+name+surname+email+phones.join()+phone.toString()+partitaIva+codFiscale+typology+typology+address.toString()+referral.toString()+addresses.join()+referrals.join();

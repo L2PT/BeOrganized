@@ -14,8 +14,8 @@ import 'package:venturiautospurghi/utils/global_methods.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/screens/customer_selection_view.dart';
 import 'package:venturiautospurghi/views/screens/operator_selection_view.dart';
-import 'package:venturiautospurghi/views/widgets/platform_datepicker.dart';
 import 'package:venturiautospurghi/views/widgets/web/create_event_web_widgets.dart';
+
 
 // ── Costanti condivise ────────────────────────────────────────────────────────
 const _kModalRadius = BorderRadius.only(
@@ -335,21 +335,11 @@ class _CreateEventWebState extends State<CreateEventWeb>
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _secLbl('Dettagli Attivita'),
         const SizedBox(height: 8),
+        _clienteSection(state),
+        const SizedBox(height: 10),
         Form(
           key: cubit.formKeyBasiclyInfo,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _lField(
-              label: 'Titolo Incarico', req: true,
-              child: TextFormField(
-                initialValue: state.event.title,
-                onSaved: (v) => state.event.title = v ?? '',
-                onChanged: (v) => state.event.title = v,
-                validator: (v) => v == null || v.trim().isEmpty ? "Il campo 'Titolo' e obbligatorio" : null,
-                style: const TextStyle(fontSize: 12.5, color: black),
-                decoration: _ideco(hint: "Specifica l'oggetto operativo dell'attivita..."),
-              ),
-            ),
-            const SizedBox(height: 10),
             _lField(
               label: 'Descrizione Attivita',
               child: TextFormField(
@@ -363,8 +353,6 @@ class _CreateEventWebState extends State<CreateEventWeb>
             ),
           ]),
         ),
-        const SizedBox(height: 10),
-        _clienteSection(state),
         const SizedBox(height: 14),
         _secLbl('Pianificazione Oraria'),
         const SizedBox(height: 6),
@@ -846,23 +834,17 @@ class _CreateEventWebState extends State<CreateEventWeb>
   }) {
     return _lField(
       label: label,
-      child: GestureDetector(
-        onTap: canModify
-            ? () => PlatformDatePicker.selectTime(
-                  context,
-                  minTime: minTime,
-                  maxTime: maxTime,
-                  currentTime: time,
-                  onConfirm: onConfirm,
-                )
-            : null,
-        child: _fakeDate(
-          TimeOfDay.fromDateTime(time).format(context),
-          isTime: true,
-        ),
+      child: _TimeInputField(
+        key: ValueKey(label),
+        time: time,
+        canModify: canModify,
+        minTime: minTime,
+        maxTime: maxTime,
+        onConfirm: onConfirm,
       ),
     );
   }
+
 
   String _formatDate(DateTime d) => '${d.day}/${d.month}/${d.year}';
 
@@ -1066,5 +1048,237 @@ class _CreateEventWebState extends State<CreateEventWeb>
     isDense: true,
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  _TimeInputField – Tastiera per orario con validazione 24h / 60m
+// ─────────────────────────────────────────────────────────────────────────────
+class _TimeInputField extends StatefulWidget {
+  final DateTime time;
+  final bool canModify;
+  final DateTime? minTime;
+  final DateTime? maxTime;
+  final ValueChanged<dynamic> onConfirm;
+
+  const _TimeInputField({
+    super.key,
+    required this.time,
+    required this.canModify,
+    this.minTime,
+    this.maxTime,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_TimeInputField> createState() => _TimeInputFieldState();
+}
+
+class _TimeInputFieldState extends State<_TimeInputField> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _formatTime(widget.time));
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TimeInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && widget.time != oldWidget.time) {
+      _controller.text = _formatTime(widget.time);
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _formatTime(DateTime time) {
+    final h = time.hour.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _submitTime();
+    }
+  }
+
+  void _submitTime() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      _controller.text = _formatTime(widget.time);
+      return;
+    }
+
+    final parts = text.split(':');
+    if (parts.isEmpty) {
+      _controller.text = _formatTime(widget.time);
+      return;
+    }
+
+    int hours = int.tryParse(parts[0]) ?? widget.time.hour;
+    if (hours > 23) hours = 23;
+    if (hours < 0) hours = 0;
+
+    int minutes = 0;
+    if (parts.length > 1 && parts[1].isNotEmpty) {
+      final minStr = parts[1].padRight(2, '0');
+      minutes = int.tryParse(minStr) ?? 0;
+      if (minutes > 59) minutes = 59;
+      if (minutes < 0) minutes = 0;
+    }
+
+    DateTime candidate = DateTime(
+      widget.time.year,
+      widget.time.month,
+      widget.time.day,
+      hours,
+      minutes,
+    );
+
+    if (widget.maxTime != null && candidate.isAfter(widget.maxTime!)) {
+      candidate = widget.maxTime!;
+      hours = candidate.hour;
+      minutes = candidate.minute;
+    }
+
+    final formatted =
+        '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+    _controller.text = formatted;
+
+    final tod = TimeOfDay(hour: hours, minute: minutes);
+    if (tod.hour != widget.time.hour || tod.minute != widget.time.minute) {
+      widget.onConfirm(tod);
+    }
+  }
+
+  void _onChanged(String val) {
+    if (val.length == 5) {
+      _submitTime();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: _controller,
+      focusNode: _focusNode,
+      enabled: widget.canModify,
+      keyboardType: TextInputType.number,
+      inputFormatters: [_TimeTextInputFormatter()],
+      style: const TextStyle(
+          fontSize: 12.5, color: black, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        suffixIcon: const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Icon(Icons.access_time_outlined, size: 12, color: grey_dark),
+        ),
+        suffixIconConstraints:
+            const BoxConstraints(minWidth: 20, minHeight: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: grey_light),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: grey_light),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: yellow),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: grey_light),
+        ),
+      ),
+      onChanged: _onChanged,
+      onEditingComplete: () {
+        _submitTime();
+        _focusNode.unfocus();
+      },
+    );
+  }
+}
+
+class _TimeTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (oldValue.text.length > newValue.text.length) {
+      if (oldValue.text.endsWith(':')) {
+        String digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+        if (digits.length >= 2) {
+          digits = digits.substring(0, digits.length - 1);
+        }
+        return TextEditingValue(
+          text: digits,
+          selection: TextSelection.collapsed(offset: digits.length),
+        );
+      }
+      return newValue;
+    }
+
+    String digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 4) {
+      digits = digits.substring(0, 4);
+    }
+
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    String formatted = '';
+    if (digits.length == 1) {
+      int firstDigit = int.parse(digits);
+      if (firstDigit > 2) {
+        formatted = '0$firstDigit:';
+      } else {
+        formatted = digits;
+      }
+    } else if (digits.length == 2) {
+      int hours = int.parse(digits);
+      if (hours > 23) hours = 23;
+      formatted = '${hours.toString().padLeft(2, '0')}:';
+    } else if (digits.length == 3) {
+      int hours = int.parse(digits.substring(0, 2));
+      if (hours > 23) hours = 23;
+      int m1 = int.parse(digits.substring(2, 3));
+      if (m1 > 5) m1 = 5;
+      formatted = '${hours.toString().padLeft(2, '0')}:$m1';
+    } else if (digits.length == 4) {
+      int hours = int.parse(digits.substring(0, 2));
+      if (hours > 23) hours = 23;
+      int minutes = int.parse(digits.substring(2, 4));
+      if (minutes > 59) minutes = 59;
+      formatted =
+          '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 
 

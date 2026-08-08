@@ -70,6 +70,7 @@ class CardCustomer extends StatefulWidget {
   final bool cardMode;
   final bool buttonMode;
   final bool selectAddressMode;
+  final bool showAddressSearch;
 
   // Address action
   final void Function(Address address)? onEditActionAddress;
@@ -98,6 +99,7 @@ class CardCustomer extends StatefulWidget {
     this.selectAddressMode = false,
     this.buttonMode = true,
     this.paddingTopHeader = 3,
+    this.showAddressSearch = true,
     this.onEditActionAddress,
     this.onCreateActionAddress,
     this.onDeleteActionAddress,
@@ -223,7 +225,6 @@ class _CardCustomerState extends State<CardCustomer> {
   }
 
   Widget headerCustomer() {
-    final isCompany = widget.customer.typology == Customer.AZIENDA;
     final iconBgColor = black;
     final iconColor = yellow;
 
@@ -571,7 +572,7 @@ class _CardCustomerState extends State<CardCustomer> {
         ],
       ),
       const SizedBox(height: 8),
-      if (widget.customer.addresses.length > 3)
+      if (widget.showAddressSearch && widget.customer.addresses.length > 3)
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: TextFormField(

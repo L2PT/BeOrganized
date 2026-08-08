@@ -149,7 +149,7 @@ class Constants {
   static const String tabellaContattiWhatsapp_updatedAt = 'updatedAt';
 
   // HANDLES
-  static const int MIN_WORKTIME = 7;
+  static const int MIN_WORKTIME = 6;
   static const int MAX_WORKTIME = 19;
   static const int WORKTIME_SPAN = 30;
   static const double MIN_CALENDAR_EVENT_HEIGHT = 60.0;

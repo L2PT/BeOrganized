@@ -347,6 +347,7 @@ class _detailsViewState extends State<_detailsView> with TickerProviderStateMixi
                   cardMode: true,
                   customer:  event.customer,
                   buttonMode: false,
+                  showAddressSearch: false,
                   onLuanchAddressAction: context.read<DetailsEventCubit>().launchMap,
                   onLuanchPhoneAction: context.read<DetailsEventCubit>().callClient,
                 ),

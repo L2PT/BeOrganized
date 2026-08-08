@@ -19,8 +19,8 @@ import 'package:venturiautospurghi/plugins/dispatcher/web.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/repositories/firebase_messaging_service.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
-import 'package:venturiautospurghi/utils/theme.dart';
 import 'package:venturiautospurghi/views/widgets/web/header_menu_widget.dart';
+import 'package:venturiautospurghi/views/widgets/web/resizable_overview_dialog.dart';
 import 'package:venturiautospurghi/views/widgets/web/side_menu_widget.dart';
 
 final Map<String, PageParameter> parameterPage = {
@@ -113,51 +113,20 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
                 buildWhen: (previous, current) => previous != current,
                 builder: (context, state) {
                   if (state is OverViewReady) {
-                    final isSmallDialog = state.route == Constants.detailsEventViewRoute;
-                    final double dialogWidth = isSmallDialog ? 400.0 : Constants.WIDTH_OVERVIEW;
-                    final double dialogHeight = Constants.HEIGHT_OVERVIEW;
-
-                    final double defaultLeft = (MediaQuery.of(context).size.width / 2) - (Constants.WIDTH_OVERVIEW / 2);
-                    double leftPos = state.posLeftOverView;
-                    if (isSmallDialog && leftPos == defaultLeft) {
-                      leftPos = (MediaQuery.of(context).size.width / 2) - (dialogWidth / 2);
-                    }
-
-                    Widget child = RepositoryProvider<CloudFirestoreService>.value(
+                    return ResizableOverviewDialog(
+                      route: state.route,
+                      accountId: account.id,
+                      posLeft: state.posLeftOverView,
+                      posTop: state.posTopOverView,
+                      onDragEnd: context.read<WebBloc>().updatePositionOverView,
+                      child: RepositoryProvider<CloudFirestoreService>.value(
                         value: RepositoryProvider.of<CloudFirestoreService>(context),
                         child: BlocProvider.value(
-                            value: context.read<WebBloc>(),
-                            child: Container(
-                                height: dialogHeight, width: dialogWidth,
-                                decoration: BoxDecoration(
-                                  color: whitebackground,
-                                  borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-                                  border: Border.all(color: grey_light, width: 1),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
-                                      spreadRadius: 5,
-                                      blurRadius: 7,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                    borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-                                    child: context.read<WebBloc>().state.content
-                                )
-                            )));
-                        return Positioned(
-                            left: leftPos,
-                            top: state.posTopOverView,
-                            child:Draggable(
-                                maxSimultaneousDrags: 1,
-                                feedback:  Opacity(
-                                  opacity: .3,
-                                  child: child,
-                                ),
-                                onDragEnd: context.read<WebBloc>().updatePositionOverView,
-                                child: child ));
+                          value: context.read<WebBloc>(),
+                          child: context.read<WebBloc>().state.content,
+                        ),
+                      ),
+                    );
                   }
                   if (state is CloseOverView) {
                     if(state.callback != null)

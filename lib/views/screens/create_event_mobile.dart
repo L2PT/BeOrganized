@@ -286,28 +286,6 @@ class _formBasiclyInfo extends StatelessWidget{
           1.2,  new Form(
             key: context.read<CreateEventCubit>().formKeyBasiclyInfo,
             child: new Column(children: <Widget>[
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextFormField(
-                  cursorColor: black,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    hintText: 'Titolo',
-                    hintStyle: subtitle,
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        width: 2.0,
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                  ),
-                  initialValue: event.title,
-                  validator:(value) => string.isNullOrEmpty(value)?
-                  'Il campo \'Titolo\' è obbligatorio' : null,
-                  onSaved: (value) => event.title = value??"",
-                ),
-              ),
-              Divider(height: 40, indent: 20, endIndent: 20, thickness: 2, color: grey_light2),
               Row(children: <Widget>[
                 Container(
                   width: iconWidth,
