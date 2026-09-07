@@ -42,6 +42,39 @@ class DateUtils {
 
   static String selectDateFormatDiff(DateTime d) => _selectDateFormatDiff.format(d);
 
+  static const List<String> italianMonths = [
+    '',
+    'Gennaio',
+    'Febbraio',
+    'Marzo',
+    'Aprile',
+    'Maggio',
+    'Giugno',
+    'Luglio',
+    'Agosto',
+    'Settembre',
+    'Ottobre',
+    'Novembre',
+    'Dicembre',
+  ];
+
+  static String formatChatDate(DateTime d) {
+    final n = now();
+    final today = DateTime(n.year, n.month, n.day);
+    final yesterday = DateTime(n.year, n.month, n.day - 1);
+    final date = DateTime(d.year, d.month, d.day);
+
+    if (date == today) {
+      return 'Oggi';
+    } else if (date == yesterday) {
+      return 'Ieri';
+    } else {
+      final day = d.day.toString().padLeft(2, '0');
+      final month = italianMonths[d.month];
+      return '$day $month ${d.year}';
+    }
+  }
+
   static const List<String> weekdays = [
     'Sun',
     'Mon',

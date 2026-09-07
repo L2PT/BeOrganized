@@ -15,6 +15,7 @@ import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/message/chat_overview.dart';
 import 'package:venturiautospurghi/models/message/message.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
+import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/extensions.dart';
 import 'package:venturiautospurghi/utils/global_constants.dart';
 import 'package:venturiautospurghi/utils/theme.dart';
@@ -204,69 +205,79 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: widget.messages.length,
               itemBuilder: (context, i) {
                 final m = widget.messages[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Align(
-                    alignment: m.isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.65,
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: m.isMe ? Color(0xFF1E1E1E) : Colors.white, // Dark vs Beige
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(16),
-                            topRight: const Radius.circular(16),
-                            bottomLeft: Radius.circular(m.isMe ? 16 : 0),
-                            bottomRight: Radius.circular(m.isMe ? 0 : 16),
+                final bool isFirstOfDay = i == widget.messages.length - 1 ||
+                    !_.DateUtils.isSameDay(m.timestamp, widget.messages[i + 1].timestamp);
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isFirstOfDay) _buildDateSeparator(m.timestamp),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: Align(
+                        alignment: m.isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.65,
                           ),
-                          // boxShadow: [ BoxShadow(...) ] // Remove shadow for cleaner look or keep minimal
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                m.text,
-                                style: TextStyle(
-                                  color: m.isMe ? white : black,
-                                ),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: m.isMe ? Color(0xFF1E1E1E) : Colors.white, // Dark vs Beige
+                              borderRadius: BorderRadius.only(
+                                topLeft: const Radius.circular(16),
+                                topRight: const Radius.circular(16),
+                                bottomLeft: Radius.circular(m.isMe ? 16 : 0),
+                                bottomRight: Radius.circular(m.isMe ? 0 : 16),
                               ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
+                              // boxShadow: [ BoxShadow(...) ] // Remove shadow for cleaner look or keep minimal
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _shortTime(m.timestamp),
+                                    m.text,
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      color: m.isMe
-                                          ? white
-                                          : grey,
+                                      color: m.isMe ? white : black,
                                     ),
                                   ),
-                                  if (m.eventoId.isNotEmpty) ...[
-                                    const SizedBox(width: 15),
-                                    TextButton(
-                                      onPressed: () => context.read<WebCubit>().messageManagePageCubit.goToEventDetails(context, m.eventoId),
-                                      style: TextButton.styleFrom(
-                                        backgroundColor: yellow,
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        minimumSize: const Size(0, 24),
-                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _shortTime(m.timestamp),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: m.isMe
+                                              ? white
+                                              : grey,
+                                        ),
                                       ),
-                                      child: const Text('Vedi Incarico', style: TextStyle(color: white, fontSize: 12)),
-                                    ),
-                                  ],
+                                      if (m.eventoId.isNotEmpty) ...[
+                                        const SizedBox(width: 15),
+                                        TextButton(
+                                          onPressed: () => context.read<WebCubit>().messageManagePageCubit.goToEventDetails(context, m.eventoId),
+                                          style: TextButton.styleFrom(
+                                            backgroundColor: yellow,
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            minimumSize: const Size(0, 24),
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                          child: const Text('Vedi Incarico', style: TextStyle(color: white, fontSize: 12)),
+                                        ),
+                                      ],
+                                    ],
+                                  )
                                 ],
-                              )
-                            ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                  ),),
+                    ),
+                  ],
                 );
               },
             ),
@@ -334,6 +345,33 @@ class _ChatScreenState extends State<ChatScreen> {
     ));
   }
 
+  Widget _buildDateSeparator(DateTime timestamp) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          color: white.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(10.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Text(
+          _.DateUtils.formatChatDate(timestamp),
+          style: const TextStyle(
+            color: black,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
 
   String _shortTime(DateTime t) => '${t.hour.toString().padLeft(2,'0')}:${t.minute.toString().padLeft(2,'0')}';
 }
