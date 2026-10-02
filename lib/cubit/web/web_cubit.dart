@@ -8,6 +8,7 @@ import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/scadenziario_page/scadenziario_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
 import 'package:venturiautospurghi/models/customer.dart';
@@ -29,13 +30,14 @@ class WebCubit extends Cubit<WebCubitState> {
   EventListPageCubit eventListPageCubit;
   UsersManagePageCubit usersManagePageCubit;
   MessageManagePageCubit messageManagePageCubit;
+  ScadenziarioPageCubit scadenziarioPageCubit;
   final ScrollController verticalCalendar = ScrollController();
   double scrollPixel = 0;
   Timer? _scrollTimer;
 
   final List<StreamSubscription> _subscriptions = [];
 
-  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, this.usersManagePageCubit, this.messageManagePageCubit, CloudFirestoreService databaseRepository, Account account,) :
+  WebCubit(this.route, this.calendarPageCubit, this.contactsPageCubit, this.historyPageCubit, this.eventListPageCubit, this.usersManagePageCubit, this.messageManagePageCubit, this.scadenziarioPageCubit, CloudFirestoreService databaseRepository, Account account,) :
         _databaseRepository = databaseRepository, _account = account,
         super(LoadingWebCubitState()){
     verticalCalendar.addListener(() {
@@ -51,6 +53,7 @@ class WebCubit extends Cubit<WebCubitState> {
     _subscriptions.add(this.eventListPageCubit.stream.listen((status) => emit(state.assign(eventListPageState: status))));
     _subscriptions.add(this.usersManagePageCubit.stream.listen((status) => emit(state.assign(usersManagePageState: status))));
     _subscriptions.add(this.messageManagePageCubit.stream.listen((status) => emit(state.assign(messageManagePageState: status))));
+    _subscriptions.add(this.scadenziarioPageCubit.stream.listen((status) => emit(state.assign(scadenziarioPageState: status))));
     _subscriptions.add(_databaseRepository.subscribeDraftEvents().listen((drafts) {
       emit(state.assign(draftsCount: drafts.length));
     }));
@@ -85,6 +88,9 @@ class WebCubit extends Cubit<WebCubitState> {
         break;
       case Constants.manageMessageRoute:
         // Already initialized in constructor
+        break;
+      case Constants.scadenziarioRoute:
+        this.scadenziarioPageCubit.initCubit();
         break;
     }
   }

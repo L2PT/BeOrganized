@@ -15,6 +15,11 @@ class Customer extends Equatable{
   static const String REFERENTE = "Referente";
   static const String AMMINISTRATORE = "Amministratore";
 
+  // Tipologie edificio (per lo Scadenziario)
+  static const String EDIFICIO_CONDOMINIO = "Condominio";
+  static const String EDIFICIO_AZIENDA = "Edificio Aziendale";
+  static const String EDIFICIO_PRIVATO = "Edificio Privato";
+
   String id = "";
   String name = "";
   String surname = "";
@@ -29,6 +34,14 @@ class Customer extends Equatable{
   List<Referrals> referrals = [];
   List<Referrals> selectedReferrals = [];
   String typology = "Privato";
+
+  // ── Campi edificio/location (retrocompatibili – opzionali) ──────────────────
+  /// Nome commerciale dell'edificio (es. "COND. ALBINONI N.8")
+  String nomeEdificio = "";
+  /// Tipologia di edificio: Condominio, Edificio Aziendale, Edificio Privato
+  String tipologiaEdificio = "";
+  /// Codice fiscale del condominio / ente
+  String codiceFiscaleEdificio = "";
 
   Customer(this.id,this.name,this.surname,this.email,this.phone, this.phones, this.partitaIva,this.codFiscale, this.typology, this.address, this.referral, this.addresses, this.referrals);
   Customer.empty();
@@ -47,7 +60,10 @@ class Customer extends Equatable{
         referral = json["Referente"] == null? Referrals.empty(): Referrals.fromMap(json["Referente"]),
         referrals = json["Referenti"] == null? []: (json["Referenti"] as List).map((referrals) => Referrals.fromMap(referrals)).toList(),
         selectedReferrals = _initSelectedReferrals(json),
-        typology = json['Tipologia']??"Privato";
+        typology = json['Tipologia']??"Privato",
+        nomeEdificio = json['NomeEdificio']??'',
+        tipologiaEdificio = json['TipologiaEdificio']??'',
+        codiceFiscaleEdificio = json['CodiceFiscaleEdificio']??'';
 
   static List<Referrals> _initSelectedReferrals(Map<String, dynamic> json) {
     if (json["ReferentiSelezionati"] != null) {
@@ -81,6 +97,9 @@ class Customer extends Equatable{
     "Indirizzo": this.address.toMap(),
     "Referente": this.referral.toMap(),
     "Tipologia":this.typology,
+    "NomeEdificio": this.nomeEdificio,
+    "TipologiaEdificio": this.tipologiaEdificio,
+    "CodiceFiscaleEdificio": this.codiceFiscaleEdificio,
   };
 
   Map<String, dynamic> toDocument() {
@@ -98,6 +117,9 @@ class Customer extends Equatable{
       "Indirizzo": this.address.toMap(),
       "Referente": this.referral.toMap(),
       "Tipologia":this.typology,
+      "NomeEdificio": this.nomeEdificio,
+      "TipologiaEdificio": this.tipologiaEdificio,
+      "CodiceFiscaleEdificio": this.codiceFiscaleEdificio,
     });
   }
 
@@ -150,6 +172,9 @@ class Customer extends Equatable{
     this.selectedReferrals = clientUpdate.selectedReferrals;
     this.address = clientUpdate.address;
     this.referral = clientUpdate.referral;
+    this.nomeEdificio = clientUpdate.nomeEdificio;
+    this.tipologiaEdificio = clientUpdate.tipologiaEdificio;
+    this.codiceFiscaleEdificio = clientUpdate.codiceFiscaleEdificio;
   }
 
   bool isCompany(){
@@ -158,6 +183,16 @@ class Customer extends Equatable{
 
   bool isAdministrator(){
     return this.typology == Customer.AMMINISTRATORE;
+  }
+
+  /// Restituisce true se il cliente ha un nome edificio esplicito
+  bool hasEdificio() => nomeEdificio.isNotEmpty;
+
+  /// Nome visualizzato: preferisce nomeEdificio se disponibile,
+  /// altrimenti ricade su surname + name (compatibilità legacy)
+  String displayName() {
+    if (nomeEdificio.isNotEmpty) return nomeEdificio;
+    return nameCustomer().trim();
   }
 
   bool filter(lambda, value){

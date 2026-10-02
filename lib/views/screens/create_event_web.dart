@@ -523,7 +523,7 @@ class _CreateEventWebState extends State<CreateEventWeb>
                     children: [
                       // Name
                       Text(
-                        (c.surname.toUpperCase() + " " + c.name).trim(),
+                        c.displayName().toUpperCase(),
                         style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: black),
                       ),
                       const SizedBox(height: 5),

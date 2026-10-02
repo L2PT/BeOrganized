@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:printing/printing.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart';
@@ -272,5 +273,73 @@ class PDFUtils {
         height: 20,
       )
     ];
+  }
+
+  Future<Uint8List> createContractReport(List<Contract> listContract, String reportTitle) async {
+    final pdf = Document(title: reportTitle, author: 'Venturi Bruno');
+
+    pdf.addPage(
+      MultiPage(
+        theme: ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+          icons: fontIcon,
+        ),
+        margin: const EdgeInsets.all(25),
+        pageFormat: PdfPageFormat.a4.landscape,
+        header: (context) => Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(reportTitle,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: PdfColors.black)),
+                Text('Totale: ${listContract.length} contratti',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.normal,
+                        color: PdfColors.grey700)),
+              ],
+            ),
+            SizedBox(height: 8),
+            Divider(color: PdfColors.grey400, thickness: 1, height: 1),
+          ],
+        ),
+        footer: _buildFooter,
+        build: (context) => [
+          SizedBox(height: 12),
+          TableHelper.fromTextArray(
+            headers: [
+              'Cliente / Edificio',
+              'Indirizzo',
+              'Oggetto Intervento',
+              'Tipologia',
+              'Scadenza',
+              'Canone Annuo',
+              'Automezzo',
+            ],
+            data: listContract.map((c) => [
+              c.customer.displayName(),
+              c.customer.address.address.join(' '),
+              c.title.isNotEmpty ? c.title : c.description,
+              c.typologyActivity,
+              '${c.prossimaMese.month.toString().padLeft(2, '0')}/${c.prossimaMese.year}',
+              c.canoneAnnuo > 0 ? '€ ${c.canoneAnnuo.toStringAsFixed(2)}' : '-',
+              c.autoMezzo?.name ?? 'Non assegnato',
+            ]).toList(),
+            headerStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 9),
+            cellStyle: const TextStyle(fontSize: 8.5),
+            headerDecoration: const BoxDecoration(color: PdfColors.grey200),
+            cellAlignment: Alignment.centerLeft,
+            cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
   }
 }

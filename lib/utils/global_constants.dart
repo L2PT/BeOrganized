@@ -48,6 +48,8 @@ class Constants {
   static const String customerContactsListRoute = '/view/customer_contacts_list';
   static const String manageUtenzeRoute = '/view/manage_utenze';
   static const String manageMessageRoute = '/view/manage_message';
+  static const String scadenziarioRoute = '/view/scadenziario';
+  static const String detailsContractViewRoute = '/view/details_contract';
   static const String noRoute = 'noRoute';
 
   // TABLES DATABASE
@@ -56,6 +58,7 @@ class Constants {
   static const String tabellaEventi = debug?'Eventi_DEBUG':'Eventi';
   static const String tabellaStorico = debug?'Storico_DEBUG':'Storico';
   static const String tabellaClienti = debug?'Clienti_DEBUG':'Clienti';
+  static const String tabellaContratti = debug?'Contratti_DEBUG':'Contratti';
   static const String subtabellaStorico = debug?'StoricoEventi_DEBUG':'StoricoEventi';
   static const String tabellaEventiEliminati = debug?'/Storico_DEBUG/StoricoEliminati/StoricoEventi_DEBUG':'/Storico/StoricoEliminati/StoricoEventi';
   static const String tabellaEventiTerminati = debug?'/Storico_DEBUG/StoricoTerminati/StoricoEventi_DEBUG':'/Storico/StoricoTerminati/StoricoEventi';
@@ -128,6 +131,13 @@ class Constants {
   static const String tabellaClienti_indirizzi = 'Indirizzi';
   static const String tabellaClienti_indirizzo = 'Indirizzo';
   static const String tabellaClienti_indirizziSearch = 'IndirizziSearch';
+
+  // TABLE CONTRATTI
+  static const String tabellaContratti_clienteId = 'ClienteId';
+  static const String tabellaContratti_stato = 'Stato';
+  static const String tabellaContratti_categoria = 'Categoria';
+  static const String tabellaContratti_prossimaMese = 'ProssimaMese';
+  static const String tabellaContratti_frequenzaMesi = 'FrequenzaMesi';
 
   //  TABLE MESSAGE CONFIG
   static const String tabellaMessageConfig_qrcode = "qrCode";

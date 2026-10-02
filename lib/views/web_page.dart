@@ -11,6 +11,7 @@ import 'package:venturiautospurghi/cubit/web/contacts_page/contacts_page_cubit.d
 import 'package:venturiautospurghi/cubit/web/event_list_page/event_list_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/history_page/history_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
+import 'package:venturiautospurghi/cubit/web/scadenziario_page/scadenziario_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/usersManage_page/users_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
 import 'package:venturiautospurghi/models/account.dart';
@@ -37,6 +38,8 @@ final Map<String, PageParameter> parameterPage = {
   Constants.customerContactsListRoute: PageParameter(Icons.person_add, Constants.createCustomerViewRoute, 'Nuovo cliente', FunctionalWidgetType.FilterCustomer,
       false, true, true),
   Constants.manageMessageRoute: PageParameter(Icons.message, Constants.newChatDialogRoute, 'Nuova chat', FunctionalWidgetType.FilterCustomer,
+      false, true, false),
+  Constants.scadenziarioRoute: PageParameter(Icons.add, Constants.detailsContractViewRoute, 'Nuovo contratto', FunctionalWidgetType.none,
       false, true, false),
 };
 
@@ -77,9 +80,10 @@ class _WebPageState extends State<WebPage> with TickerProviderStateMixin {
         BlocProvider(create: (_) => EventListPageCubit(databaseRepository)),
         BlocProvider(create: (_) => UsersManagePageCubit(databaseRepository)),
         BlocProvider(create: (_) => MessageManagePageCubit(databaseRepository)),
+        BlocProvider(create: (_) => ScadenziarioPageCubit(databaseRepository)),
       BlocProvider(
             create: (tex) => WebCubit(GoRouterState.of(context).uri.toString(),tex.read<CalendarPageCubit>(),tex.read<ContactsPageCubit>(),
-                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), tex.read<UsersManagePageCubit>(),tex.read<MessageManagePageCubit>(), databaseRepository, account)),
+                tex.read<HistoryPageCubit>(), tex.read<EventListPageCubit>(), tex.read<UsersManagePageCubit>(),tex.read<MessageManagePageCubit>(), tex.read<ScadenziarioPageCubit>(), databaseRepository, account)),
     ], child:Scaffold(
           backgroundColor: Color(0x00000000),
           body: Stack(

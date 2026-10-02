@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:venturiautospurghi/cubit/create_event/create_event_cubit.dart';
 import 'package:venturiautospurghi/cubit/generate_ai_event/generate_ai_event_cubit.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -17,9 +18,10 @@ class CreateEvent extends StatefulWidget {
   final int currentStep;
   final DateTime? dateSelect;
   final TypeStatus type;
+  final Contract? contractSource;
   static const iconWidth = 30.0;
 
-  CreateEvent({this.event, this.currentStep = 0, this.dateSelect, this.type = TypeStatus.create });
+  CreateEvent({this.event, this.currentStep = 0, this.dateSelect, this.type = TypeStatus.create, this.contractSource });
 
   @override
   _CreateEventState createState() => _CreateEventState();
@@ -34,7 +36,7 @@ class _CreateEventState extends State<CreateEvent> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<CreateEventCubit>(
-          create: (_) => CreateEventCubit(repository, account, widget.event, widget.currentStep, widget.dateSelect, type: widget.type),
+          create: (_) => CreateEventCubit(repository, account, widget.event, widget.currentStep, widget.dateSelect, type: widget.type, contractSource: widget.contractSource),
         ),
         BlocProvider<GenerateAiEventCubit>(
           create: (_) => GenerateAiEventCubit(repository, account, widget.dateSelect),

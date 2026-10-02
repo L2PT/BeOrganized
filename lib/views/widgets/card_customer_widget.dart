@@ -225,18 +225,75 @@ class _CardCustomerState extends State<CardCustomer> {
   }
 
   Widget headerCustomer() {
+    final customer = widget.customer;
     final iconBgColor = black;
     final iconColor = yellow;
 
-    // Build subtitle based on open/closed state
-    List<String> subtitleParts = [widget.customer.typology];
-    String idVal = widget.customer.isCompany() ? widget.customer.partitaIva : widget.customer.codFiscale;
+    // ── Layout "Edificio" (retrocompatibile) se nomeEdificio è presente ──────
+    if (customer.hasEdificio()) {
+      final indirizzo = customer.address.address.isNotEmpty
+          ? customer.address.address.join(', ')
+          : (customer.email.isNotEmpty ? customer.email : '');
+      return Padding(
+        padding: EdgeInsets.only(top: widget.paddingTopHeader),
+        child: Row(children: [
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+              color: iconBgColor,
+            ),
+            child: const Center(
+              child: Icon(Icons.apartment, size: 26, color: yellow),
+            ),
+          ),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                customer.nomeEdificio,
+                style: title.copyWith(
+                    color: black, fontSize: 14, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (indirizzo.isNotEmpty)
+                Text(
+                  indirizzo,
+                  style: subtitle.copyWith(fontSize: 11, color: grey_dark),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (customer.tipologiaEdificio.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    customer.tipologiaEdificio,
+                    style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF374151)),
+                  ),
+                ),
+            ]),
+          ),
+        ]),
+      );
+    }
+
+    // ── Layout legacy (persona / azienda) ─────────────────────────────────────
+    List<String> subtitleParts = [customer.typology];
+    String idVal = customer.isCompany() ? customer.partitaIva : customer.codFiscale;
     if (idVal.isNotEmpty) {
       subtitleParts.add(idVal);
     }
-    // Only show email if expanded AND not empty
-    if (widget.selectedMode && widget.customer.email.isNotEmpty) {
-      subtitleParts.add(widget.customer.email);
+    if (widget.selectedMode && customer.email.isNotEmpty) {
+      subtitleParts.add(customer.email);
     }
     String subtitleText = subtitleParts.join(" • ");
 
@@ -254,7 +311,7 @@ class _CardCustomerState extends State<CardCustomer> {
             ),
             child: Center(
               child: Icon(
-                Customer.getIconTypology(widget.customer.typology).icon,
+                Customer.getIconTypology(customer.typology).icon,
                 size: 24,
                 color: iconColor,
               ),
@@ -267,11 +324,11 @@ class _CardCustomerState extends State<CardCustomer> {
                 Row(
                   children: [
                     Text(
-                      widget.customer.surname.toUpperCase() + " ",
+                      customer.surname.toUpperCase() + " ",
                       style: title.copyWith(color: black, fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      widget.customer.name,
+                      customer.name,
                       overflow: TextOverflow.ellipsis,
                       style: subtitle.copyWith(fontSize: 14),
                     ),
@@ -292,6 +349,7 @@ class _CardCustomerState extends State<CardCustomer> {
       ),
     );
   }
+
 
   Widget referralsCustomer() {
     List<Referrals> filteredReferrals = List<Referrals>.from(widget.customer.referrals);

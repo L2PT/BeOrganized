@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:venturiautospurghi/cubit/web/messageManage_page/message_manage_page_cubit.dart';
 import 'package:venturiautospurghi/cubit/web/web_cubit.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/linkmenu.dart';
 import 'package:venturiautospurghi/models/page_parameter.dart';
 import 'package:venturiautospurghi/plugins/dispatcher/platform_loader.dart';
@@ -29,6 +30,8 @@ final Map<String, LinkMenu> menuWeb = const {
       Icons.people, Colors.white, 20, "Gestione Utenze", title_rev_menu),
   Constants.manageMessageRoute: const LinkMenu(
       Icons.inbox, Colors.white, 20, "Messaggi", title_rev_menu),
+  Constants.scadenziarioRoute: const LinkMenu(
+      Icons.assignment_turned_in, Colors.white, 20, "Scadenziario", title_rev_menu),
 
 };
 
@@ -47,12 +50,18 @@ class SideMenuLayerWeb extends StatelessWidget {
 
 
   Widget buttonAction(bool expandedMode, BuildContext context){
+    final Map<String, dynamic> params = actionButtonRoute == Constants.detailsContractViewRoute
+        ? {'objectParameter': Contract.empty()}
+        : {
+            'dateSelect': context.read<WebCubit>().state.calendarPageState.calendarDate,
+            'qrCode': context.read<WebCubit>().messageManagePageCubit.state.qrcode,
+          };
     return !expandedMode?
             Container( alignment: Alignment.center,
-                child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate, 'qrCode' : context.read<WebCubit>().messageManagePageCubit.state.qrcode}), icon: Icon(iconData, color: white, size: 40,),)):
+                child: IconButton(padding: EdgeInsets.all(0),onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, params), icon: Icon(iconData, color: white, size: 40,),)):
             Column( children: [
               ElevatedButton(
-                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, <String,dynamic>{'dateSelect' : context.read<WebCubit>().state.calendarPageState.calendarDate, 'qrCode' : context.read<WebCubit>().messageManagePageCubit.state.qrcode} ),
+                  onPressed: () => PlatformUtils.navigator(context, actionButtonRoute, params ),
                   style: ButtonStyle(
                     backgroundColor:  WidgetStateProperty.all<Color>(black),
                     surfaceTintColor: WidgetStateProperty.all<Color>(black),
@@ -293,6 +302,8 @@ class SideMenuLayerWeb extends StatelessWidget {
                   paddingTopBox: 0,
                   spaceButton: 10,
                 ));
+      case FunctionalWidgetType.none:
+        return Container();
       default:
         return Container();
     }

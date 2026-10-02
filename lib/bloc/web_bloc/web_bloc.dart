@@ -5,12 +5,14 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/route_navigation.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
 import 'package:venturiautospurghi/utils/create_entity_utils.dart';
 import 'package:venturiautospurghi/utils/date_utils.dart' as _;
 import 'package:venturiautospurghi/utils/global_constants.dart';
+import 'package:venturiautospurghi/views/screens/contract_detail_web.dart';
 import 'package:venturiautospurghi/views/screens/create_address_view.dart';
 import 'package:venturiautospurghi/views/screens/create_customer_view.dart';
 import 'package:venturiautospurghi/views/screens/create_event_view.dart';
@@ -85,7 +87,9 @@ class WebBloc extends Bloc<WebEvent, WebState> {
     switch(event.route){
       case Constants.closeOverViewRoute: emit( CloseOverView(<String, dynamic>{"objectParameter": objectParameter,"typeStatus": historyRoute.isEmpty?0:historyRoute.last.status, "currentStep": historyRoute.isEmpty?0:historyRoute.last.currentStep},routeTarget,(event.arg is Map)?event.arg["res"]:false, callback??() {})); break;
       case Constants.detailsEventViewRoute: emit( OverViewReady(event.route, DetailsEvent(objectParameter),_posLeftOverView, _posTopOverView, )); break;
-      case Constants.createEventViewRoute: emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now(), type: status), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.createEventViewRoute:
+        final contractSource = (event.arg is Map) ? event.arg["contractSource"] as Contract? : null;
+        emit( OverViewReady(event.route, CreateEvent(event: objectParameter,currentStep: currentStep,dateSelect: (event.arg is Map)?event.arg["dateSelect"]:_.DateUtils.now(), type: status, contractSource: contractSource), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createCustomerViewRoute: emit( OverViewReady(event.route, CreateCustomer(event: objectParameter,currentStep: currentStep,type: status), _posLeftOverView, _posTopOverView,)); break;
       case Constants.newChatDialogRoute: emit( OverViewReady(event.route, NewChatDialog((event.arg is Map)?event.arg["qrCode"]:""), _posLeftOverView, _posTopOverView,)); break;
       case Constants.createAddressViewRoute: emit( OverViewReady(event.route, CreateAddress(objectParameter, status), _posLeftOverView, _posTopOverView,)); break;
@@ -95,6 +99,10 @@ class WebBloc extends Bloc<WebEvent, WebState> {
       case Constants.operatorListRoute: emit( OverViewReady(event.route, OperatorSelection(objectParameter, (event.arg is Map)?event.arg["requirePrimaryOperator"]:false, null, (event.arg is Map && event.arg["title"] != null)?event.arg["title"]:'OPERATORI'),_posLeftOverView, _posTopOverView)); break;
       case Constants.customerListRoute: emit( OverViewReady(event.route, CustomerSelection(objectParameter),_posLeftOverView, _posTopOverView)); break;
       case Constants.addWebOperatorRoute: Event e = new Event.empty()..suboperators = _account.webops; e.start = e.end = DateTime(0); emit( OverViewReady(event.route, OperatorSelection(e), _posLeftOverView, _posTopOverView,)); break;
+      case Constants.detailsContractViewRoute:
+        final contract = objectParameter is Contract ? objectParameter as Contract : Contract.empty();
+        emit(OverViewReady(event.route, ContractDetailWeb(contract: contract), _posLeftOverView, _posTopOverView));
+        break;
     }
   }
 

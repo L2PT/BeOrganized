@@ -12,6 +12,7 @@ import 'package:venturiautospurghi/views/screen_pages/history_event_list_view.da
 import 'package:venturiautospurghi/views/screen_pages/log_in_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/message_manage_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/reset_auth_account_view.dart';
+import 'package:venturiautospurghi/views/screen_pages/scadenziario_view.dart';
 import 'package:venturiautospurghi/views/screen_pages/users_manage_view.dart';
 import 'package:venturiautospurghi/views/screens/filter_event_list_view.dart';
 import 'package:venturiautospurghi/views/widgets/splash_screen.dart';
@@ -81,6 +82,12 @@ class RouterWebApp{
                   path: Constants.manageMessageRoute,
                   name: 'messageManage',
                   builder: (context, state) => MessageManage(),
+                ),
+                GoRoute(
+                  parentNavigatorKey: _shellNavigatorKey,
+                  path: Constants.scadenziarioRoute,
+                  name: 'scadenziario',
+                  builder: (context, state) => ScadenziarioView(),
                 ),
               ]),
           GoRoute(

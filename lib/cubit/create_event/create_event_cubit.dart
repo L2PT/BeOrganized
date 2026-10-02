@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
@@ -45,15 +46,16 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
       int currentStep,
       DateTime? dateSelect, {
         TypeStatus type = TypeStatus.create,
+        Contract? contractSource,
       }) : super(CreateEventState(event, dateSelect: dateSelect)) {
-    _initializeCubit(event, currentStep, type);
+    _initializeCubit(event, currentStep, type, contractSource: contractSource);
   }
 
   // ========================================
   // INIZIALIZZAZIONE
   // ========================================
 
-  void _initializeCubit(Event? event, int currentStep, TypeStatus type) {
+  void _initializeCubit(Event? event, int currentStep, TypeStatus type, {Contract? contractSource}) {
     state.currentStep = currentStep;
     fillMapForms();
     setType(type);
@@ -83,6 +85,62 @@ class CreateEventCubit extends Cubit<CreateEventState> with CreateEntityUtils {
 
     if (event?.documentsMap.isNotEmpty ?? false) {
       state.documents = event!.documentsMap;
+    }
+
+    if (contractSource != null) {
+      _applyContractSource(contractSource);
+    }
+  }
+
+  void _applyContractSource(Contract contract) {
+    // 1. Cliente
+    state.event.customer = contract.customer;
+    if (contract.customer.nameCustomer().trim().isNotEmpty) {
+      state.event.title = contract.customer.nameCustomer().trim();
+    } else if (contract.title.isNotEmpty) {
+      state.event.title = contract.title;
+    }
+
+    // 2. Indirizzo da cliente
+    if (contract.customer.address.address.isNotEmpty) {
+      final addr = contract.customer.address.address.join(', ');
+      state.event.address = addr;
+      addressController.text = addr;
+    }
+
+    // 3. Categoria
+    if (contract.category.isNotEmpty) {
+      state.event.category = contract.category;
+      state.category = contract.category;
+    }
+
+    // 4. Automezzo / Operatore
+    if (contract.autoMezzo != null) {
+      state.event.operator = contract.autoMezzo!;
+    }
+
+    // 5. Tipologia e Cartello
+    state.event.typology = 'Contratto';
+    state.typeSelected = 'Contratto';
+    if (contract.withCartel) {
+      state.event.withCartel = true;
+      state.withCartel = true;
+    }
+
+    // 6. Descrizione
+    if (contract.description.isNotEmpty) {
+      state.event.description = contract.description;
+    }
+
+    // 7. Pianificazione oraria nel mese di scadenza
+    if (contract.prossimaMese.year > 2000) {
+      final now = _.DateUtils.now();
+      final targetDay = (now.month == contract.prossimaMese.month && now.year == contract.prossimaMese.year)
+          ? now.day
+          : 1;
+      state.event.start = DateTime(contract.prossimaMese.year, contract.prossimaMese.month, targetDay, 8, 0);
+      state.event.end = state.event.start.add(const Duration(minutes: Constants.WORKTIME_SPAN));
+      state.event.recurrenceDayOfMonth = targetDay;
     }
   }
 

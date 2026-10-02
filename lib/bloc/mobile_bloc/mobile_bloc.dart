@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/filter_wrapper.dart';
 import 'package:venturiautospurghi/repositories/cloud_firestore_service.dart';
@@ -85,7 +86,9 @@ class MobileBloc extends Bloc<MobileEvent, MobileState> {
     }
     switch(event.route) {
       case Constants.detailsEventViewRoute: emit(OutBackdropState(event.route, DetailsEvent(event.arg))); break;
-      case Constants.createEventViewRoute: emit( OutBackdropState(event.route, CreateEvent(event: objectParameter, type: status, currentStep: currentStep, ))); break;
+      case Constants.createEventViewRoute:
+        final contractSource = (event.arg is Map) ? event.arg["contractSource"] as Contract? : null;
+        emit( OutBackdropState(event.route, CreateEvent(event: objectParameter, type: status, currentStep: currentStep, contractSource: contractSource, ))); break;
       case Constants.registerRoute: emit( OutBackdropState(event.route, CreateUser(event: objectParameter, type: status,))); break;
       case Constants.waitingNotificationRoute: emit( NotificationWaitingState(event.route, PersistentNotification(event.arg))); break;
       case Constants.homeRoute: emit( InBackdropState(event.route, _account.supervisor? OperatorList() : DailyCalendar(event.arg != null? event.arg['day']:null,event.arg != null?event.arg['operator']:null) )); break;

@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:venturiautospurghi/models/account.dart';
+import 'package:venturiautospurghi/models/address.dart';
+import 'package:venturiautospurghi/models/referrals.dart';
+import 'package:venturiautospurghi/models/contract.dart';
 import 'package:venturiautospurghi/models/customer.dart';
 import 'package:venturiautospurghi/models/event.dart';
 import 'package:venturiautospurghi/models/event_status.dart';
@@ -29,6 +32,7 @@ class CloudFirestoreService {
   late CollectionReference _collectionChats;
   late CollectionReference _collectionContactsWhatsapp;
   late Query _collectionMessaggi;
+  late CollectionReference _collectionContratti;
 
   late Map<String,dynamic> categories;
   late Map<String,dynamic> typesEvent;
@@ -49,6 +53,7 @@ class CloudFirestoreService {
     _collectionChats = _cloudFirestore.collection(Constants.tabellaChats);
     _collectionMessaggi = _cloudFirestore.collectionGroup(Constants.tabellaMessaggi);
     _collectionContactsWhatsapp = _cloudFirestore.collection(Constants.tabellaContattiWhatsapp);
+    _collectionContratti = _cloudFirestore.collection(Constants.tabellaContratti);
   }
 
   static Future<CloudFirestoreService> create() async {
@@ -1067,5 +1072,384 @@ class CloudFirestoreService {
     });
   }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CONTRATTI
+
+  Future<String> addContract(Contract contract) async {
+    var docRef = await _collectionContratti.add(contract.toDocument());
+    return docRef.id;
+  }
+
+  void updateContract(String id, Contract contract) {
+    _collectionContratti.doc(id).update(contract.toDocument());
+  }
+
+  Future<Contract?> getContract(String id) async {
+    return _collectionContratti.doc(id).get().then((doc) =>
+        doc.exists ? Contract.fromMap(doc.id, doc.data()! as Map<String, dynamic>) : null);
+  }
+
+  void deleteContract(String id) {
+    _collectionContratti.doc(id).delete();
+  }
+
+  /// Restituisce tutti i contratti di un cliente specifico.
+  Future<List<Contract>> getContractsByCustomer(String clienteId) async {
+    final snapshot = await _collectionContratti
+        .where(Constants.tabellaContratti_clienteId, isEqualTo: clienteId)
+        .get();
+    return snapshot.docs
+        .map((doc) => Contract.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Restituisce contratti con filtri: anno, mese (prossimaMese), categoria.
+  Future<List<Contract>> getContractsFiltered({
+    int? year,
+    int? month,
+    String? categoria,
+    String? searchText,
+    int? status,
+    int limit = 250,
+    DocumentSnapshot? startFrom,
+  }) async {
+    Query query = _collectionContratti;
+
+    if (status != null) {
+      query = query.where(Constants.tabellaContratti_stato, isEqualTo: status);
+    }
+
+    if (categoria != null && categoria.isNotEmpty) {
+      query = query.where(Constants.tabellaContratti_categoria, isEqualTo: categoria);
+    }
+
+    if (year != null && month != null) {
+      final from = DateTime(year, month, 1);
+      final to = DateTime(year, month + 1, 1);
+      query = query
+          .where(Constants.tabellaContratti_prossimaMese, isGreaterThanOrEqualTo: from)
+          .where(Constants.tabellaContratti_prossimaMese, isLessThan: to);
+    } else if (year != null) {
+      final from = DateTime(year, 1, 1);
+      final to = DateTime(year + 1, 1, 1);
+      query = query
+          .where(Constants.tabellaContratti_prossimaMese, isGreaterThanOrEqualTo: from)
+          .where(Constants.tabellaContratti_prossimaMese, isLessThan: to);
+    }
+
+    query = query.orderBy(Constants.tabellaContratti_prossimaMese);
+
+    if (startFrom != null) {
+      query = query.startAfterDocument(startFrom);
+    }
+    query = query.limit(limit);
+
+    final snapshot = await query.get();
+    List<Contract> contracts = snapshot.docs
+        .map((doc) => Contract.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+        .toList();
+
+    // Filtro testo libero lato client (su nome edificio o nome cliente)
+    if (searchText != null && searchText.isNotEmpty) {
+      final lower = searchText.toLowerCase();
+      contracts = contracts.where((c) {
+        return c.customer.displayName().toLowerCase().contains(lower) ||
+            c.customer.address.address.join(' ').toLowerCase().contains(lower) ||
+            c.title.toLowerCase().contains(lower) ||
+            c.description.toLowerCase().contains(lower);
+      }).toList();
+    }
+
+    return contracts;
+  }
+
+  /// Conta i contratti in scadenza nel mese corrente (per badge menu).
+  Future<int> getContractsCurrentMonthCount() async {
+    final now = DateTime.now();
+    final from = DateTime(now.year, now.month, 1);
+    final to = DateTime(now.year, now.month + 1, 1);
+    final snapshot = await _collectionContratti
+        .where(Constants.tabellaContratti_stato, isEqualTo: ContractStatus.Active)
+        .where(Constants.tabellaContratti_prossimaMese, isGreaterThanOrEqualTo: from)
+        .where(Constants.tabellaContratti_prossimaMese, isLessThan: to)
+        .count()
+        .get();
+    return snapshot.count ?? 0;
+  }
+
+  /// Crea un set di contratti di prova realistici per testare lo scadenziario
+  /// distribuiti su una finestra di 5 mesi (-2, -1, 0, +1, +2).
+  Future<void> createSampleContracts() async {
+    final now = DateTime.now();
+
+    Customer makeCustomer({
+      required String id,
+      required String nomeEdificio,
+      required String tipologiaEdificio,
+      required String codiceFiscaleEdificio,
+      required String nomeReferente,
+      required String tipologia,
+      required String email,
+      required String phone,
+      required List<String> indirizzo,
+      required String telefonoIndirizzo,
+      required String contattoNome,
+      required String contattoTel,
+    }) {
+      final cust = Customer.empty();
+      cust.id = id;
+      cust.nomeEdificio = nomeEdificio;
+      cust.tipologiaEdificio = tipologiaEdificio;
+      cust.codiceFiscaleEdificio = codiceFiscaleEdificio;
+      cust.name = nomeReferente;
+      cust.surname = '';
+      cust.email = email;
+      cust.phone = phone;
+      cust.phones = [phone, contattoTel];
+      cust.typology = tipologia;
+      cust.address = Address(indirizzo, telefonoIndirizzo);
+      cust.addresses = [cust.address];
+      cust.referral = Referrals(contattoNome, contattoTel);
+      cust.referrals = [cust.referral];
+      return cust;
+    }
+
+    final sampleData = [
+      // Mese -2 (es. Agosto)
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_1',
+          nomeEdificio: 'Condominio Albinoni 12',
+          tipologiaEdificio: Customer.EDIFICIO_CONDOMINIO,
+          codiceFiscaleEdificio: '91234560371',
+          nomeReferente: 'Studio Amministrazioni Rossi',
+          tipologia: Customer.AMMINISTRATORE,
+          email: 'rossi.amministrazioni@email.it',
+          phone: '051 456789',
+          indirizzo: ['Via Giuseppe Albinoni 12', 'Bologna (BO)', '40137'],
+          telefonoIndirizzo: '051 456789',
+          contattoNome: 'Sig. Rossi Marco (Amministratore)',
+          contattoTel: '340 1234567',
+        ),
+        'title': 'Pulizia Fosse Biologiche e Pozzetti Condominiali',
+        'desc': 'Spurgo periodico annuale fosse biologiche, pozzetti di cacciata e sifoni firenze.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': false,
+        'freq': 12,
+        'monthOffset': -2,
+        'canone': 1250.0,
+        'assi': 2,
+        'note': 'Accesso carraio da cortile interno. Chiavi presso custode scala A.',
+        'fattura': 'FT-2025/089',
+      },
+      // Mese -1 (es. Settembre)
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_2',
+          nomeEdificio: 'Residence I Girasoli',
+          tipologiaEdificio: Customer.EDIFICIO_CONDOMINIO,
+          codiceFiscaleEdificio: '98765430372',
+          nomeReferente: 'Immobiliare Bologna Est',
+          tipologia: Customer.AMMINISTRATORE,
+          email: 'gestioni@bolognaest.it',
+          phone: '051 6271890',
+          indirizzo: ["Via dell'Artigiano 45", 'San Lazzaro di Savena (BO)', '40068'],
+          telefonoIndirizzo: '051 6271890',
+          contattoNome: 'Dott.ssa Girasoli Carla',
+          contattoTel: '335 9876543',
+        ),
+        'title': 'Spurgo e Lavaggio Colonne di Scarico',
+        'desc': 'Lavaggio canal-jet colonne montanti cucina e scarichi principali.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': true,
+        'freq': 6,
+        'monthOffset': -1,
+        'canone': 890.0,
+        'assi': 2,
+        'note': 'Richiesto preavviso di 48h ai condomini tramite avviso bacheca.',
+        'fattura': 'FT-2025/112',
+      },
+      // Mese 0 (Corrente - es. Ottobre) - Contratto 1
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_3',
+          nomeEdificio: 'Meccanica Padana S.p.A.',
+          tipologiaEdificio: Customer.EDIFICIO_AZIENDA,
+          codiceFiscaleEdificio: '02837490378',
+          nomeReferente: 'Meccanica Padana S.p.A.',
+          tipologia: Customer.AZIENDA,
+          email: 'manutenzioni@meccanicapadana.it',
+          phone: '051 723411',
+          indirizzo: ["Via dell'Industria 88", 'Calderara di Reno (BO)', '40012'],
+          telefonoIndirizzo: '051 723411',
+          contattoNome: 'Ing. Ferri Marco (RSPP)',
+          contattoTel: '333 4455667',
+        ),
+        'title': 'Manutenzione Periodica Vasche Decantazione e Disoleatori',
+        'desc': 'Aspirazione fanghi industriali da disoleatori piazzale e vasche lavaggio pezzi.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': false,
+        'freq': 3,
+        'monthOffset': 0,
+        'canone': 2400.0,
+        'assi': 3,
+        'note': 'Necessario DPI speciali, tesserino e modulo DUVRI per accesso stabilimento.',
+        'fattura': 'FT-2026/045',
+      },
+      // Mese 0 (Corrente - es. Ottobre) - Contratto 2
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_4',
+          nomeEdificio: 'Palazzo Zamboni',
+          tipologiaEdificio: Customer.EDIFICIO_PRIVATO,
+          codiceFiscaleEdificio: 'ZMBLNE68L45A944B',
+          nomeReferente: 'Zamboni Elena',
+          tipologia: Customer.PRIVATO,
+          email: 'elena.zamboni@libero.it',
+          phone: '051 223344',
+          indirizzo: ['Via Zamboni 34', 'Bologna (BO)', '40126'],
+          telefonoIndirizzo: '051 223344',
+          contattoNome: 'Dott.ssa Elena Zamboni',
+          contattoTel: '348 7766554',
+        ),
+        'title': 'Controllo Rete Fognaria e Videoispezione Condotte',
+        'desc': 'Verifica periodica reflui e videoispezione con report digitale rete antica.',
+        'cat': 'Videoispezione',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': false,
+        'freq': 12,
+        'monthOffset': 0,
+        'canone': 650.0,
+        'assi': 2,
+        'note': 'Centro storico ZTL. Accesso consentito solo con automezzo passo corto.',
+        'fattura': 'FT-2025/198',
+      },
+      // Mese +1 (es. Novembre)
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_5',
+          nomeEdificio: 'Condominio San Mamolo 28',
+          tipologiaEdificio: Customer.EDIFICIO_CONDOMINIO,
+          codiceFiscaleEdificio: '92019380375',
+          nomeReferente: 'Geom. Bianchi Roberto',
+          tipologia: Customer.AMMINISTRATORE,
+          email: 'studio.bianchi@gmail.com',
+          phone: '051 582319',
+          indirizzo: ['Via San Mamolo 28', 'Bologna (BO)', '40136'],
+          telefonoIndirizzo: '051 582319',
+          contattoNome: 'Geom. Roberto Bianchi',
+          contattoTel: '338 1122334',
+        ),
+        'title': 'Esposizione Cartello e Manutenzione Preventiva Pozzetti',
+        'desc': 'Cartellonistica divieto di sosta e svuotamento annuale vasche pluviali.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.ESPOSIZIONE_CARTELLO,
+        'cartel': true,
+        'freq': 12,
+        'monthOffset': 1,
+        'canone': 1100.0,
+        'assi': 2,
+        'note': 'Posizionare cartelli divieto di sosta 48h prima con foto protocollata vigili.',
+        'fattura': 'FT-2025/240',
+      },
+      // Mese +2 (es. Dicembre) - Contratto 1
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_6',
+          nomeEdificio: 'Villa Reale Park',
+          tipologiaEdificio: Customer.EDIFICIO_PRIVATO,
+          codiceFiscaleEdificio: 'BNTALN55M12A944R',
+          nomeReferente: 'Bentivoglio Alessandro',
+          tipologia: Customer.PRIVATO,
+          email: 'a.bentivoglio@residenzastorica.it',
+          phone: '051 591204',
+          indirizzo: ['Via dei Colli 15', 'Casalecchio di Reno (BO)', '40033'],
+          telefonoIndirizzo: '051 591204',
+          contattoNome: 'Sig. Giuseppe (Custode Tenuta)',
+          contattoTel: '339 8877665',
+        ),
+        'title': 'Pulizia Fosse Imhoff e Pozzi Neri Parco',
+        'desc': 'Manutenzione semestrale serbatoi Imhoff e pulizia pozzetti di degassamento parco.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': false,
+        'freq': 6,
+        'monthOffset': 2,
+        'canone': 1800.0,
+        'assi': 3,
+        'note': 'Entrata dal cancello secondario in via della Pineta (strada sterrata).',
+        'fattura': 'FT-2025/301',
+      },
+      // Mese +2 (es. Dicembre) - Contratto 2
+      {
+        'customer': makeCustomer(
+          id: 'sample_cust_7',
+          nomeEdificio: 'Centro Commerciale Meridiana',
+          tipologiaEdificio: Customer.EDIFICIO_AZIENDA,
+          codiceFiscaleEdificio: '03491820377',
+          nomeReferente: 'Meridiana Gest S.r.l.',
+          tipologia: Customer.AZIENDA,
+          email: 'direzione@meridianashopping.it',
+          phone: '051 617800',
+          indirizzo: ['Via Aldo Moro 64', 'Bologna (BO)', '40127'],
+          telefonoIndirizzo: '051 617800',
+          contattoNome: 'Dott. Luca Moretti (Facility Manager)',
+          contattoTel: '347 5566778',
+        ),
+        'title': 'Spurgo Rete Ristorazione e Degrassatori Food Court',
+        'desc': 'Svuotamento disoleatori e separatori grassi cucine ristoranti centro commerciale.',
+        'cat': 'Spurgo',
+        'tipo': ContractActivityType.CONTRATTO,
+        'cartel': false,
+        'freq': 3,
+        'monthOffset': 2,
+        'canone': 3200.0,
+        'assi': 4,
+        'note': 'Intervento notturno o mattina presto prima delle 07:30 per non disturbare la clientela.',
+        'fattura': 'FT-2026/012',
+      },
+    ];
+
+    for (final item in sampleData) {
+      final cust = item['customer'] as Customer;
+      final int offset = item['monthOffset'] as int;
+      final scadenza = DateTime(now.year, now.month + offset, 1);
+      final primoIntervento = DateTime(now.year - 1, now.month + offset, 1);
+      final ultimaFattura = DateTime(now.year, now.month + offset - 1, 15);
+
+      final contract = Contract(
+        id: '',
+        clienteId: cust.id,
+        customer: cust,
+        title: item['title'] as String,
+        description: item['desc'] as String,
+        category: item['cat'] as String,
+        typologyActivity: item['tipo'] as String,
+        withCartel: item['cartel'] as bool,
+        frequenzaMesi: item['freq'] as int,
+        prossimaMese: scadenza,
+        primoIntervento: primoIntervento,
+        canoneAnnuo: (item['canone'] as double),
+        ivaIncluded: false,
+        fatturazioneNote: 'Fatturazione concordata da contratto',
+        ultimaFatturaNr: item['fattura'] as String,
+        ultimaFatturaData: ultimaFattura,
+        numAssi: item['assi'] as int,
+        documents: [],
+        documentsMap: {},
+        status: ContractStatus.Active,
+        note: item['note'] as String,
+      );
+
+      await _collectionClienti.doc(cust.id).set(cust.toDocument(), SetOptions(merge: true));
+      await addContract(contract);
+    }
+  }
+
 }
+
+
 
