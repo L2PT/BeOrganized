@@ -261,7 +261,8 @@ class CustomerSelectionCubit extends Cubit<CustomerSelectionState> {
   void selectReferralsOnCustomer(Referrals referral ){
     Customer customer = Customer.fromMap("", (state as ReadyCustomers).customer.toMap());
     if(customer.selectedReferrals.contains(referral)){
-      if(customer.selectedReferrals.length > 1){
+      // Per gli amministratori si può deselezionare anche l'ultimo referente
+      if(customer.isAdministrator() || customer.selectedReferrals.length > 1){
         customer.selectedReferrals.remove(referral);
       }
     } else {

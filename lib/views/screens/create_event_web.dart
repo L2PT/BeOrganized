@@ -499,7 +499,7 @@ class _CreateEventWebState extends State<CreateEventWeb>
             child: Icon(
               Customer.getIconTypology(c.typology).icon,
               color: yellow,
-              size: 16,
+              size: 18,
             ),
           ),
           const SizedBox(width: 12),

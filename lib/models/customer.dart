@@ -52,7 +52,8 @@ class Customer extends Equatable{
   static List<Referrals> _initSelectedReferrals(Map<String, dynamic> json) {
     if (json["ReferentiSelezionati"] != null) {
       var list = (json["ReferentiSelezionati"] as List).map((r) => Referrals.fromMap(r)).toList();
-      if (list.isNotEmpty) return list;
+      // Se la lista è stata salvata esplicitamente (anche vuota), la rispettiamo
+      return list;
     }
     if (json["Referente"] != null) {
       var ref = Referrals.fromMap(json["Referente"]);

@@ -373,13 +373,13 @@ class _CardCustomerState extends State<CardCustomer> {
                         children: visibleReferrals.map((ref) => referralsListElement(ref)).toList(),
                       )
                     : CardReferrals(
-                        referral: widget.customer.referral,
+                        referral: widget.customer.referrals.first,
                         onLuanchPhoneAction: widget.onLuanchPhoneAction,
                         onclickMode: widget.selectedMode,
-                        selectItem: widget.selectedMode && widget.customer.selectedReferrals.contains(widget.customer.referral) && widget.customer.referral != Referrals.empty(),
-                        onTapAction: widget.selectedMode ? () => widget.onTapActionReferrals!(widget.customer.referral) : null,
+                        selectItem: widget.selectedMode && widget.customer.selectedReferrals.contains(widget.customer.referrals.first),
+                        onTapAction: widget.selectedMode ? () => widget.onTapActionReferrals!(widget.customer.referrals.first) : null,
                         actionButton: widget.onEditActionReferrals != null,
-                        onEditAction: widget.onEditActionReferrals != null ? () => widget.onEditActionReferrals!(widget.customer.referral) : null,
+                        onEditAction: widget.onEditActionReferrals != null ? () => widget.onEditActionReferrals!(widget.customer.referrals.first) : null,
                         onDeleteAction: null,
                       ))
                 : (widget.customer.selectedReferrals.isNotEmpty
